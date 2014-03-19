@@ -1,3 +1,4 @@
+0) Upload to bitbucket
 1) Downlaod ./download_raw_data.sh
 2) Create database (drop all tables and create new): ./stat_sync_scheme.py
 3) Load domain listings to mysql: ./stat_load_data.py
