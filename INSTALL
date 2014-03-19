@@ -1,0 +1,8 @@
+1) oursql:
+    apt-get install -y libmysqlclient-dev python-mysqldb
+    pip install oursql
+2) subnettree:
+    apt-get install -y python-subnettree
+3) PowerDNS: 
+    http://phpsuxx.blogspot.ru/2011/12/powerdns-recursor-debian-squeeze.html
+4) MySQL 

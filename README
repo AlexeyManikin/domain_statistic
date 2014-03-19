@@ -1,0 +1,12 @@
+1) Downlaod ./download_raw_data.sh
+2) Create database (drop all tables and create new): ./stat_sync_scheme.py
+3) Load domain listings to mysql: ./stat_load_data.py
+4) Resolve and postprocess domains: ./stat_resolve_domains.py
+
+Вот как-то так:
+Thread 38 finished update db time 8206 seconds
+Thread 25 finished update db time 8070 seconds
+
+real    638m21.611s
+user    102m35.411s
+sys     9m17.106s 
