@@ -21,9 +21,9 @@ processed_zones = ['ru', 'su', 'rf']
 #processed_zones = [ 'ru' ]
 
 # Для тестов ограничиваем число обрабатываемых доменов
-limit_select_for_tests = "LIMIT 10000"
+#limit_select_for_tests = "LIMIT 10000"
 # Для продакшена снимаем:
-#limit_select_for_tests = ""
+limit_select_for_tests = ""
 
 # продакшен: 100 потоков
 number_of_threads = 100
