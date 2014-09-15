@@ -1,3 +1,7 @@
+Debian 6/7/...
+Ununtu 14.04/...
+
+0) Install dependencies with this guide: https://github.com/pavel-odintsov/ru_open_statistics/blob/master/INSTALL
 1) oursql:
     apt-get install -y libmysqlclient-dev python-mysqldb
     pip install oursql
@@ -5,4 +9,12 @@
     apt-get install -y python-subnettree
 3) PowerDNS: 
     http://phpsuxx.blogspot.ru/2011/12/powerdns-recursor-debian-squeeze.html
-4) MySQL 
+4) MySQL
+    apt-get install mysql-server 
+5) Create database:
+
+mysql -uroot -p -e "CREATE DATABASE stat CHARSET 'utf8'";
+mysql -uroot -p -e "GRANT ALL PRIVILEGES ON stat.* TO 'stat_user'@'localhost' IDENTIFIED BY 'eer6paigaus2aeGa';
+FLUSH PRIVILEGES;" 
+
+ 
