@@ -16,7 +16,7 @@ resolver = dns.resolver.Resolver()
 def get_asn_descrption(asn):
     try:
         answers = resolver.query('AS' + asn + '.asn.cymru.com', 'TXT')
-    except NXDOMAIN:
+    except dns.resolver.NXDOMAIN:
         return "can't identify ASN. You could try it: " + "bgp.he.net/AS" + asn
 
     asn_name = ''
