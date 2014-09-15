@@ -27,7 +27,7 @@ limit_select_for_tests = "LIMIT 10000"
 
 # продакшен: 100 потоков
 number_of_threads = 100
-ip_asn_data_file = '/opt/bgp/asn.txt'
+ip_asn_data_file = '/opt/ru_open_statistics/bgp/asn.txt'
 
 # Списки эквивалентности доменов, используются для схлопывания ns/mx
 eq_domains = { 

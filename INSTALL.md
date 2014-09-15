@@ -11,7 +11,7 @@ Ununtu 14.04/...
 3) subnettree:
     apt-get install -y python-subnettree
 4) dns.resolver:
-    pip install dns.resolver
+    pip install dnspython
 5) PowerDNS: 
     http://phpsuxx.blogspot.ru/2011/12/powerdns-recursor-debian-squeeze.html
     apt-get install -y pdns-recursor
