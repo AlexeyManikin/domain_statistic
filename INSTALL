@@ -6,6 +6,8 @@ Ununtu 14.04/...
 1) oursql:
     apt-get install -y libmysqlclient-dev python-mysqldb
     pip install oursql
+2) Sqlalchemy:
+    pip install sqlalchemy
 2) subnettree:
     apt-get install -y python-subnettree
 3) PowerDNS: 
