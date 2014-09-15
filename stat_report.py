@@ -13,12 +13,20 @@ curs.execute(query)
 import dns.resolver
 resolver = dns.resolver.Resolver()
 
-for i in curs:
-    answers = resolver.query('AS' + i['asn_normal'] + '.asn.cymru.com', 'TXT')
+def get_asn_descrption(asn):
+    try:
+        answers = resolver.query('AS' + asn + '.asn.cymru.com', 'TXT')
+    except NXDOMAIN:
+        return "can't identify ASN. You could try it: " + "bgp.he.net/AS" + asn
+
     asn_name = ''
     for record in answers:
         asn_name = record.to_text()
 
     asn_name = asn_name.split(' | ')[4]
+    return asn_name
+
+for i in curs:
+    asn_name = get_asn_descrption(i['asn_normal']);
 
     print "%s %s %%" % ( asn_name, i['cc'] )

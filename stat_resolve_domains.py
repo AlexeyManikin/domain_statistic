@@ -12,6 +12,9 @@ import sys
 import stat_config
 from stat_utils import *
 
+import multiprocessing
+
+
 # для резволинга ASN
 import SubnetTree
  
