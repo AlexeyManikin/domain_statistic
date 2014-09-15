@@ -13,3 +13,4 @@ Usage:
 * Create database (drop all tables and create new): ./stat_sync_scheme.py
 * Load domain listings to mysql: ./stat_load_data.py
 * Resolve and postprocess domains: ./stat_resolve_domains.py
+* Graph data: ./stat_report.py 
