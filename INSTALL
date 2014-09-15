@@ -1,7 +1,6 @@
 Debian 6/7/...
 Ununtu 14.04/...
 
-0) Install dependencies with this guide: https://github.com/pavel-odintsov/ru_open_statistics/blob/master/INSTALL
 1) oursql:
     apt-get install -y libmysqlclient-dev python-mysqldb
     pip install oursql
