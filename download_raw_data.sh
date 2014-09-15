@@ -10,7 +10,7 @@ for domain_type in $domain_types
 do
     echo "Download domain list for zone ${domain_type}"
     rm -f /opt/domain_lists/${domain_type}_domains
-    wget "https://partner.r01.ru/${domain_type}_domains.gz" -O "/opt/domain_lists/${domain_type}_domains.gz"
+    wget "https://partner.r01.ru/zones/${domain_type}_domains.gz" -O "/opt/domain_lists/${domain_type}_domains.gz"
     gunzip /opt/domain_lists/${domain_type}_domains.gz
 done
 
