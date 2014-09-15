@@ -20,4 +20,6 @@ Ununtu 14.04/...
 mysql -uroot -p -e "CREATE DATABASE stat CHARSET 'utf8'";
 mysql -uroot -p -e "GRANT ALL PRIVILEGES ON stat.* TO 'stat_user'@'localhost' IDENTIFIED BY 'eer6paigaus2aeGa'; FLUSH PRIVILEGES;" 
 
+# We should use *.* because file permission os global for server
+mysql -uroot -p -e "GRANT FILE PRIVILEGES ON *.* TO 'stat_user'@'localhost' IDENTIFIED BY 'eer6paigaus2aeGa'; FLUSH PRIVILEGES;"
  
