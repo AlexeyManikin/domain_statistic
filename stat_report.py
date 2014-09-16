@@ -26,7 +26,9 @@ def get_asn_descrption(asn):
     asn_name = asn_name.split(' | ')[4]
     return asn_name
 
+print "Organization | Percent of delegated domains"
+print "---|---"
 for i in curs:
     asn_name = get_asn_descrption(i['asn_normal']);
 
-    print "%s %s %%" % ( asn_name, i['cc'] )
+    print "%s | %s %%" % ( asn_name, i['cc'] )
