@@ -27,4 +27,5 @@ mysql -uroot -p -e "GRANT ALL PRIVILEGES ON stat.* TO 'stat_user'@'localhost' ID
 
 # We should use *.* because file permission os global for server
 mysql -uroot -p -e "GRANT FILE PRIVILEGES ON *.* TO 'stat_user'@'localhost' IDENTIFIED BY 'eer6paigaus2aeGa'; FLUSH PRIVILEGES;"
- 
+8) Install Patricia:
+    apt-get install -y libnet-patricia-perl 
