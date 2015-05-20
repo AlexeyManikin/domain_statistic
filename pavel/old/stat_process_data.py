@@ -9,13 +9,10 @@
 # Данный скрипт обрабатывает полученные DNS данные в пределах БД
 #
 
-import stat_config
+from pavel import stat_config
 #from sqlalchemy import create_engine,text
-import re
 import SubnetTree
 import oursql
-import sys
-import os
 
 
 # Конструируем таблицу для быстрого разрешения IP в номер ASN

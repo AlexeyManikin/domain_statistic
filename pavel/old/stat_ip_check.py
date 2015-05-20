@@ -7,7 +7,7 @@
 #
 
 import SubnetTree
-import stat_config
+from pavel import stat_config
 from sqlalchemy import create_engine, text
 
 # Конструируем таблицу для быстрого разрешения IP в номер ASN

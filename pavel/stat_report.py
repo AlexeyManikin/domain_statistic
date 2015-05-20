@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import stat_config
+from pavel import stat_config
 import oursql
 
 conn = oursql.connect(host='127.0.0.1', user=stat_config.db_user, passwd=stat_config.db_password, db=stat_config.db_name, charset=None, use_unicode=False)

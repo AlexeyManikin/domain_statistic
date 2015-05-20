@@ -6,13 +6,13 @@
 #
 
 # from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, text, Date, Boolean
-import oursql
 from threading import Thread
 import sys
-import stat_config
-from stat_utils import *
 
-import multiprocessing
+import oursql
+from pavel.stat_utils import *
+
+
 
 
 # для резволинга ASN
@@ -22,7 +22,6 @@ import time
 import os
 
 # socket.gethostbyname
-import socket
 
 from itertools import cycle
 

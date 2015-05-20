@@ -18,7 +18,7 @@ Ununtu 14.04/...
 6) MySQL
     apt-get install mysql-server 
 Tune it for (my.cnf):
-max_connections        = 5000
+max_connections = 5000
 
 7) Create database:
 

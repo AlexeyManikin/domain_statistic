@@ -6,7 +6,7 @@
 #
 
 from sqlalchemy import create_engine
-import stat_config
+from pavel import stat_config
 
 db = create_engine(stat_config.db_url, echo=False)
 
@@ -19,6 +19,6 @@ load_data_query = "LOAD DATA INFILE '/opt/ru_open_statistics/domain_lists/%s_dom
 
 for zone in stat_config.processed_zones:
     print "Start load data for %s zone" % zone
-    result = db.execute(load_data_query % (zone, zone) ) 
+    result = db.execute(load_data_query % (zone, zone))
 
 print "Finished loading domains in DB"

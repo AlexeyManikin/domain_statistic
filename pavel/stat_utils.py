@@ -2,15 +2,12 @@
 # Служебная библиотека
 
 #  python-dnspython
-import dns.resolver
-from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
-
-import datetime
 from datetime import datetime
-
 import re
 
-import stat_config
+from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
+
+from pavel import stat_config
 
 # Дату в строчном представлении конвертируем в объект
 # 01.02.2009
