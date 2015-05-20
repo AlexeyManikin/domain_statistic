@@ -24,6 +24,7 @@ __all__ = ["same_string_type_as", "as_bytes", "as_unicode",
 LOSSLESS_ENCODING = "utf-8"
 
 
+
 def same_string_type_as(type_source, content_source):
     """
     Return a string of the same type as `type_source` with the content
@@ -113,3 +114,15 @@ def recursive_str_to_unicode(target):
 
     result = pack_result.pop()
     return result
+
+
+################################################################################
+# Testing
+
+if __name__ == '__main__':
+    test_obj = {str('myList'): [str('inList1'), str('inList2')],
+                str('myTuple'): (str('inTuple1'), str('inTuple2')),
+                str('mystr'): str('text'),
+                str('myint'): 99}
+    print repr(test_obj)
+    print repr(recursive_str_to_unicode(test_obj))

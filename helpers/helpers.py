@@ -10,7 +10,7 @@ import pwd
 import time
 import signal
 from Queue import Queue
-from helpers.helperUnicode import as_default_string, as_unicode
+from helperUnicode import as_default_string, as_unicode
 from threading import Thread
 
 
