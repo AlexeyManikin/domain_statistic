@@ -13,6 +13,11 @@ class BColor():
 
     @staticmethod
     def parce_message(message):
+        """
+        Красивый вывод в консоль
+        :param message:
+        :return:
+        """
         message = message.replace("<RESET>",   RESET_SEQ).replace("<BOLD>", BOLD_SEQ)
         message = message.replace("<BLUE>",    COLOR_SEQ % (30 + BLUE))
         message = message.replace("<GREEN>",   COLOR_SEQ % (30 + GREEN))

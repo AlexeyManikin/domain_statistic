@@ -15,6 +15,10 @@ from threading import Thread
 
 
 def get_hostname():
+    """
+
+    :return:
+    """
     hostname_parts = socket.gethostname().split(".")
     if len(hostname_parts) > 0:
         return hostname_parts[0]
@@ -23,6 +27,11 @@ def get_hostname():
 
 
 def get_util(name):
+    """
+
+    :param name:
+    :return:
+    """
     command = ["/bin/which", name]
 
     env = {"PATH": "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"}
@@ -33,7 +42,11 @@ def get_util(name):
 
 
 def pid_exists(pid):
-    """Check whether pid exists in the current process table."""
+    """
+    Check whether pid exists in the current process table
+    :param pid:
+    :return:
+    """
     if pid < 0:
         return False
     try:
@@ -45,12 +58,23 @@ def pid_exists(pid):
 
 
 def kill_child_processes(parent_pid, sig=signal.SIGTERM):
+    """
+
+    :param parent_pid:
+    :param sig:
+    :return:
+    """
     p = psutil.Process(parent_pid)
     child_pid = p.children(recursive=True)
     for pid in child_pid:
         os.kill(pid.pid, sig)
 
 def microtime(get_as_float=False):
+    """
+
+    :param get_as_float:
+    :return:
+    """
     if get_as_float:
         return time.time()
     else:
@@ -58,7 +82,17 @@ def microtime(get_as_float=False):
 
 
 class SubprocessRunner(object):
+
     def __init__(self, command, logger=None, nice=19, log_prefix="subprocess", **process_options):
+        """
+
+        :param command:
+        :param logger:
+        :param nice:
+        :param log_prefix:
+        :param process_options:
+        :return:
+        """
         self.command = command
         self.nice = nice
         self.logger = logger
@@ -68,6 +102,10 @@ class SubprocessRunner(object):
         self.process_options = self._extend_options(process_options)
 
     def run(self):
+        """
+
+        :return:
+        """
         try:
             if self.logger:
                 self.logger.debug("%s : execute command %s" % (as_unicode(self.log_prefix), as_unicode(self.command)))
@@ -81,6 +119,12 @@ class SubprocessRunner(object):
         self.process = subprocess.Popen(command, **self.process_options)
 
     def wait(self, extended_return=False, write_output_in_log=True):
+        """
+
+        :param extended_return:
+        :param write_output_in_log:
+        :return:
+        """
         out, err = self.process.communicate()
 
         try:
@@ -98,6 +142,10 @@ class SubprocessRunner(object):
         return (out, err, self.process.returncode) if extended_return else out
 
     def iterate(self):
+        """
+
+        :return:
+        """
         try:
             if self.logger:
                 self.logger.debug("%s : iterate command %s" % (as_unicode(self.log_prefix), as_unicode(self.command)))
@@ -167,6 +215,11 @@ class SubprocessRunner(object):
             yield line_output
 
     def _extend_options(self, options):
+        """
+
+        :param options:
+        :return:
+        """
         options['cwd'] = options.get('cwd', None)
         options['preexec_fn'] = options.get('preexec_fn', self.pre_exec)
         options['stderr'] = options.get('stderr', subprocess.PIPE)
@@ -176,7 +229,8 @@ class SubprocessRunner(object):
 
     def pre_exec(self):
         """
-            sets nice, ionice to process
+        sets nice, ionice to process
+        :return:
         """
         os.nice(self.nice)
 
@@ -189,6 +243,11 @@ class PwRepository(object):
 
     @staticmethod
     def get(login):
+        """
+
+        :param login:
+        :return:
+        """
         if login in PwRepository.pws:
             return PwRepository.pws[login]
         else:

@@ -6,22 +6,27 @@ from datetime import datetime
 import re
 
 from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
+#from pavel import stat_config
 
-from pavel import stat_config
 
-# Дату в строчном представлении конвертируем в объект
-# 01.02.2009
-def convert_string_to_date(date):   
+def convert_string_to_date(date):
+    """
+    Дату в строчном представлении конвертируем в объект 01.02.2009
+    :type date: unicode
+    :rtype: datetime
+    """
     format = "%d.%m.%Y"
     return datetime.strptime(date, format)
-  
-# функция читает файл и сохраняет его строки как массив
+
 def load_domains_file_to_memory(file_name):
+    """
+    функция читает файл и сохраняет его строки как массив
+    :type file_name: unicode
+    :return:
+    """
     file = open(file_name, 'r')
     domains_list_as_array = []
-  
     readed_lines = 0
-    # Загружаем данные в память
     for line in file:
         # Убираем разделитель в конце строки
         line = line.strip()
@@ -33,9 +38,15 @@ def load_domains_file_to_memory(file_name):
             break
   
     return domains_list_as_array
-  
-# Получить ресурсную запись данного типа от DNS сервера  
+
 def get_dns_record(resolver, domain_name, record_type):
+    """
+    Получить ресурсную запись данного типа от DNS сервера
+    :type resolver: Resolver
+    :type domain_name: unicode
+    :type record_type: unicode
+    :return:
+    """
     dns_records = []
     try:
         answers = resolver.query(domain_name, record_type)
@@ -60,10 +71,14 @@ def get_dns_record(resolver, domain_name, record_type):
   
     return dns_records
 
-# Из списка доменов в стиле:
-# ns1.fastvps.ru, ns2.fastvps.ru делает fastvps.ru
-# если не получилось, то выдает слово conflict
 def normalize_domain_list(domain_names):
+    """
+    Из списка доменов в стиле:
+    ns1.fastvps.ru, ns2.fastvps.ru делает fastvps.ru
+    если не получилось, то выдает слово conflict
+    :param domain_names:
+    :return:
+    """
     # нормализованная форма домена
     domain_normalized = ''
   
@@ -92,8 +107,13 @@ def normalize_domain_list(domain_names):
   
     return domain_normalized
 
-# Кастомный компаратор доменов, некоторые домены нужно сравнивать сложно
 def compare_domains(domain_first, domain_second):
+    """
+    Кастомный компаратор доменов, некоторые домены нужно сравнивать сложно
+    :param domain_first:
+    :param domain_second:
+    :return:
+    """
     if domain_first == domain_second:
         return True
   
@@ -103,8 +123,12 @@ def compare_domains(domain_first, domain_second):
   
     return False
 
-# нормализация списка ASN, все номера ASN должны быть идентичны
 def normalize_asn(asn_list):
+    """
+    нормализация списка ASN, все номера ASN должны быть идентичны
+    :param asn_list:
+    :return:
+    """
     asn_normalized = ''
 
     for asn in asn_list:
