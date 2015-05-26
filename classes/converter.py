@@ -37,7 +37,7 @@ class Converter(object):
                                               use_unicode=True,
                                               charset="utf8")
 
-            self.connection.query("SET SESSION wait_timeout = 3600")
+            self.connection.query("SET SESSION wait_timeout = 36000")
             self.connection.query("SET @@sql_mode:=TRADITIONAL")
 
     def __del__(self):
@@ -45,8 +45,7 @@ class Converter(object):
         Подчисщаем за собой все
         :return:
         """
-        #self._remove_worl_dir()
-        pass
+        self._remove_worl_dir()
 
     def _create_work_dir(self):
         """

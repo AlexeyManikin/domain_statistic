@@ -21,7 +21,7 @@ from config.main import MAX_AS_NUMBER
 if __name__ == "__main__":
     try:
         asparcer = AsInet()
-        for i in range(64197, MAX_AS_NUMBER):
+        for i in range(1, MAX_AS_NUMBER):
             asparcer.update_as(i, show_log=True)
     except Exception as e:
         print "Got an exception: %s" % e.message

@@ -47,18 +47,33 @@ def load_prefix_list_from_file(file_name):
 
     return as_list
 
+def print_log(show_log,text):
+    if show_log:
+        print text
+
 if __name__ == "__main__":
+    show_log = True
     try:
+
         downloder = Downloader()
+        print_log(show_log, "Download files")
         path = downloder.download_data_for_current_date()
+
+        print_log(show_log, "Load domain in DB")
         converter = Converter(path)
         converter.load_domain_file_in_base()
+
+        print_log(show_log, "Parce rib file")
         converter.parce_file_rib_file_to()
+
+        print_log(show_log, "Get AS list")
         as_list = converter.convert_rib_to_net_as()
 
-        # save_prefix_list(as_list, path + '/work/prefix_list')
+        print_log(show_log, "Save AS list")
+        save_prefix_list(as_list, path + '/work/prefix_list')
         # as_list = load_prefix_list_from_file(path + '/work/prefix_list')
 
+        print_log(show_log, "Start resolv")
         Resolver.start_resolver(as_list)
 
     except Exception as e:

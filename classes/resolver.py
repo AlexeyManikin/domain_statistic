@@ -70,7 +70,7 @@ class Resolver(Thread):
         connection = Resolver._connect_mysql_static()
         curs = connection.cursor(MySQLdb.cursors.DictCursor)
 
-        curs.execute("SELECT id as domain_id, domain_name FROM domain_tmp WHERE delegated = 1 limit 100")
+        curs.execute("SELECT id as domain_id, domain_name FROM domain_tmp WHERE delegated = 1")
         domains_list_as_array = curs.fetchall()
 
         data_for_threads = []
@@ -178,7 +178,8 @@ class Resolver(Thread):
 
         # сюда добавляем айпишники, что находятся среди  А записей
         for domain_data in self.domains:
-            print str(self.number) + " " + domain_data['domain_name']
+            print "Thread " + str(self.number) + " domain " \
+                  + str(domain_data['domain_id']) + " " + domain_data['domain_name']
 
             domain_dns_data_array = self._get_ns_record(domain_data['domain_name'])
             normalize_value = self._get_normalaze_data(domain_dns_data_array['domain_dns_data_list'])

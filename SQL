@@ -1,0 +1,264 @@
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `as_list`
+--
+
+DROP TABLE IF EXISTS `as_list`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `as_list` (
+  `id` int(11) NOT NULL,
+  `descriptions` varchar(255) DEFAULT NULL COMMENT 'Full as descriptions',
+  `contry` varchar(45) DEFAULT NULL,
+  `date_register` datetime DEFAULT NULL,
+  `organization_register` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `domain`
+--
+
+DROP TABLE IF EXISTS `domain`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `domain` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `domain_name` varchar(256) DEFAULT NULL,
+  `registrant` varchar(64) DEFAULT NULL,
+  `tld` varchar(32) DEFAULT NULL,
+  `register_date` datetime DEFAULT NULL,
+  `register_date_end` datetime DEFAULT NULL,
+  `free_date` datetime DEFAULT NULL,
+  `delegated` enum('Y','N') DEFAULT NULL,
+  `ns` varchar(512) DEFAULT NULL,
+  `mx` varchar(512) DEFAULT NULL,
+  `a` varchar(512) DEFAULT NULL,
+  `aaaa` varchar(512) DEFAULT NULL,
+  `txt` varchar(2048) DEFAULT NULL,
+  `asn_text` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_domain_as_list_idx` (`asn_text`),
+  KEY `domain_name` (`domain_name`(255)),
+  KEY `delegated` (`delegated`),
+  KEY `tld` (`tld`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `domain_statistic`.`domain_AFTER_INSERT` AFTER INSERT ON `domain` FOR EACH ROW
+BEGIN
+	INSERT INTO domain_history(domain_id,
+							   date_start,
+							   date_end,
+                 domain_name,
+                 registrant,
+                 tld,
+                 register_date,
+                 register_date_end,
+                 free_date,
+                 delegated,
+                 ns,
+                 mx,
+                 a,
+                 aaaa,
+                 txt,
+                 asn_text)
+    VALUE(NEW.id,
+		      NOW(),
+          '2099-01-01',
+          NEW.domain_name,
+          NEW.registrant,
+          NEW.tld,
+          NEW.register_date,
+          NEW.register_date_end,
+          NEW.free_date,
+          NEW.delegated,
+          NEW.ns,
+		      NEW.mx,
+          NEW.a,
+          NEW.aaaa,
+          NEW.txt,
+          NEW.asn_text);
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `domain_statistic`.`domain_BEFORE_UPDATE` BEFORE UPDATE ON `domain` FOR EACH ROW
+BEGIN
+	IF NEW.registrant <> OLD.registrant
+     AND NEW.register_date <> OLD.register_date
+     AND NEW.register_date_end <> OLD.register_date_end
+	   AND NEW.free_date <> OLD.free_date
+	   AND NEW.delegated <> OLD.delegated
+     AND NEW.ns <> OLD.ns
+     AND NEW.mx <> OLD.mx
+     AND NEW.a <> OLD.a
+	   AND NEW.aaaa <> OLD.aaaa
+     AND NEW.txt <> OLD.txt
+     AND NEW.asn_text <> OLD.asn_text
+	THEN
+		 UPDATE domain_history
+		   SET date_end = NOW()
+		   WHERE
+				domain_id = OLD.id
+				AND id = (SELECT max(id) FROM domain_history WHERE omain_id = OLD.id);
+
+		INSERT INTO domain_history(domain_id,
+							   date_start,
+							   date_end,
+                 domain_name,
+                 registrant,
+                 tld,
+                 register_date,
+                 register_date_end,
+                 free_date,
+                 delegated,
+                 ns,
+                 mx,
+                 a,
+                 aaaa,
+                 txt,
+                 asn_text)
+			VALUE(NEW.id,
+				  NOW(),
+				  '2099-01-01',
+				  NEW.domain_name,
+				  NEW.registrant,
+				  NEW.tld,
+				  NEW.register_date,
+				  NEW.register_date_end,
+				  NEW.free_date,
+				  NEW.delegated,
+				  NEW.ns,
+				  NEW.mx,
+				  NEW.a,
+				  NEW.aaaa,
+				  NEW.txt,
+				  NEW.asn_text);
+    END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `domain_statistic`.`domain_BEFORE_DELETE` BEFORE DELETE ON `domain` FOR EACH ROW
+BEGIN
+ UPDATE domain_history
+   SET date_end = NOW()
+   WHERE
+		domain_id = OLD.id
+        AND id = (SELECT max(id) FROM domain_history WHERE domain_id = OLD.id);
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `domain_history`
+--
+
+DROP TABLE IF EXISTS `domain_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `domain_history` (
+  `id` int(11) NOT NULL,
+  `domain_id` int(11) DEFAULT NULL,
+  `date_start` varchar(45) DEFAULT NULL,
+  `date_end` varchar(45) DEFAULT NULL,
+  `domain_name` varchar(256) DEFAULT NULL,
+  `registrant` varchar(64) DEFAULT NULL,
+  `tld` varchar(32) DEFAULT NULL,
+  `register_date` datetime DEFAULT NULL,
+  `register_date_end` datetime DEFAULT NULL,
+  `free_date` datetime DEFAULT NULL,
+  `delegated` enum('Y','N') DEFAULT NULL,
+  `ns` varchar(512) DEFAULT NULL,
+  `mx` varchar(512) DEFAULT NULL,
+  `a` varchar(512) DEFAULT NULL,
+  `aaaa` varchar(512) DEFAULT NULL,
+  `txt` varchar(2048) DEFAULT NULL,
+  `asn_text` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `date` (`date_start`,`date_end`,`domain_id`),
+  KEY `domain_id` (`domain_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `domain_tmp`
+--
+
+DROP TABLE IF EXISTS `domain_tmp`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `domain_tmp` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `domain_name` varchar(256) DEFAULT NULL,
+  `registrant` varchar(64) DEFAULT NULL,
+  `tld` varchar(32) DEFAULT NULL,
+  `register_date` datetime DEFAULT NULL,
+  `register_date_end` datetime DEFAULT NULL,
+  `free_date` datetime DEFAULT NULL,
+  `delegated` enum('Y','N') DEFAULT NULL,
+  `ns` varchar(512) DEFAULT NULL,
+  `mx` varchar(512) DEFAULT NULL,
+  `a` varchar(512) DEFAULT NULL,
+  `aaaa` varchar(512) DEFAULT NULL,
+  `txt` varchar(2048) DEFAULT NULL,
+  `asn_text` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=497001 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2015-05-26  2:18:52

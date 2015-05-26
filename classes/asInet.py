@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 __author__ = 'alexeyymanikin'
 
 import re
-from helpers.helpers import *
 import dns.resolver
 import MySQLdb
 import pprint
@@ -81,7 +80,7 @@ class AsInet(object):
 
         try:
             as_info = self._get_asn_descrption(number)
-        except dns.resolver.NXDOMAIN:
+        except:
             as_info = {'AS': number,
                        'CONTRY': '',
                        'ORGANIZATION': '',
@@ -94,11 +93,11 @@ class AsInet(object):
 
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         try:
-            cursor.execute("SELECT COUNT(*) as count FROM as_list WHERE id = %s", number)
+            cursor.execute("SELECT COUNT(*) as count FROM as_list WHERE id = %s" % str(number))
         except:
             self._connect_mysql()
             cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute("SELECT COUNT(*) as count FROM as_list WHERE id = %s", number)
+            cursor.execute("SELECT COUNT(*) as count FROM as_list WHERE id = %s" % str(number))
 
         count = cursor.fetchone()
 
@@ -118,7 +117,7 @@ class AsInet(object):
                                        contry,
                                        date_register,
                                        organization_register)
-                   VALUE(%s, %s, %s, %s, %s)""", (as_info['AS'],
+                   VALUE(%s, %s, %s, %s, %s)""", (str(number),
                                                   as_info['DESCRIPTION'],
                                                   as_info['CONTRY'],
                                                   as_info['DATEREGISTER'],
@@ -136,7 +135,7 @@ class AsInet(object):
                                       as_info['CONTRY'],
                                       as_info['DATEREGISTER'],
                                       as_info['ORGANIZATION'],
-                                      as_info['AS']))
+                                      str(number)))
             self.connection.commit()
 
         return True
