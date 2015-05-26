@@ -234,9 +234,6 @@ class SubprocessRunner(object):
         """
         os.nice(self.nice)
 
-        p = psutil.Process(os.getpid())
-        p.ionice(psutil.IOPRIO_CLASS_IDLE)
-
 
 class PwRepository(object):
     pws = {}
