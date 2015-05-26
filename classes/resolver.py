@@ -12,7 +12,7 @@ import pprint
 from config.main import *
 import MySQLdb
 import sys
-
+from helpers.helpers import get_mysql_connection
 
 class Resolver(Thread):
 
@@ -47,16 +47,7 @@ class Resolver(Thread):
         Возвращаем коннект к MySQL
         :return:
         """
-        connection = MySQLdb.connect(host=MYSQL_HOST,
-                                     user=MYSQL_USER,
-                                     db=MYSQL_DATABASE,
-                                     passwd=MYSQL_PASSWD,
-                                     use_unicode=True,
-                                     charset="utf8")
-
-        connection.query("SET SESSION wait_timeout = 36000")
-        connection.query("SET @@sql_mode:=TRADITIONAL")
-        return connection
+        return get_mysql_connection()
 
     @staticmethod
     def start_resolver(net_array, count=COUNT_THREAD):

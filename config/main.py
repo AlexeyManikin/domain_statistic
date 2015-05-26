@@ -11,9 +11,10 @@ import getpass
 CURRENT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__))+'/../')
 MAX_AS_NUMBER = 500000
 
-MYSQL_HOST = '192.168.2.201'
-MYSQL_USER = 'root'
-MYSQL_PASSWD = '258da5c71b7d854456a7c89402f48593'
+MYSQL_HOST = '192.168.2.240'
+MYSQL_PORT = '13307'
+MYSQL_USER = 'domain_statistic'
+MYSQL_PASSWD = 'domain_statisticdomain_statistic'
 MYSQL_DATABASE = 'domain_statistic'
 
-COUNT_THREAD = 50
+COUNT_THREAD = 150

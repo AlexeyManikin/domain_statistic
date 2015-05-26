@@ -30,15 +30,7 @@ class Converter(object):
         if mysql_connection:
             self.connection = mysql_connection
         else:
-            self.connection = MySQLdb.connect(host=MYSQL_HOST,
-                                              user=MYSQL_USER,
-                                              db=MYSQL_DATABASE,
-                                              passwd=MYSQL_PASSWD,
-                                              use_unicode=True,
-                                              charset="utf8")
-
-            self.connection.query("SET SESSION wait_timeout = 36000")
-            self.connection.query("SET @@sql_mode:=TRADITIONAL")
+            self.connection = get_mysql_connection()
 
     def __del__(self):
         """

@@ -3,16 +3,34 @@ __author__ = 'vladislav'
 
 import psutil
 import socket
-import os
 import subprocess
 import errno
 import pwd
 import time
 import signal
+import MySQLdb
+from config.main import *
 from Queue import Queue
 from helperUnicode import as_default_string, as_unicode
 from threading import Thread
 
+
+def get_mysql_connection():
+    """
+    :return:
+    """
+    connection = MySQLdb.connect(host=MYSQL_HOST,
+                                 port=MYSQL_PORT,
+                                 user=MYSQL_USER,
+                                 db=MYSQL_DATABASE,
+                                 passwd=MYSQL_PASSWD,
+                                 use_unicode=True,
+                                 charset="utf8")
+
+    connection.query("SET SESSION wait_timeout = 36000")
+    connection.query("SET @@sql_mode:=TRADITIONAL")
+
+    return connection
 
 def get_hostname():
     """
@@ -233,6 +251,8 @@ class SubprocessRunner(object):
         :return:
         """
         os.nice(self.nice)
+        p = psutil.Process(os.getpid())
+        p.ionice(psutil.IOPRIO_CLASS_IDLE)
 
 
 class PwRepository(object):

@@ -3,6 +3,7 @@
 
 #  python-dnspython
 from datetime import datetime
+from config.eq_domain import eq_domains
 import re
 
 from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
@@ -117,8 +118,8 @@ def compare_domains(domain_first, domain_second):
     if domain_first == domain_second:
         return True
   
-    if ( stat_config.eq_domains.has_key(domain_first)  and stat_config.eq_domains[domain_first] == domain_second) or \
-        ( stat_config.eq_domains.has_key(domain_second) and stat_config.eq_domains[domain_second] == domain_first):
+    if (eq_domains.has_key(domain_first) and eq_domains[domain_first] == domain_second) or \
+        (eq_domains.has_key(domain_second) and eq_domains[domain_second] == domain_first):
         return True
   
     return False
