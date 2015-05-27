@@ -59,9 +59,8 @@ if __name__ == "__main__":
         print_log(show_log, "Download files")
         path = downloder.download_data_for_current_date()
 
-        print_log(show_log, "Load domain in DB")
+        print_log(show_log, "Unzip file")
         converter = Converter(path)
-        converter.load_domain_file_in_base()
 
         print_log(show_log, "Parce rib file")
         converter.parce_file_rib_file_to()
@@ -70,11 +69,12 @@ if __name__ == "__main__":
         as_list = converter.convert_rib_to_net_as()
 
         print_log(show_log, "Save AS list")
-        save_prefix_list(as_list, path + '/work/prefix_list')
-        # as_list = load_prefix_list_from_file(path + '/work/prefix_list')
+        save_prefix_list(as_list, path + 'prefix_list')
+        #print_log(show_log, "Load as list")
+        #as_list = load_prefix_list_from_file(path + '/prefix_list')
 
         print_log(show_log, "Start resolv")
-        Resolver.start_resolver(as_list)
+        Resolver.start_load_and_resolver_domain(as_list, path+'/work')
 
     except Exception as e:
         print "Got an exception: %s" % e.message

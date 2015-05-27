@@ -15,17 +15,20 @@ from config.main import *
 
 class Converter(object):
 
-    def __init__(self, path, mysql_connection=False):
+    def __init__(self, path, mysql_connection=False, show_log=True):
         """
         В качестве параметра передается путь до рабочей директории
         :rtype path: unicode
         """
         self.path = path
+        self.show_log = show_log
         self.work_path = self._create_work_dir()
-        self.prefix = ['ru', 'su', 'rf']
+        self.prefix = PREFIX_LIST
 
         for prefix in self.prefix:
             shutil.copy(os.path.join(self.path, prefix+'_domains.gz'), self.work_path)
+            path_archiv = os.path.join(self.work_path, prefix+"_domains.gz")
+            self.unzip_file(path_archiv)
 
         if mysql_connection:
             self.connection = mysql_connection
@@ -38,6 +41,12 @@ class Converter(object):
         :return:
         """
         self._remove_worl_dir()
+
+    def get_work_path(self):
+        """
+        :rtype: unicode
+        """
+        return self.work_path
 
     def _create_work_dir(self):
         """
@@ -55,8 +64,8 @@ class Converter(object):
         Подчищаем за собой
         :return:
         """
-        if self.work_path:
-            shutil.rmtree(self.work_path)
+        #if self.work_path:
+        #    shutil.rmtree(self.work_path)
         pass
 
     def unzip_file(self, path_file):
@@ -74,77 +83,6 @@ class Converter(object):
             return False
 
         return True
-
-    def load_domain_file_in_base(self):
-        """
-        Еще надо в БД загружать =)
-        :return:
-        """
-        cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute("TRUNCATE TABLE domain_tmp")
-        re_prefix = re.compile(r'\s*')
-
-        for prefix in self.prefix:
-
-            print "Run unzip %s" % os.path.join(self.work_path, prefix+"_domains.gz")
-            self.unzip_file(os.path.join(self.work_path, prefix+"_domains.gz"))
-            file_prefix = os.path.join(self.work_path, prefix+"_domains")
-            print "Prefix %s" % os.path.join(self.work_path, prefix+"_domains")
-
-            sql_insert = "INSERT INTO " \
-                         "domain_tmp(tld, register_date, register_date_end, free_date, domain_name, registrant," \
-                         " delegated) VALUES "
-            sql_insert_date = ""
-
-            print "Start parce"
-            file_rib_data = open(file_prefix)
-            line = file_rib_data.readline()
-            counter = 0
-            counter_all = 0
-
-            while line:
-                if counter > 999:
-                    print counter_all
-                    cursor.execute(sql_insert + sql_insert_date)
-                    self.connection.commit()
-                    sql_insert_date = ""
-                    counter = 0
-                else:
-                    if sql_insert_date != "":
-                        sql_insert_date += ", "
-
-                data = line.split("\t")
-
-                domain = re.sub(re_prefix, '', data[0])
-                registrant = re.sub(re_prefix, '', data[1])
-                register_date = re.sub(re_prefix, '', data[2])
-                register_end_date = re.sub(re_prefix, '', data[3])
-                free_date = re.sub(re_prefix, '', data[4])
-                deligated = re.sub(re_prefix, '', data[5])
-
-                if deligated == '1':
-                    deligated = 'Y'
-                else:
-                    deligated = 'N'
-
-                sql_insert_date += """
-                                    ('%s',
-                                    STR_TO_DATE('%s', '%%d.%%m.%%Y'),
-                                    STR_TO_DATE('%s', '%%d.%%m.%%Y'),
-                                    STR_TO_DATE('%s', '%%d.%%m.%%Y'),
-                                    LOWER('%s'),
-                                    LOWER('%s'),
-                                    '%s')""" % (prefix,
-                                                register_date,
-                                                register_end_date,
-                                                free_date,
-                                                domain,
-                                                registrant,
-                                                deligated)
-
-                counter += 1
-                counter_all += 1
-                line = file_rib_data.readline()
 
     def parce_file_rib_file_to(self, path_rib_file=False, path_to=False):
         """
