@@ -65,13 +65,13 @@ if __name__ == "__main__":
         converter.parce_file_rib_file_to()
 
         print_log(show_log, "Get AS list")
-        as_list = converter.convert_rib_to_net_as()
+        as_list_text = converter.convert_rib_to_net_as()
 
         print_log(show_log, "Save AS list")
-        save_prefix_list(as_list, os.path.abspath(os.path.join(path, 'prefix_list')))
+        save_prefix_list(as_list_text, os.path.abspath(os.path.join(path, 'prefix_list')))
 
-        # print_log(show_log, "Load as list")
-        # as_list = load_prefix_list_from_file(path + '/prefix_list')
+        print_log(show_log, "Load as list")
+        as_list = load_prefix_list_from_file(os.path.abspath(os.path.join(path, 'prefix_list')))
 
         print_log(show_log, "Start resolv")
         Resolver.start_load_and_resolver_domain(as_list, os.path.abspath(os.path.join(path, 'work')))
