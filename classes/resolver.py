@@ -178,6 +178,9 @@ class Resolver(Thread):
                             elif dns_type == 'ns':
                                 set_statement += ", %s%s = '%s'" % (dns_type, (int(value)+1),
                                                                     self.connection.escape_string(values[value])[0:44])
+                            elif dns_type == 'aaaa':
+                                set_statement += ", %s%s = '%s'" % (dns_type, (int(value)+1),
+                                                                    self.connection.escape_string(values[value])[0:54])
                             else:
                                 set_statement += ", %s%s = '%s'" % (dns_type, (int(value)+1),
                                                                     self.connection.escape_string(values[value]))
@@ -265,6 +268,8 @@ class Resolver(Thread):
                             defaul_value[dns_type][i] = "'%s'" % self.connection.escape_string(dns_row)[0:44]
                         elif dns_type == 'mx':
                             defaul_value[dns_type][i] = "'%s'" % self.connection.escape_string(dns_row)[0:69]
+                        elif dns_type == 'aaaa':
+                            defaul_value[dns_type][i] = "'%s'" % self.connection.escape_string(dns_row)[0:54]
                         else:
                             defaul_value[dns_type][i] = "'%s'" % self.connection.escape_string(dns_row)
                         i += 1

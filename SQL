@@ -59,11 +59,11 @@ CREATE TABLE `domain` (
   `asn2` int(11) DEFAULT NULL,
   `asn3` int(11) DEFAULT NULL,
   `asn4` int(11) DEFAULT NULL,
-  `aaaa1` varchar(35) DEFAULT NULL,
-  `aaaa2` varchar(35) DEFAULT NULL,
-  `aaaa3` varchar(35) DEFAULT NULL,
-  `aaaa4` varchar(35) DEFAULT NULL,
-  `cname` varchar(45) DEFAULT NULL,
+  `aaaa1` varchar(55) DEFAULT NULL,
+  `aaaa2` varchar(55) DEFAULT NULL,
+  `aaaa3` varchar(55) DEFAULT NULL,
+  `aaaa4` varchar(55) DEFAULT NULL,
+  `cname` varchar(55) DEFAULT NULL,
   `load_today` enum('Y','N') DEFAULT 'Y',
   `last_update` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -145,6 +145,11 @@ BEGIN
        OR NEW.asn2 <> OLD.asn2 
        OR NEW.asn3 <> OLD.asn3 
        OR NEW.asn4 <> OLD.asn4
+       OR NEW.aaaa1 <> OLD.aaaa1
+       OR NEW.aaaa2 <> OLD.aaaa2
+       OR NEW.aaaa3 <> OLD.aaaa3
+       OR NEW.aaaa4 <> OLD.aaaa4
+       OR NEW.cname <> OLD.cname
 	THEN
 		  SELECT max(id) INTO max_id FROM domain_history WHERE domain_id = OLD.id;
 		  UPDATE domain_history SET date_end = NOW() WHERE id = max_id;
@@ -229,11 +234,11 @@ CREATE TABLE `domain_history` (
   `asn2` int(11) DEFAULT NULL,
   `asn3` int(11) DEFAULT NULL,
   `asn4` int(11) DEFAULT NULL,
-  `aaaa1` varchar(35) DEFAULT NULL,
-  `aaaa2` varchar(35) DEFAULT NULL,
-  `aaaa3` varchar(35) DEFAULT NULL,
-  `aaaa4` varchar(35) DEFAULT NULL,
-  `cname` varchar(45) DEFAULT NULL,
+  `aaaa1` varchar(55) DEFAULT NULL,
+  `aaaa2` varchar(55) DEFAULT NULL,
+  `aaaa3` varchar(55) DEFAULT NULL,
+  `aaaa4` varchar(55) DEFAULT NULL,
+  `cname` varchar(55) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=81778 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
