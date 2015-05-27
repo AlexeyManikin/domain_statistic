@@ -14,6 +14,7 @@ import MySQLdb
 import sys
 from helpers.helpers import get_mysql_connection
 
+
 class Resolver(Thread):
 
     def __init__(self, number, domains_list, dns_server, array_net):
