@@ -5,7 +5,6 @@ __author__ = 'alexeyymanikin'
 
 import shutil
 import re
-import pprint
 import MySQLdb
 from classes.command.gunzip import Gunzip
 from classes.command.bgpdump import Bgpdump
@@ -15,7 +14,7 @@ from config.main import *
 
 class Converter(object):
 
-    def __init__(self, path, mysql_connection=False, show_log=True):
+    def __init__(self, path, show_log=True):
         """
         В качестве параметра передается путь до рабочей директории
         :rtype path: unicode
@@ -27,13 +26,10 @@ class Converter(object):
 
         for prefix in self.prefix:
             shutil.copy(os.path.join(self.path, prefix+'_domains.gz'), self.work_path)
-            path_archiv = os.path.join(self.work_path, prefix+"_domains.gz")
-            self.unzip_file(path_archiv)
+            path_archive = os.path.join(self.work_path, prefix+"_domains.gz")
+            Converter.unzip_file(path_archive)
 
-        if mysql_connection:
-            self.connection = mysql_connection
-        else:
-            self.connection = get_mysql_connection()
+        self.connection = get_mysql_connection()
 
     def __del__(self):
         """
@@ -41,6 +37,7 @@ class Converter(object):
         :return:
         """
         self._remove_worl_dir()
+        self.connection.close()
 
     def get_work_path(self):
         """
@@ -53,7 +50,7 @@ class Converter(object):
         Создает директорию с текущей датой в download
         :rtype: unicode
         """
-        work_path = os.path.abspath(os.path.join(self.path, 'work'))
+        work_path = self.get_work_path()
         if not os.path.exists(work_path):
             os.makedirs(work_path)
 
@@ -64,11 +61,11 @@ class Converter(object):
         Подчищаем за собой
         :return:
         """
-        #if self.work_path:
-        #    shutil.rmtree(self.work_path)
-        pass
+        if self.work_path:
+            shutil.rmtree(self.work_path)
 
-    def unzip_file(self, path_file):
+    @staticmethod
+    def unzip_file(path_file):
         """
         :rtype path_file: unicode
         :return:
@@ -95,8 +92,8 @@ class Converter(object):
             path_rib_file = os.path.abspath(os.path.join(self.path, 'rib.bz2'))
             path_to = os.path.abspath(os.path.join(self.work_path, 'rib'))
 
-        bgpdump = Bgpdump(path_rib_file)
-        command = bgpdump.get_command()
+        bgp_dump = Bgpdump(path_rib_file)
+        command = bgp_dump.get_command()
 
         shutil.rmtree(path_to, ignore_errors=True)
         file_rib = open(path_to, 'w')

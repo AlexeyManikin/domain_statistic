@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 __author__ = 'alexeyymanikin'
 
 import datetime
-from config.main import *
 from classes.command.wget import Wget
 from helpers.helpers import *
 import shutil
@@ -74,7 +73,7 @@ class Downloader(object):
                       {'url': 'https://partner.r01.ru/zones/su_domains.gz', 'file_name': 'su_domains.gz'},
                       {'url': 'https://partner.r01.ru/zones/rf_domains.gz', 'file_name': 'rf_domains.gz'},
                       {'url': 'http://archive.routeviews.org/bgpdata/%s/RIBS/rib.%s.0600.bz2'
-                               % (now_date.strftime("%Y.%m"), now_date.strftime("%Y%m%d")), 'file_name': 'rib.bz2'}]
+                              % (now_date.strftime("%Y.%m"), now_date.strftime("%Y%m%d")), 'file_name': 'rib.bz2'}]
 
         path = self.create_data_dir()
 

@@ -6,7 +6,7 @@ __author__ = 'alexeyymanikin'
 import sys
 from config.main import *
 
-PROGRAM_NAME = 'console'
+PROGRAM_NAME = 'update_domain'
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 sys.path.insert(0, CURRENT_DIR)
@@ -47,7 +47,7 @@ def load_prefix_list_from_file(file_name):
 
     return as_list
 
-def print_log(show_log,text):
+def print_log(show_log, text):
     if show_log:
         print text
 
@@ -69,14 +69,14 @@ if __name__ == "__main__":
         as_list = converter.convert_rib_to_net_as()
 
         print_log(show_log, "Save AS list")
-        save_prefix_list(as_list, path + 'prefix_list')
-        #print_log(show_log, "Load as list")
-        #as_list = load_prefix_list_from_file(path + '/prefix_list')
+        save_prefix_list(as_list, os.path.abspath(os.path.join(path, 'prefix_list')))
+
+        # print_log(show_log, "Load as list")
+        # as_list = load_prefix_list_from_file(path + '/prefix_list')
 
         print_log(show_log, "Start resolv")
-        Resolver.start_load_and_resolver_domain(as_list, path+'/work')
+        Resolver.start_load_and_resolver_domain(as_list, os.path.abspath(os.path.join(path, 'work')))
 
     except Exception as e:
         print "Got an exception: %s" % e.message
         print traceback.format_exc()
-# EOF

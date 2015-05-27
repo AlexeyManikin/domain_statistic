@@ -1,6 +1,8 @@
 Debian 7/...
 Ununtu 14.04/...
 
+
+
 0) Tools: apt-get install -y python-pip python-all-dev
 
 1) MySQLdb:
