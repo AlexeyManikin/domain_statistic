@@ -19,7 +19,7 @@ DROP TABLE IF EXISTS `as_list`;
 CREATE TABLE `as_list` (
   `id` int(11) NOT NULL,
   `descriptions` varchar(255) DEFAULT NULL COMMENT 'Full as descriptions',
-  `contry` varchar(45) DEFAULT NULL,
+  `country` varchar(45) DEFAULT NULL,
   `date_register` datetime DEFAULT NULL,
   `organization_register` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`)

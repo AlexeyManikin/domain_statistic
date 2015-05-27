@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 # Служебная библиотека
 
-#  python-dnspython
 from datetime import datetime
 from config.eq_domain import eq_domains
 import re
-
 from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
-#from pavel import stat_config
-
 
 def convert_string_to_date(date):
     """
@@ -34,7 +30,7 @@ def load_domains_file_to_memory(file_name):
         domain_data = line.split("\t")
         domains_list_as_array.append(domain_data)
   
-        readed_lines = readed_lines + 1
+        readed_lines += 1
         if readed_lines > 100:
             break
   

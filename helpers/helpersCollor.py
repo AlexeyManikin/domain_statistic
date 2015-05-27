@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-__author__ = 'Alexey Y Manikin alexey@beget.ru'
+__author__ = 'alexeyymanikin'
 
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
 
