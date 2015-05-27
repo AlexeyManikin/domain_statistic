@@ -347,7 +347,6 @@ class Resolver(Thread):
         :return:
         """
         added_domains = 0
-        insert_sql = ''
         re_prefix = re.compile(r'\s*')
         self._connect_mysql()
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -373,7 +372,7 @@ class Resolver(Thread):
                              'domain': domain,
                              'prefix': domain_data['prefix']}
 
-            cursor.execute("SELECT id FROM domain WHERE domain_name = LOWER(%s)", domain)
+            cursor.execute("SELECT id FROM domain WHERE domain_name = LOWER('%s')" % domain)
             domain_id = cursor.fetchone()
 
             if delegated == 'Y':

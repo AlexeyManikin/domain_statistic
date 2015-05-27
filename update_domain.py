@@ -54,7 +54,6 @@ def print_log(show_log, text):
 if __name__ == "__main__":
     show_log = True
     try:
-
         downloder = Downloader()
         print_log(show_log, "Download files")
         path = downloder.download_data_for_current_date()
