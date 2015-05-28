@@ -65,9 +65,8 @@ def print_log(log_flag, text):
 if __name__ == "__main__":
     show_log = True
     try:
-        loader = Downloader()
         print_log(show_log, "Download files")
-        path = loader.download_data_for_current_date()
+        path = Downloader.download_data_for_current_date()
 
         print_log(show_log, "Unzip file")
         converter = Converter(path)

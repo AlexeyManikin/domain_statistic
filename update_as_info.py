@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 __author__ = 'alexeyymanikin'
 
-
 import sys
 import os
 
@@ -15,14 +14,12 @@ logfile = os.path.join(CURRENT_DIR, '%s.debug' % PROGRAM_NAME)
 
 import traceback
 from classes.asInet import AsInet
-from config.main import MAX_AS_NUMBER
 
 
 if __name__ == "__main__":
     try:
         as_parser = AsInet()
-        for i in range(1, MAX_AS_NUMBER):
-            as_parser.update_as(i, show_log=True)
+        as_parser.parsing_as(show_log=True)
     except Exception as e:
         print "Got an exception: %s" % e.message
         print traceback.format_exc()
