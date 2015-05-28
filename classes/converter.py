@@ -36,7 +36,7 @@ class Converter(object):
         Подчисщаем за собой все
         :return:
         """
-        self._remove_worl_dir()
+        self._remove_work_dir()
         self.connection.close()
 
     def get_work_path(self):
@@ -50,13 +50,13 @@ class Converter(object):
         Создает директорию с текущей датой в download
         :rtype: unicode
         """
-        work_path = self.get_work_path()
+        work_path = os.path.abspath(os.path.join(self.path, 'work'))
         if not os.path.exists(work_path):
             os.makedirs(work_path)
 
         return work_path
 
-    def _remove_worl_dir(self):
+    def _remove_work_dir(self):
         """
         Подчищаем за собой
         :return:
