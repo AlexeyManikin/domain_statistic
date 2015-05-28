@@ -8,7 +8,6 @@ from helpers.utils import *
 import dns.resolver
 import SubnetTree
 from helpers.helperUnicode import *
-import pprint
 from config.main import *
 import MySQLdb
 import sys
@@ -48,7 +47,7 @@ class Resolver(Thread):
     @staticmethod
     def start_load_and_resolver_domain(net_array, work_path, count=COUNT_THREAD):
         """
-        Запускам процессы резолвинга
+        Запускам процессы резолвинга, процесс должен быть синглинтоном
         :param net_array:
         :param count:
         :return:
@@ -77,10 +76,10 @@ class Resolver(Thread):
         threads_list = []
 
         for i in range(0, count):
-            resovler = Resolver(i,  data_for_threads[i], '127.0.0.1', net_array)
-            resovler.daemon = True
-            threads_list.append(resovler)
-            resovler.start()
+            resolver = Resolver(i,  data_for_threads[i], '127.0.0.1', net_array)
+            resolver.daemon = True
+            threads_list.append(resolver)
+            resolver.start()
 
         print "Wait for threads finish..."
         for thread in threads_list:
@@ -93,7 +92,9 @@ class Resolver(Thread):
         connection = get_mysql_connection()
         cursor = connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("DELETE FROM domain WHERE load_today = 'N'")
-        cursor.execute("UPDATE  domain SET load_today = 'N'")
+        cursor.execute("SET @TRIGGER_DISABLED = 1")
+        cursor.execute("UPDATE domain SET load_today = 'N'")
+        cursor.execute("SET @TRIGGER_DISABLED = 0")
         connection.commit()
         connection.close()
 
