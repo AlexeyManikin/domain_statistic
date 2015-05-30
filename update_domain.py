@@ -15,6 +15,7 @@ logfile = os.path.join(CURRENT_DIR, '%s.debug' % PROGRAM_NAME)
 import traceback
 import SubnetTree
 from helpers.helperUnicode import *
+from helpers.helpers import check_prog_run
 from classes.downloader import Downloader
 from classes.converter import Converter
 from classes.resolver import Resolver
@@ -65,9 +66,12 @@ def print_log(log_flag, text):
 if __name__ == "__main__":
     show_log = True
     try:
-        loader = Downloader()
+        if check_prog_run(PROGRAM_NAME):
+            print "Program %s already running" % PROGRAM_NAME
+            sys.exit(1)
+
         print_log(show_log, "Download files")
-        path = loader.download_data_for_current_date()
+        path = Downloader.download_data_for_current_date()
 
         print_log(show_log, "Unzip file")
         converter = Converter(path)

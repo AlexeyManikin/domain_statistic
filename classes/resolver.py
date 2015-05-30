@@ -8,11 +8,12 @@ from helpers.utils import *
 import dns.resolver
 import SubnetTree
 from helpers.helperUnicode import *
-import pprint
 from config.main import *
 import MySQLdb
 import sys
+from collections import defaultdict
 from helpers.helpers import get_mysql_connection
+
 
 class Resolver(Thread):
 
@@ -38,13 +39,15 @@ class Resolver(Thread):
         # The number of seconds to wait for a response from a server, before timing out.
         self.resolver.timeout = 3.0
 
-        self.ip_addr = {}
+        self.list_ip_address = {}
         self.array_net = array_net
+
+        self.dns_type_length = {'a': 16, 'aaaa': 54, 'mx': 69, 'txt': 254, 'ns': 44, 'cname': 44}
 
     @staticmethod
     def start_load_and_resolver_domain(net_array, work_path, count=COUNT_THREAD):
         """
-        Запускам процессы резолвинга
+        Запускам процессы резолвинга, процесс должен быть синглинтоном
         :param net_array:
         :param count:
         :return:
@@ -73,10 +76,10 @@ class Resolver(Thread):
         threads_list = []
 
         for i in range(0, count):
-            resovler = Resolver(i,  data_for_threads[i], '127.0.0.1', net_array)
-            resovler.daemon = True
-            threads_list.append(resovler)
-            resovler.start()
+            resolver = Resolver(i,  data_for_threads[i], '127.0.0.1', net_array)
+            resolver.daemon = True
+            threads_list.append(resolver)
+            resolver.start()
 
         print "Wait for threads finish..."
         for thread in threads_list:
@@ -89,13 +92,14 @@ class Resolver(Thread):
         connection = get_mysql_connection()
         cursor = connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("DELETE FROM domain WHERE load_today = 'N'")
-        cursor.execute("UPDATE  domain SET load_today = 'N'")
+        cursor.execute("SET @TRIGGER_DISABLED = 1")
+        cursor.execute("UPDATE domain SET load_today = 'N'")
+        cursor.execute("SET @TRIGGER_DISABLED = 0")
         connection.commit()
         connection.close()
 
     def _connect_mysql(self):
         """
-        :param connection:
         :return:
         """
         self.connection = get_mysql_connection()
@@ -110,10 +114,8 @@ class Resolver(Thread):
 
         # получаем все интересные нам типы записей
         for record_type in ('NS', 'MX', 'A', 'TXT', 'AAAA', 'CNAME'):
-            # получаем данные в виде массива
             array_data = get_dns_record(self.resolver, domain_name, record_type)
             array_data.sort()
-
             # часть оставляем во вложенных массивах для пост-обработки
             domain_dns_data_list[record_type.lower()] = array_data
 
@@ -125,19 +127,16 @@ class Resolver(Thread):
         :param domain_dns_data_list:
         :return:
         """
-        # список АСН
         asn_for_a_records_array = []
         if len(domain_dns_data_list['a']) > 0:
             for ip in domain_dns_data_list['a']:
-                bip = as_bytes(ip)
-                if not self.ip_addr.has_key(bip):
+                ip_as_str_byte = as_bytes(ip)
+                if ip_as_str_byte not in self.list_ip_address:
                     try:
-                        self.ip_addr[bip] = self.array_net[bip]
+                        self.list_ip_address[ip_as_str_byte] = self.array_net[ip_as_str_byte]
                     except KeyError:
-                        self.ip_addr[bip] = '-1'
-
-                asn_for_a_records_array.append(self.ip_addr[bip])
-
+                        self.list_ip_address[ip_as_str_byte] = '-1'
+                asn_for_a_records_array.append(self.list_ip_address[ip_as_str_byte])
         return asn_for_a_records_array
 
     def _update_domain(self, dns_data, as_data, domain_id, register_info):
@@ -154,39 +153,33 @@ class Resolver(Thread):
 
         if register_info['delegated'] == 'Y':
             for dns_type in dns_data:
-                if dns_type == 'txt':
+                if dns_type == 'txt' or dns_type == 'cname':
                     set_statement += ", txt = '%s'" \
-                                     % (self.connection.escape_string(" ".join(dns_data[dns_type])[0:254]))
-                elif dns_type == 'cname':
-                    set_statement += ", cname = '%s'" \
-                                     % (self.connection.escape_string(" ".join(dns_data[dns_type])[0:44]))
+                                     % (self.connection.escape_string(
+                                        " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]])
+                                        )
+
                 else:
                     values = {0: None, 1: None, 2: None, 3: None}
                     i = 0
-                    for recodr in dns_data[dns_type]:
-                        if recodr != '' and i <= 3:
-                            values[i] = recodr
+                    for record in dns_data[dns_type]:
+                        if record != '' and i <= 3:
+                            values[i] = record
                             i += 1
 
                     for value in values:
                         if values[value] is None or values[value] == '':
                             set_statement += ", %s%s = NULL" % (dns_type, (int(value)+1))
                         else:
-                            if dns_type == 'mx':
-                                set_statement += ", %s%s = '%s'" % (dns_type, (int(value)+1),
-                                                                    self.connection.escape_string(values[value])[0:69])
-                            elif dns_type == 'ns':
-                                set_statement += ", %s%s = '%s'" % (dns_type, (int(value)+1),
-                                                                    self.connection.escape_string(values[value])[0:44])
-                            else:
-                                set_statement += ", %s%s = '%s'" % (dns_type, (int(value)+1),
-                                                                    self.connection.escape_string(values[value]))
+                            set_statement += ", %s%s = '%s'" % (dns_type, (int(value)+1),
+                                                                self.connection.escape_string(
+                                                                    values[value])[0:self.dns_type_length[dns_type]])
 
             values = {0: None, 1: None, 2: None, 3: None}
             i = 0
-            for recodr in as_data:
-                if recodr != '' and i <= 3:
-                    values[i] = recodr
+            for record in as_data:
+                if record != '' and i <= 3:
+                    values[i] = record
                     i += 1
 
             for value in values:
@@ -216,123 +209,43 @@ class Resolver(Thread):
                      " delegated, a1, a2, a3, a4, ns1, ns2, ns3, ns4, mx1, mx2, mx3, mx4, txt, asn1, " \
                      "asn2, asn3, asn4, aaaa1, aaaa2, aaaa3, aaaa4, cname, last_update) VALUE "
 
-        defaul_value = {}
-        defaul_value['a'] = {}
-        defaul_value['a'][0] = 'NULL'
-        defaul_value['a'][1] = 'NULL'
-        defaul_value['a'][2] = 'NULL'
-        defaul_value['a'][3] = 'NULL'
-
-        defaul_value['ns'] = {}
-        defaul_value['ns'][0] = 'NULL'
-        defaul_value['ns'][1] = 'NULL'
-        defaul_value['ns'][2] = 'NULL'
-        defaul_value['ns'][3] = 'NULL'
-
-        defaul_value['mx'] = {}
-        defaul_value['mx'][0] = 'NULL'
-        defaul_value['mx'][1] = 'NULL'
-        defaul_value['mx'][2] = 'NULL'
-        defaul_value['mx'][3] = 'NULL'
-
-        defaul_value['aaaa'] = {}
-        defaul_value['aaaa'][0] = 'NULL'
-        defaul_value['aaaa'][1] = 'NULL'
-        defaul_value['aaaa'][2] = 'NULL'
-        defaul_value['aaaa'][3] = 'NULL'
-
-        defaul_value['txt'] = {'txt': 'NULL'}
-        defaul_value['cname']= {'cname': 'NULL'}
-
-        defaul_value['asn'] = {}
-        defaul_value['asn'][0] = 'NULL'
-        defaul_value['asn'][1] = 'NULL'
-        defaul_value['asn'][2] = 'NULL'
-        defaul_value['asn'][3] = 'NULL'
+        default_value = defaultdict(lambda: defaultdict(lambda: 'NULL'))
 
         for dns_type in dns_data:
-            if dns_type == 'txt':
-                defaul_value[dns_type][dns_type] = "'%s'" \
-                                                   % self.connection.escape_string(" ".join(dns_data[dns_type])[0:254])
-            elif dns_type == 'cname':
-                defaul_value[dns_type][dns_type] = "'%s'" \
-                                                   % self.connection.escape_string(" ".join(dns_data[dns_type])[0:44])
+            if dns_type == 'txt' or dns_type == 'cname':
+                default_value[dns_type][dns_type] = "'%s'" \
+                                                    % self.connection.escape_string(
+                    " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]])
             else:
                 i = 0
                 for dns_row in dns_data[dns_type]:
                     if dns_row != '' and i <= 3:
-                        if dns_type == 'ns':
-                            defaul_value[dns_type][i] = "'%s'" % self.connection.escape_string(dns_row)[0:44]
-                        elif dns_type == 'mx':
-                            defaul_value[dns_type][i] = "'%s'" % self.connection.escape_string(dns_row)[0:69]
-                        else:
-                            defaul_value[dns_type][i] = "'%s'" % self.connection.escape_string(dns_row)
+                        default_value[dns_type][i] = "'%s'" \
+                                                     % self.connection.escape_string(
+                            dns_row)[0:self.dns_type_length[dns_type]]
                         i += 1
 
         i = 0
         for dns_row in as_data:
             if dns_row != '' and i <= 3:
-                defaul_value['asn'][i] = "'%s'" % self.connection.escape_string(dns_row)
+                default_value['asn'][i] = "'%s'" % self.connection.escape_string(dns_row)
                 i += 1
 
-        sql_insert_date = """ ('%s',
-                                STR_TO_DATE('%s', '%%d.%%m.%%Y'),
-                                STR_TO_DATE('%s', '%%d.%%m.%%Y'),
-                                STR_TO_DATE('%s', '%%d.%%m.%%Y'),
-                                LOWER('%s'),
-                                LOWER('%s'),
-                                '%s',
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                %s,
-                                NOW())""" % (register_info['prefix'],
-                                            register_info['register_date'],
-                                            register_info['register_end_date'],
-                                            register_info['free_date'],
-                                            register_info['domain'],
-                                            register_info['registrant'],
-                                            register_info['delegated'],
-                                            defaul_value['a'][0],
-                                            defaul_value['a'][1],
-                                            defaul_value['a'][2],
-                                            defaul_value['a'][3],
-                                            defaul_value['ns'][0],
-                                            defaul_value['ns'][1],
-                                            defaul_value['ns'][2],
-                                            defaul_value['ns'][3],
-                                            defaul_value['mx'][0],
-                                            defaul_value['mx'][1],
-                                            defaul_value['mx'][2],
-                                            defaul_value['mx'][3],
-                                            defaul_value['txt']['txt'],
-                                            defaul_value['asn'][0],
-                                            defaul_value['asn'][1],
-                                            defaul_value['asn'][2],
-                                            defaul_value['asn'][3],
-                                            defaul_value['aaaa'][0],
-                                            defaul_value['aaaa'][1],
-                                            defaul_value['aaaa'][2],
-                                            defaul_value['aaaa'][3],
-                                            defaul_value['cname']['cname'])
+        sql_insert_date = """ ('%s', STR_TO_DATE('%s', '%%d.%%m.%%Y'), STR_TO_DATE('%s', '%%d.%%m.%%Y'),
+                                STR_TO_DATE('%s', '%%d.%%m.%%Y'), LOWER('%s'), LOWER('%s'),
+                                '%s', %s, %s, %s, %s, %s, %s,  %s, %s, %s, %s, %s, %s, %s,
+                                %s, %s, %s, %s, %s, %s, %s, %s, %s,  NOW())""" \
+                          % (register_info['prefix'], register_info['register_date'],
+                             register_info['register_end_date'], register_info['free_date'],
+                             register_info['domain'], register_info['registrant'], register_info['delegated'],
+                             default_value['a'][0], default_value['a'][1],  default_value['a'][2],
+                             default_value['a'][3], default_value['ns'][0], default_value['ns'][1],
+                             default_value['ns'][2], default_value['ns'][3], default_value['mx'][0],
+                             default_value['mx'][1], default_value['mx'][2],  default_value['mx'][3],
+                             default_value['txt']['txt'], default_value['asn'][0], default_value['asn'][1],
+                             default_value['asn'][2], default_value['asn'][3],
+                             default_value['aaaa'][0], default_value['aaaa'][1], default_value['aaaa'][2],
+                             default_value['aaaa'][3], default_value['cname']['cname'])
 
         return sql_insert + sql_insert_date
 
@@ -342,7 +255,6 @@ class Resolver(Thread):
         :return:
         """
         added_domains = 0
-        insert_sql = ''
         re_prefix = re.compile(r'\s*')
         self._connect_mysql()
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -368,7 +280,7 @@ class Resolver(Thread):
                              'domain': domain,
                              'prefix': domain_data['prefix']}
 
-            cursor.execute("SELECT id FROM domain WHERE domain_name = LOWER(%s)", domain)
+            cursor.execute("SELECT id FROM domain WHERE domain_name = LOWER('%s')" % domain)
             domain_id = cursor.fetchone()
 
             if delegated == 'Y':

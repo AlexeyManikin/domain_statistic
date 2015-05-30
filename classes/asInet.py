@@ -8,18 +8,21 @@ import dns.resolver
 import MySQLdb
 import pprint
 from helpers.helpers import get_mysql_connection
+from config.main import MAX_AS_NUMBER
 
 
 class AsInet(object):
 
     def __init__(self):
         """
-        :param mysql_connection:
         :return:
         """
         self.resolver = dns.resolver.Resolver()
         self.resolver.timeout = 1
         self.resolver.lifetime = 1
+
+        self.re_plus = re.compile('\s+')
+        self.re_all = re.compile('\s*')
 
         self.connection = get_mysql_connection()
 
@@ -30,6 +33,16 @@ class AsInet(object):
         """
         self.connection.close()
 
+    def parsing_as(self, show_log=False, max_as=MAX_AS_NUMBER):
+        """
+        парсим названия AS
+        :type show_log:  bool
+        :type max_as: int
+        :return:
+        """
+        for i in range(1, max_as):
+            self.update_as(i, show_log=show_log)
+
     def _get_asn_description(self, number):
         """
         :type number: int
@@ -38,26 +51,25 @@ class AsInet(object):
         answers = self.resolver.query('AS' + str(number) + '.asn.cymru.com', 'TXT')
         asn_name = re.sub(r'"', '', answers[0].to_text())
         list_as_info = asn_name.split('|')
-        re_plus = re.compile('\s+')
 
         try:
-            description = re.sub(re_plus, ' ', list_as_info[4])
+            description = re.sub(self.re_plus, ' ', list_as_info[4])
         except IndexError:
             description = ''
 
         try:
-            date_register = re.sub(r'\s*', '', list_as_info[3])
+            date_register = re.sub(self.re_all, '', list_as_info[3])
         except IndexError:
             date_register = ''
 
         try:
-            country = re.sub(re_plus, '', list_as_info[1])
+            country = re.sub(self.re_plus, '', list_as_info[1])
         except IndexError:
             country = ''
 
-        return {'AS': re.sub(re_plus, ' ', list_as_info[0]),
+        return {'AS': re.sub(self.re_plus, ' ', list_as_info[0]),
                 'COUNTRY': country,
-                'ORGANIZATION': re.sub(re_plus, ' ', list_as_info[2]),
+                'ORGANIZATION': re.sub(self.re_plus, ' ', list_as_info[2]),
                 'DATE_REGISTER': date_register,
                 'DESCRIPTION': description}
 
@@ -112,8 +124,6 @@ class AsInet(object):
                                                   as_info['COUNTRY'],
                                                   as_info['DATE_REGISTER'],
                                                   as_info['ORGANIZATION']))
-            self.connection.commit()
-
         else:
             cursor.execute(
                 """UPDATE  as_list SET
@@ -126,6 +136,5 @@ class AsInet(object):
                                       as_info['DATE_REGISTER'],
                                       as_info['ORGANIZATION'],
                                       str(number)))
-            self.connection.commit()
-
+        self.connection.commit()
         return True

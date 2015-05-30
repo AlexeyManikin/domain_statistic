@@ -13,7 +13,22 @@ from config.main import *
 from Queue import Queue
 from helperUnicode import as_default_string, as_unicode
 from threading import Thread
+import socket
 
+
+def check_prog_run(process_name):
+    """
+    Проверка на запущенность программы
+    :type process_name: unicode
+    :return:
+    """
+    global lock_socket   # Without this our lock gets garbage collected
+    lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+    try:
+        lock_socket.bind('\0' + process_name)
+        return False
+    except socket.error:
+        return True
 
 def get_mysql_connection():
     """

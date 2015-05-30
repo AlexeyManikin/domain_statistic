@@ -11,9 +11,6 @@ import shutil
 
 class Downloader(object):
 
-    def __init__(self):
-        pass
-
     @staticmethod
     def create_data_dir():
         """
@@ -51,7 +48,8 @@ class Downloader(object):
 
         return True
 
-    def download_data_for_current_date(self):
+    @staticmethod
+    def download_data_for_current_date():
         """
         Скачивает все необходимы файлы для парсинга
 
@@ -75,13 +73,13 @@ class Downloader(object):
                       {'url': 'http://archive.routeviews.org/bgpdata/%s/RIBS/rib.%s.0600.bz2'
                               % (now_date.strftime("%Y.%m"), now_date.strftime("%Y%m%d")), 'file_name': 'rib.bz2'}]
 
-        path = self.create_data_dir()
+        path = Downloader.create_data_dir()
 
         for item in files_list:
             path_file = os.path.abspath(os.path.join(path, item['file_name']))
             print "Download %s to %s " % (item['url'], path_file)
             shutil.rmtree(path_file, ignore_errors=True)
-            self.download_file(item['url'], path_file)
+            Downloader.download_file(item['url'], path_file)
             if os.path.getsize(path_file) == 0:
                 raise Exception("Can`t download file %s to %s" % (item['url'], path_file))
 

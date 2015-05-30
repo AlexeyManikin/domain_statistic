@@ -5,7 +5,6 @@ __author__ = 'alexeyymanikin'
 
 import shutil
 import re
-import MySQLdb
 from classes.command.gunzip import Gunzip
 from classes.command.bgpdump import Bgpdump
 from helpers.helpers import *
