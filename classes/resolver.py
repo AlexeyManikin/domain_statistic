@@ -34,10 +34,10 @@ class Resolver(Thread):
         # стандартное время ожидания велико, его нужно уменьшить
 
         # The total number of seconds to spend trying to get an answer to the question.
-        self.resolver.lifetime = 3.0
+        self.resolver.lifetime = DEFAULT_TIMEOUT
 
         # The number of seconds to wait for a response from a server, before timing out.
-        self.resolver.timeout = 3.0
+        self.resolver.timeout = DEFAULT_TIMEOUT
 
         self.list_ip_address = {}
         self.array_net = array_net
