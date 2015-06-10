@@ -41,6 +41,7 @@ CREATE TABLE `domain` (
   `aaaa3` varchar(55) DEFAULT NULL,
   `aaaa4` varchar(55) DEFAULT NULL,
   `cname` varchar(55) DEFAULT NULL,
+  `nserrors` varchar(100) DEFAULT NULL,
   `load_today` enum('Y','N') DEFAULT 'Y',
   `last_update` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -64,7 +65,8 @@ BEGIN
                                mx3, mx4, ns1, ns2,
                                ns3, ns4, txt, asn1,
                                asn2, asn3, asn4, aaaa1,
-                               aaaa2, aaaa3, aaaa4, cname)
+                               aaaa2, aaaa3, aaaa4, cname,
+                               nserrors)
                            VALUE(NEW.id, NOW(), '2099-01-01', NEW.domain_name,
                                NEW.registrant, NEW.tld, NEW.register_date, NEW.register_date_end,
                                NEW.free_date, NEW.delegated, NEW.a1, NEW.a2,
@@ -72,7 +74,8 @@ BEGIN
                                NEW.mx3, NEW.mx4, NEW.ns1, NEW.ns2,
                                NEW.ns3, NEW.ns4, NEW.txt, NEW.asn1,
                                NEW.asn2, NEW.asn3, NEW.asn4, NEW.aaaa1,
-                               NEW.aaaa2, NEW.aaaa3, NEW.aaaa4, NEW.cname);
+                               NEW.aaaa2, NEW.aaaa3, NEW.aaaa4, NEW.cname,
+                               NEW.nserrors);
 END ;;
 DELIMITER ;
 
@@ -108,6 +111,7 @@ BEGIN
        OR NEW.aaaa3 <> OLD.aaaa3
        OR NEW.aaaa4 <> OLD.aaaa4
        OR NEW.cname <> OLD.cname
+       OR NEW.nserrors <> OLD.nserrors
 	THEN
 		  SELECT max(id) INTO max_id FROM domain_history WHERE domain_id = OLD.id;
 		  UPDATE domain_history SET date_end = NOW() WHERE id = max_id;
@@ -119,7 +123,8 @@ BEGIN
                                mx3, mx4, ns1, ns2,
                                ns3, ns4, txt, asn1,
                                asn2, asn3, asn4, aaaa1,
-                               aaaa2, aaaa3, aaaa4, cname)
+                               aaaa2, aaaa3, aaaa4, cname,
+                               nserrors)
                            VALUE(NEW.id, NOW(), '2099-01-01', NEW.domain_name,
                                NEW.registrant, NEW.tld, NEW.register_date, NEW.register_date_end,
                                NEW.free_date, NEW.delegated, NEW.a1, NEW.a2,
@@ -127,7 +132,8 @@ BEGIN
                                NEW.mx3, NEW.mx4, NEW.ns1, NEW.ns2,
                                NEW.ns3, NEW.ns4, NEW.txt, NEW.asn1,
                                NEW.asn2, NEW.asn3, NEW.asn4, NEW.aaaa1,
-                               NEW.aaaa2, NEW.aaaa3, NEW.aaaa4, NEW.cname);
+                               NEW.aaaa2, NEW.aaaa3, NEW.aaaa4, NEW.cname,
+                               NEW.nserrors);
     END IF;
 END ;;
 DELIMITER ;
@@ -175,6 +181,7 @@ CREATE TABLE `domain_history` (
   `aaaa3` varchar(55) DEFAULT NULL,
   `aaaa4` varchar(55) DEFAULT NULL,
   `cname` varchar(55) DEFAULT NULL,
+  `nserrors` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `domain_id` (`domain_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;

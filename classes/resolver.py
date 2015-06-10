@@ -13,6 +13,7 @@ import MySQLdb
 import sys
 from collections import defaultdict
 from helpers.helpers import get_mysql_connection
+from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
 
 
 class Resolver(Thread):
@@ -42,7 +43,14 @@ class Resolver(Thread):
         self.list_ip_address = {}
         self.array_net = array_net
 
-        self.dns_type_length = {'a': 16, 'aaaa': 54, 'mx': 69, 'txt': 254, 'ns': 44, 'cname': 44}
+        self.dns_type_length = {'a': 16,
+                                'aaaa': 54,
+                                'mx': 69,
+                                'txt': 254,
+                                'ns': 44,
+                                'cname': 44,
+                                'nserrors': 30
+                                }
 
     @staticmethod
     def start_load_and_resolver_domain(net_array, work_path, count=COUNT_THREAD):
@@ -104,20 +112,47 @@ class Resolver(Thread):
         """
         self.connection = get_mysql_connection()
 
+    @staticmethod
+    def get_dns_record(resolver, domain_name, record_type):
+        """
+        Получить ресурсную запись данного типа от DNS сервера
+        :type resolver: dns.resolver.Resolver()
+        :type domain_name: unicode
+        :type record_type: unicode
+        :return:
+        """
+        dns_records = []
+        answers = resolver.query(domain_name, record_type)
+        for rdata in answers:
+            if record_type == 'MX':
+                dns_records.append(rdata.exchange.to_text().lower())
+            else:
+                dns_records.append(rdata.to_text().lower())
+
+        return dns_records
+
     def _get_ns_record(self, domain_name):
         """
         Получаем массив с DNS записями
         :type domain_name: unicode
         :return:
         """
-        domain_dns_data_list = {}
+        domain_dns_data_list = {'nserrors': ''}
 
         # получаем все интересные нам типы записей
         for record_type in ('NS', 'MX', 'A', 'TXT', 'AAAA', 'CNAME'):
-            array_data = get_dns_record(self.resolver, domain_name, record_type)
-            array_data.sort()
-            # часть оставляем во вложенных массивах для пост-обработки
-            domain_dns_data_list[record_type.lower()] = array_data
+            try:
+                array_data = self.get_dns_record(self.resolver, domain_name, record_type)
+                array_data.sort()
+                domain_dns_data_list[record_type.lower()] = array_data
+            except NXDOMAIN:
+                domain_dns_data_list['nserrors'] = 'NXDOMAIN'
+            except NoAnswer:
+                domain_dns_data_list['nserrors'] = 'NoAnswer'
+            except Timeout:
+                domain_dns_data_list['nserrors'] = 'Timeout'
+            except NoNameservers:
+                domain_dns_data_list['nserrors'] = 'NoNameservers'
 
         return domain_dns_data_list
 
@@ -153,10 +188,11 @@ class Resolver(Thread):
 
         if register_info['delegated'] == 'Y':
             for dns_type in dns_data:
-                if dns_type == 'txt' or dns_type == 'cname':
-                    set_statement += ", txt = '%s'" \
-                                     % (self.connection.escape_string(
-                                        " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]])
+                if dns_type == 'txt' or dns_type == 'cname' or dns_type == 'nserrors':
+                    set_statement += ", %s = '%s'" \
+                                     % (dns_type,
+                                        self.connection.escape_string(
+                                            " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]])
                                         )
 
                 else:
@@ -207,12 +243,12 @@ class Resolver(Thread):
         sql_insert = "INSERT INTO " \
                      "domain(tld, register_date, register_date_end, free_date, domain_name, registrant," \
                      " delegated, a1, a2, a3, a4, ns1, ns2, ns3, ns4, mx1, mx2, mx3, mx4, txt, asn1, " \
-                     "asn2, asn3, asn4, aaaa1, aaaa2, aaaa3, aaaa4, cname, last_update) VALUE "
+                     "asn2, asn3, asn4, aaaa1, aaaa2, aaaa3, aaaa4, cname, last_update, nserrors) VALUE "
 
         default_value = defaultdict(lambda: defaultdict(lambda: 'NULL'))
 
         for dns_type in dns_data:
-            if dns_type == 'txt' or dns_type == 'cname':
+            if dns_type == 'txt' or dns_type == 'cname' or dns_type == 'nserrors':
                 default_value[dns_type][dns_type] = "'%s'" \
                                                     % self.connection.escape_string(
                     " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]])
@@ -234,7 +270,7 @@ class Resolver(Thread):
         sql_insert_date = """ ('%s', STR_TO_DATE('%s', '%%d.%%m.%%Y'), STR_TO_DATE('%s', '%%d.%%m.%%Y'),
                                 STR_TO_DATE('%s', '%%d.%%m.%%Y'), LOWER('%s'), LOWER('%s'),
                                 '%s', %s, %s, %s, %s, %s, %s,  %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s,  NOW())""" \
+                                %s, %s, %s, %s, %s, %s, %s, %s, %s,  NOW(), %s)""" \
                           % (register_info['prefix'], register_info['register_date'],
                              register_info['register_end_date'], register_info['free_date'],
                              register_info['domain'], register_info['registrant'], register_info['delegated'],
@@ -245,7 +281,8 @@ class Resolver(Thread):
                              default_value['txt']['txt'], default_value['asn'][0], default_value['asn'][1],
                              default_value['asn'][2], default_value['asn'][3],
                              default_value['aaaa'][0], default_value['aaaa'][1], default_value['aaaa'][2],
-                             default_value['aaaa'][3], default_value['cname']['cname'])
+                             default_value['aaaa'][3], default_value['cname']['cname'],
+                             default_value['nserrors']['nserrors'])
 
         return sql_insert + sql_insert_date
 
