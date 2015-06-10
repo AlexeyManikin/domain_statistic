@@ -36,38 +36,6 @@ def load_domains_file_to_memory(file_name):
   
     return domains_list_as_array
 
-def get_dns_record(resolver, domain_name, record_type):
-    """
-    Получить ресурсную запись данного типа от DNS сервера
-    :type resolver: Resolver
-    :type domain_name: unicode
-    :type record_type: unicode
-    :return:
-    """
-    dns_records = []
-    try:
-        answers = resolver.query(domain_name, record_type)
-        for rdata in answers:
-            if record_type == 'MX':
-                dns_records.append(rdata.exchange.to_text().lower())
-            else:
-                dns_records.append(rdata.to_text().lower())
-    except NXDOMAIN:
-        #print "Not found dns server for domain %s" % domain_data[0]
-        return dns_records
-    except NoAnswer:
-        #print "No answer from DNS for %s" % domain_data[0]
-        return dns_records
-    except Timeout:
-        # Потом дополнительно верифицировать эти домены, возможно, по whois
-        # print "Timeout for domain %s" % domain_data[0]
-        return dns_records
-    except NoNameservers:
-        # print "No dns server for %s" % domain_data[0]
-        return dns_records
-  
-    return dns_records
-
 def normalize_domain_list(domain_names):
     """
     Из списка доменов в стиле:
