@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 __author__ = 'alexeyymanikin'
 
-from threading import Thread
+import multiprocessing
 from helpers.utils import *
 import dns.resolver
 import SubnetTree
@@ -16,7 +16,7 @@ from helpers.helpers import get_mysql_connection
 from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
 
 
-class Resolver(Thread):
+class Resolver(multiprocessing.Process):
 
     def __init__(self, number, domains_list, dns_server, array_net):
         """
@@ -25,7 +25,7 @@ class Resolver(Thread):
         :param dns_server:
         :return:
         """
-        Thread.__init__(self)
+        multiprocessing.Process.__init__(self)
         self.number = number
         self.domains = domains_list
         self.dns_server = dns_server
@@ -60,9 +60,9 @@ class Resolver(Thread):
         :param count:
         :return:
         """
-        data_for_threads = []
+        data_for_process = []
         for thread_number in range(0, count):
-            data_for_threads.append([])
+            data_for_process.append([])
 
         for prefix in PREFIX_LIST:
             file_prefix = os.path.join(work_path, prefix+"_domains")
@@ -76,23 +76,23 @@ class Resolver(Thread):
                 if i >= count:
                     i = 0
 
-                data_for_threads[i].append({'line': line, 'prefix': prefix})
+                data_for_process[i].append({'line': line, 'prefix': prefix})
                 i += 1
                 counter_all += 1
                 line = file_rib_data.readline()
 
-        threads_list = []
+        process_list = []
 
         for i in range(0, count):
-            resolver = Resolver(i,  data_for_threads[i], '127.0.0.1', net_array)
-            resolver.daemon = True
-            threads_list.append(resolver)
+            resolver = Resolver(i,  data_for_process[i], '127.0.0.1', net_array)
+            resolver.daemon = False
+            process_list.append(resolver)
             resolver.start()
 
         print "Wait for threads finish..."
-        for thread in threads_list:
+        for process in process_list:
             try:
-                thread.join()
+                process.join()
             except KeyboardInterrupt:
                 print "Interrupted by user"
                 sys.exit(1)
