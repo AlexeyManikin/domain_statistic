@@ -64,6 +64,12 @@ def load_prefix_list_from_var(prefix_list):
 
 
 def print_log(log_flag, text):
+    """
+    Выводим сообщение в консоль или лог
+    :type log_flag: bool
+    :type text: unicode
+    :return:
+    """
     if log_flag:
         print text
 

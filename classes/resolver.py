@@ -97,6 +97,13 @@ class Resolver(multiprocessing.Process):
                 print "Interrupted by user"
                 sys.exit(1)
 
+        sys.exit(0)
+
+    @staticmethod
+    def delete_not_updated_today():
+        """
+        :return:
+        """
         connection = get_mysql_connection()
         cursor = connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("DELETE FROM domain WHERE load_today = 'N'")
@@ -159,11 +166,11 @@ class Resolver(multiprocessing.Process):
     def _get_asn_array(self, domain_dns_data_list):
         """
         Возвращаем массив AS
-        :param domain_dns_data_list:
+        :param domain_dns_data_list: list
         :return:
         """
         asn_for_a_records_array = []
-        if len(domain_dns_data_list['a']) > 0:
+        if 'a' in domain_dns_data_list and len(domain_dns_data_list['a']) > 0:
             for ip in domain_dns_data_list['a']:
                 ip_as_str_byte = as_bytes(ip)
                 if ip_as_str_byte not in self.list_ip_address:
