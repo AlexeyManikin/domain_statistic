@@ -3,20 +3,23 @@ from __future__ import unicode_literals
 
 __author__ = 'alexeyymanikin'
 
-from threading import Thread
+import multiprocessing
 from helpers.utils import *
 import dns.resolver
 import SubnetTree
 from helpers.helperUnicode import *
 from config.main import *
 import MySQLdb
+import traceback
 import sys
 from collections import defaultdict
 from helpers.helpers import get_mysql_connection
 from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
+import time
+from helpers.helpersCollor import BColor
 
 
-class Resolver(Thread):
+class Resolver(multiprocessing.Process):
 
     def __init__(self, number, domains_list, dns_server, array_net):
         """
@@ -25,7 +28,7 @@ class Resolver(Thread):
         :param dns_server:
         :return:
         """
-        Thread.__init__(self)
+        multiprocessing.Process.__init__(self)
         self.number = number
         self.domains = domains_list
         self.dns_server = dns_server
@@ -60,9 +63,9 @@ class Resolver(Thread):
         :param count:
         :return:
         """
-        data_for_threads = []
+        data_for_process = []
         for thread_number in range(0, count):
-            data_for_threads.append([])
+            data_for_process.append([])
 
         for prefix in PREFIX_LIST:
             file_prefix = os.path.join(work_path, prefix+"_domains")
@@ -76,27 +79,34 @@ class Resolver(Thread):
                 if i >= count:
                     i = 0
 
-                data_for_threads[i].append({'line': line, 'prefix': prefix})
+                data_for_process[i].append({'line': line, 'prefix': prefix})
                 i += 1
                 counter_all += 1
                 line = file_rib_data.readline()
 
-        threads_list = []
+        process_list = []
 
         for i in range(0, count):
-            resolver = Resolver(i,  data_for_threads[i], '127.0.0.1', net_array)
-            resolver.daemon = True
-            threads_list.append(resolver)
+            resolver = Resolver(i,  data_for_process[i], '127.0.0.1', net_array)
+            resolver.daemon = False
+            process_list.append(resolver)
             resolver.start()
 
-        print "Wait for threads finish..."
-        for thread in threads_list:
+        BColor.process("Wait for threads finish...")
+        for process in process_list:
             try:
-                thread.join()
+                process.join()
             except KeyboardInterrupt:
-                print "Interrupted by user"
+                BColor.warning("Interrupted by user")
                 sys.exit(1)
 
+        sys.exit(0)
+
+    @staticmethod
+    def delete_not_updated_today():
+        """
+        :return:
+        """
         connection = get_mysql_connection()
         cursor = connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("DELETE FROM domain WHERE load_today = 'N'")
@@ -159,11 +169,11 @@ class Resolver(Thread):
     def _get_asn_array(self, domain_dns_data_list):
         """
         Возвращаем массив AS
-        :param domain_dns_data_list:
+        :param domain_dns_data_list: list
         :return:
         """
         asn_for_a_records_array = []
-        if len(domain_dns_data_list['a']) > 0:
+        if 'a' in domain_dns_data_list and len(domain_dns_data_list['a']) > 0:
             for ip in domain_dns_data_list['a']:
                 ip_as_str_byte = as_bytes(ip)
                 if ip_as_str_byte not in self.list_ip_address:
@@ -336,6 +346,11 @@ class Resolver(Thread):
                 cursor.execute(run_sql)
                 self.connection.commit()
             except:
+                BColor.error("MySQL exeptions")
+                traceback.format_exc()
+
+                # try again
+                time.sleep(5)
                 self._connect_mysql()
                 cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
                 cursor.execute(run_sql)
@@ -344,6 +359,6 @@ class Resolver(Thread):
             added_domains += 1
 
             if (added_domains % 1000) == 0:
-                print "Thread %d success resolved %d domains" % (self.number, added_domains)
+                BColor.process("Thread %d success resolved %d domains" % (self.number, added_domains), pid=self.number)
 
         self.connection.close()

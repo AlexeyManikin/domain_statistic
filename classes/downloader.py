@@ -7,6 +7,7 @@ import datetime
 from classes.command.wget import Wget
 from helpers.helpers import *
 import shutil
+from helpers.helpersCollor import BColor
 
 
 class Downloader(object):
@@ -37,13 +38,14 @@ class Downloader(object):
         :rtype: bool
         """
 
-        rsync = Wget(url, data_dir)
-        command = rsync.get_command()
+        wget_until = Wget(url, data_dir)
+        command = wget_until.get_command()
 
         p = SubprocessRunner(command=command)
         p.run()
         p.wait(write_output_in_log=False)
         if p.process.returncode != 0:
+            BColor.error("wget p.process.returncode = %s" % p.process.returncode)
             return False
 
         return True
@@ -77,10 +79,11 @@ class Downloader(object):
 
         for item in files_list:
             path_file = os.path.abspath(os.path.join(path, item['file_name']))
-            print "Download %s to %s " % (item['url'], path_file)
+            BColor.process("Download %s to %s " % (item['url'], path_file))
             shutil.rmtree(path_file, ignore_errors=True)
             Downloader.download_file(item['url'], path_file)
             if os.path.getsize(path_file) == 0:
+                BColor.error("Can`t download file %s to %s" % (item['url'], path_file))
                 raise Exception("Can`t download file %s to %s" % (item['url'], path_file))
 
         return path

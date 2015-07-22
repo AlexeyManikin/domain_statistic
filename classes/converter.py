@@ -9,6 +9,7 @@ from classes.command.gunzip import Gunzip
 from classes.command.bgpdump import Bgpdump
 from helpers.helpers import *
 from config.main import *
+from helpers.helpersCollor import BColor
 
 
 class Converter(object):
@@ -76,6 +77,7 @@ class Converter(object):
         p.run()
         p.wait(write_output_in_log=False)
         if p.process.returncode != 0:
+            BColor.error("unzip p.process.returncode = %s" % p.process.returncode)
             return False
 
         return True
