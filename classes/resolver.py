@@ -95,11 +95,13 @@ class Resolver(multiprocessing.Process):
         BColor.process("Wait for threads finish...")
         for process in process_list:
             try:
-                process.join()
+                # timeout 2 days
+                process.join(172800)
             except KeyboardInterrupt:
                 BColor.warning("Interrupted by user")
                 sys.exit(1)
 
+        Resolver.delete_not_updated_today()
         sys.exit(0)
 
     @staticmethod
@@ -109,8 +111,12 @@ class Resolver(multiprocessing.Process):
         """
         connection = get_mysql_connection()
         cursor = connection.cursor(MySQLdb.cursors.DictCursor)
+
+        BColor.process("DELETE FROM domain WHERE load_today = 'N'")
         cursor.execute("DELETE FROM domain WHERE load_today = 'N'")
         cursor.execute("SET @TRIGGER_DISABLED = 1")
+
+        BColor.process("UPDATE domain SET load_today = 'N'")
         cursor.execute("UPDATE domain SET load_today = 'N'")
         cursor.execute("SET @TRIGGER_DISABLED = 0")
         connection.commit()
