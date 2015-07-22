@@ -10,6 +10,7 @@ import SubnetTree
 from helpers.helperUnicode import *
 from config.main import *
 import MySQLdb
+import traceback
 import sys
 from collections import defaultdict
 from helpers.helpers import get_mysql_connection
@@ -345,6 +346,10 @@ class Resolver(multiprocessing.Process):
                 cursor.execute(run_sql)
                 self.connection.commit()
             except:
+                BColor.error("MySQL exeptions")
+                traceback.format_exc()
+
+                # try again
                 time.sleep(5)
                 self._connect_mysql()
                 cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
