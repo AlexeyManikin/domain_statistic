@@ -20,6 +20,7 @@ from classes.downloader import Downloader
 from classes.converter import Converter
 from classes.resolver import Resolver
 
+
 def save_prefix_list(prefix_list, file_name):
     """
     Сохраняем информацию об AS в файл
@@ -31,6 +32,7 @@ def save_prefix_list(prefix_list, file_name):
     for index in prefix_list:
         saved_file.write(index + '\t' + prefix_list[index] + '\n')
     saved_file.close()
+
 
 def load_prefix_list_from_file(file_name):
     """
@@ -48,6 +50,7 @@ def load_prefix_list_from_file(file_name):
 
     return subnet_list_tree
 
+
 def load_prefix_list_from_var(prefix_list):
     """
     Загрузка данных из переменной
@@ -58,6 +61,7 @@ def load_prefix_list_from_var(prefix_list):
         subnet_list_tree[as_bytes(index)] = as_bytes(prefix_list[index])
 
     return subnet_list_tree
+
 
 def print_log(log_flag, text):
     if log_flag:
