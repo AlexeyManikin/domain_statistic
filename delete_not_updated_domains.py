@@ -15,6 +15,7 @@ logfile = os.path.join(CURRENT_DIR, '%s.debug' % PROGRAM_NAME)
 import traceback
 from helpers.helpers import check_prog_run
 from classes.resolver import Resolver
+from helpers.helpersCollor import BColor
 
 
 def print_log(log_flag, text):
@@ -31,11 +32,11 @@ if __name__ == "__main__":
     show_log = True
     try:
         if check_prog_run(PROGRAM_NAME):
-            print "Program %s already running" % PROGRAM_NAME
+            BColor.error("Program %s already running" % PROGRAM_NAME)
             sys.exit(1)
 
         Resolver.delete_not_updated_today()
 
     except Exception as e:
-        print "Got an exception: %s" % e.message
+        BColor.error("Got an exception: %s" % e.message)
         print traceback.format_exc()

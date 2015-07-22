@@ -14,6 +14,8 @@ import sys
 from collections import defaultdict
 from helpers.helpers import get_mysql_connection
 from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
+import time
+from helpers.helpersCollor import BColor
 
 
 class Resolver(multiprocessing.Process):
@@ -89,12 +91,12 @@ class Resolver(multiprocessing.Process):
             process_list.append(resolver)
             resolver.start()
 
-        print "Wait for threads finish..."
+        BColor.process("Wait for threads finish...")
         for process in process_list:
             try:
                 process.join()
             except KeyboardInterrupt:
-                print "Interrupted by user"
+                BColor.warning("Interrupted by user")
                 sys.exit(1)
 
         sys.exit(0)
@@ -343,6 +345,7 @@ class Resolver(multiprocessing.Process):
                 cursor.execute(run_sql)
                 self.connection.commit()
             except:
+                time.sleep(5)
                 self._connect_mysql()
                 cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
                 cursor.execute(run_sql)
@@ -351,6 +354,6 @@ class Resolver(multiprocessing.Process):
             added_domains += 1
 
             if (added_domains % 1000) == 0:
-                print "Thread %d success resolved %d domains" % (self.number, added_domains)
+                BColor.process("Thread %d success resolved %d domains" % (self.number, added_domains), pid=self.number)
 
         self.connection.close()
