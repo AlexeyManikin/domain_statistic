@@ -55,7 +55,7 @@ class Resolver(multiprocessing.Process):
                                 }
 
     @staticmethod
-    def start_load_and_resolver_domain(net_array, work_path, count=COUNT_THREAD):
+    def start_load_and_resolver_domain(net_array, work_path, delete_old=True, count=COUNT_THREAD):
         """
         Запускам процессы резолвинга, процесс должен быть синглинтоном
         :param net_array:
@@ -95,12 +95,13 @@ class Resolver(multiprocessing.Process):
         for process in process_list:
             try:
                 # timeout 2 days
-                process.join(172800)
+                process.join(1728000)
             except KeyboardInterrupt:
                 BColor.warning("Interrupted by user")
                 return
 
-        Resolver.delete_not_updated_today()
+        if delete_old:
+            Resolver.delete_not_updated_today()
 
     @staticmethod
     def delete_not_updated_today():

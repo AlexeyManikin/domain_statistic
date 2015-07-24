@@ -23,4 +23,3 @@ if __name__ == "__main__":
     except Exception as e:
         print "Got an exception: %s" % e.message
         print traceback.format_exc()
-# EOF
