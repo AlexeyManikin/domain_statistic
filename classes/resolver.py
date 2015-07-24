@@ -11,7 +11,6 @@ from helpers.helperUnicode import *
 from config.main import *
 import MySQLdb
 import traceback
-import sys
 from collections import defaultdict
 from helpers.helpers import get_mysql_connection
 from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
@@ -28,7 +27,7 @@ class Resolver(multiprocessing.Process):
         :param dns_server:
         :return:
         """
-        multiprocessing.Process.__init__(self)
+        multiprocessing.Process.__init__(self, name="resolver_%s" % number)
         self.number = number
         self.domains = domains_list
         self.dns_server = dns_server
@@ -99,10 +98,9 @@ class Resolver(multiprocessing.Process):
                 process.join(172800)
             except KeyboardInterrupt:
                 BColor.warning("Interrupted by user")
-                sys.exit(1)
+                return
 
         Resolver.delete_not_updated_today()
-        sys.exit(0)
 
     @staticmethod
     def delete_not_updated_today():
@@ -252,7 +250,6 @@ class Resolver(multiprocessing.Process):
         """
         :param dns_data:
         :param as_data:
-        :param domain_id:
         :param register_info:
         :return:
         """
@@ -307,6 +304,9 @@ class Resolver(multiprocessing.Process):
         Запрашиваем DNS данные
         :return:
         """
+
+        BColor.process("Process %s running " % self.number)
+
         added_domains = 0
         re_prefix = re.compile(r'\s*')
         self._connect_mysql()
@@ -367,4 +367,6 @@ class Resolver(multiprocessing.Process):
             if (added_domains % 1000) == 0:
                 BColor.process("Thread %d success resolved %d domains" % (self.number, added_domains), pid=self.number)
 
+        BColor.process("Process %s done " % self.number)
         self.connection.close()
+        return 0
