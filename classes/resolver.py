@@ -95,7 +95,7 @@ class Resolver(multiprocessing.Process):
         for process in process_list:
             try:
                 # timeout 2 days
-                process.join(172800x0)
+                process.join(1728000)
             except KeyboardInterrupt:
                 BColor.warning("Interrupted by user")
                 return
