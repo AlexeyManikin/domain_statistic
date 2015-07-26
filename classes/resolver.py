@@ -237,7 +237,8 @@ class Resolver(multiprocessing.Process):
                 if values[value] is None or values[value] == '':
                     set_statement += ", asn%s = NULL" % (int(value)+1)
                 else:
-                    set_statement += ", asn%s = '%s'" % ((int(value)+1), self.connection.escape_string(values[value]))
+                    set_statement += ", asn%s = '%s'" % ((int(value)+1),
+                                                         self.connection.escape_string(values[value]))
 
         set_statement += ", register_date = STR_TO_DATE('%s', '%%d.%%m.%%Y')" % register_info['register_date']
         set_statement += ", register_date_end = STR_TO_DATE('%s', '%%d.%%m.%%Y')" % register_info['register_end_date']
@@ -354,7 +355,7 @@ class Resolver(multiprocessing.Process):
                     cursor.execute(run_sql)
                     self.connection.commit()
                 except:
-                    BColor.error("MySQL exeptions")
+                    BColor.error("MySQL exceptions (SQL %s)" % run_sql)
                     BColor.error(traceback.format_exc())
 
                     # try again
