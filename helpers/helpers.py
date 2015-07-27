@@ -16,6 +16,19 @@ from threading import Thread
 import socket
 
 
+def is_int(s):
+    """
+    Проверяем что переменная  INT
+    :param s:
+    :return:
+    """
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
 def check_prog_run(process_name):
     """
     Проверка на запущенность программы

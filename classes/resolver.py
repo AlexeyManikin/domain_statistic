@@ -12,7 +12,7 @@ from config.main import *
 import MySQLdb
 import traceback
 from collections import defaultdict
-from helpers.helpers import get_mysql_connection
+from helpers.helpers import get_mysql_connection, is_int
 from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
 import time
 from helpers.helpersCollor import BColor
@@ -183,7 +183,19 @@ class Resolver(multiprocessing.Process):
                 ip_as_str_byte = as_bytes(ip)
                 if ip_as_str_byte not in self.list_ip_address:
                     try:
-                        self.list_ip_address[ip_as_str_byte] = self.array_net[ip_as_str_byte]
+                        # необходимо так как иногда возвращаеся 217.112.32.0/20	{3216,6939,40966}
+                        as_number = self.array_net[ip_as_str_byte]
+                        if is_int(as_number):
+                            self.list_ip_address[ip_as_str_byte] = as_number
+                        else:
+                            try:
+                                as_number = str(as_number).replace("{", "").replace("}", "").split(",")[0]
+                                if is_int(as_number):
+                                    self.list_ip_address[ip_as_str_byte] = as_number
+                                else:
+                                    self.list_ip_address[ip_as_str_byte] = '-1'
+                            except:
+                                self.list_ip_address[ip_as_str_byte] = '-1'
                     except KeyError:
                         self.list_ip_address[ip_as_str_byte] = '-1'
                 asn_for_a_records_array.append(self.list_ip_address[ip_as_str_byte])
@@ -317,59 +329,66 @@ class Resolver(multiprocessing.Process):
 
             # сюда добавляем айпишники, что находятся среди  А записей
             for domain_data in self.domains:
-
-                data = domain_data['line'].split("\t")
-
-                domain = re.sub(re_prefix, '', data[0])
-                delegated = re.sub(re_prefix, '', data[5])
-
-                if delegated == '1':
-                    delegated = 'Y'
-                else:
-                    delegated = 'N'
-
-                register_info = {'registrant': re.sub(re_prefix, '', data[1]),
-                                 'register_date': re.sub(re_prefix, '', data[2]),
-                                 'register_end_date': re.sub(re_prefix, '', data[3]),
-                                 'free_date': re.sub(re_prefix, '', data[4]),
-                                 'delegated': delegated,
-                                 'domain': domain,
-                                 'prefix': domain_data['prefix']}
-
-                cursor.execute("SELECT id FROM domain WHERE domain_name = LOWER('%s')" % domain)
-                domain_id = cursor.fetchone()
-
-                if delegated == 'Y':
-                    domain_dns_data_array = self._get_ns_record(domain)
-                    as_array = self._get_asn_array(domain_dns_data_array)
-                else:
-                    domain_dns_data_array = {}
-                    as_array = {}
-
-                if not domain_id:
-                    run_sql = self._insert_domain(domain_dns_data_array, as_array, register_info)
-                else:
-                    run_sql = self._update_domain(domain_dns_data_array, as_array, domain_id['id'],
-                                                  register_info)
                 try:
-                    cursor.execute(run_sql)
-                    self.connection.commit()
+
+                    data = domain_data['line'].split("\t")
+
+                    domain = re.sub(re_prefix, '', data[0])
+                    delegated = re.sub(re_prefix, '', data[5])
+
+                    if delegated == '1':
+                        delegated = 'Y'
+                    else:
+                        delegated = 'N'
+
+                    register_info = {'registrant': re.sub(re_prefix, '', data[1]),
+                                     'register_date': re.sub(re_prefix, '', data[2]),
+                                     'register_end_date': re.sub(re_prefix, '', data[3]),
+                                     'free_date': re.sub(re_prefix, '', data[4]),
+                                     'delegated': delegated,
+                                     'domain': domain,
+                                     'prefix': domain_data['prefix']}
+
+                    cursor.execute("SELECT id FROM domain WHERE domain_name = LOWER('%s')" % domain)
+                    domain_id = cursor.fetchone()
+
+                    if delegated == 'Y':
+                        domain_dns_data_array = self._get_ns_record(domain)
+                        as_array = self._get_asn_array(domain_dns_data_array)
+                    else:
+                        domain_dns_data_array = {}
+                        as_array = {}
+
+                    if not domain_id:
+                        run_sql = self._insert_domain(domain_dns_data_array, as_array, register_info)
+                    else:
+                        run_sql = self._update_domain(domain_dns_data_array, as_array, domain_id['id'],
+                                                      register_info)
+                    try:
+                        cursor.execute(run_sql)
+                        self.connection.commit()
+                    except:
+                        BColor.error("MySQL exceptions (SQL %s)" % run_sql)
+                        BColor.error(traceback.format_exc())
+
+                        # try again
+                        time.sleep(5)
+                        self._connect_mysql()
+                        cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+                        cursor.execute(run_sql)
+                        self.connection.commit()
+
+                    added_domains += 1
+
+                    if (added_domains % 1000) == 0:
+                        BColor.process("Thread %d success resolved %d domains" % (self.number, added_domains),
+                                       pid=self.number)
                 except:
-                    BColor.error("MySQL exceptions (SQL %s)" % run_sql)
+                    data = domain_data['line'].split("\t")
+                    domain = re.sub(re_prefix, '', data[0])
+
+                    BColor.error("Domain %s work failed process number %s" % (domain, self.number))
                     BColor.error(traceback.format_exc())
-
-                    # try again
-                    time.sleep(5)
-                    self._connect_mysql()
-                    cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
-                    cursor.execute(run_sql)
-                    self.connection.commit()
-
-                added_domains += 1
-
-                if (added_domains % 1000) == 0:
-                    BColor.process("Thread %d success resolved %d domains" % (self.number, added_domains),
-                                   pid=self.number)
 
             BColor.process("Process %s done " % self.number)
             self.connection.close()

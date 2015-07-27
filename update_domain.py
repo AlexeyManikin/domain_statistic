@@ -107,6 +107,7 @@ if __name__ == "__main__":
 
         delete_old = True
         if args.delete_old:
+            BColor.ok("Not delete removed domains")
             delete_old = False
 
         Resolver.start_load_and_resolver_domain(as_list, os.path.abspath(os.path.join(path, 'work')),
