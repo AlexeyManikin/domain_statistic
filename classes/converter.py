@@ -36,7 +36,7 @@ class Converter(object):
         Подчисщаем за собой все
         :return:
         """
-        self._remove_work_dir()
+        # self._remove_work_dir()
         self.connection.close()
 
     def get_work_path(self):

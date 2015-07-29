@@ -58,7 +58,10 @@ class Resolver(multiprocessing.Process):
     def start_load_and_resolver_domain(net_array, work_path, delete_old=True, count=COUNT_THREAD):
         """
         Запускам процессы резолвинга, процесс должен быть синглинтоном
+
         :param net_array:
+        :param work_path:
+        :param delete_old:
         :param count:
         :return:
         """
@@ -67,9 +70,11 @@ class Resolver(multiprocessing.Process):
             data_for_process.append([])
 
         for prefix in PREFIX_LIST:
+            BColor.process("Load prefix_list %s " % prefix)
             file_prefix = os.path.join(work_path, prefix+"_domains")
             file_rib_data = open(file_prefix)
 
+            BColor.process("Load file %s " % file_prefix)
             line = file_rib_data.readline()
             counter_all = 0
             i = 0
@@ -78,14 +83,23 @@ class Resolver(multiprocessing.Process):
                 if i >= count:
                     i = 0
 
+
                 data_for_process[i].append({'line': line, 'prefix': prefix})
                 i += 1
                 counter_all += 1
                 line = file_rib_data.readline()
 
-        process_list = []
+            BColor.process("All load zone %s" % counter_all)
 
+            i = 0
+            for data in data_for_process:
+                BColor.process("data_for_process %s %s" % (i, len(data)))
+                i += 1
+
+
+        process_list = []
         for i in range(0, count):
+            BColor.process("Start process to work %s %s" % (i, len(data_for_process[i])))
             resolver = Resolver(i,  data_for_process[i], '127.0.0.1', net_array)
             resolver.daemon = False
             process_list.append(resolver)
