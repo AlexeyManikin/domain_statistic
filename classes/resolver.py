@@ -315,9 +315,11 @@ class Resolver(multiprocessing.Process):
 
         for dns_type in dns_data:
             if dns_type == 'txt' or dns_type == 'cname' or dns_type == 'nserrors':
-                default_value[dns_type][dns_type] = "'%s'" \
-                                                    % self.connection.escape_string(
-                    " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]])
+                text = " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]]
+                if dns_type == 'txt':
+                    text.replace("\"", "")
+
+                default_value[dns_type][dns_type] = "'%s'" % self.connection.escape_string(text)
             else:
                 i = 0
                 for dns_row in dns_data[dns_type]:
