@@ -164,8 +164,7 @@ class Resolver(multiprocessing.Process):
         """
         self.connection = get_mysql_connection()
 
-    @staticmethod
-    def get_dns_record(resolver, domain_name, record_type):
+    def _get_dns_record(self, resolver, domain_name, record_type):
         """
         Получить ресурсную запись данного типа от DNS сервера
         :type resolver: dns.resolver.Resolver()
@@ -175,11 +174,11 @@ class Resolver(multiprocessing.Process):
         """
         dns_records = []
         answers = resolver.query(domain_name, record_type)
-        for rdata in answers:
+        for dns_data in answers:
             if record_type == 'MX':
-                dns_records.append(rdata.exchange.to_text().lower())
+                dns_records.append(dns_data.exchange.to_text().lower())
             else:
-                dns_records.append(rdata.to_text().lower())
+                dns_records.append(dns_data.to_text().lower())
 
         return dns_records
 
@@ -192,9 +191,9 @@ class Resolver(multiprocessing.Process):
         domain_dns_data_list = {'nserrors': []}
 
         # получаем все интересные нам типы записей
-        for record_type in ('NS', 'MX', 'A', 'TXT', 'AAAA', 'CNAME'):
+        for record_type in ('A', 'NS', 'MX', 'TXT', 'AAAA', 'CNAME'):
             try:
-                array_data = self.get_dns_record(self.resolver, domain_name, record_type)
+                array_data = self._get_dns_record(self.resolver, domain_name, record_type)
                 array_data.sort()
                 domain_dns_data_list[record_type.lower()] = array_data
             except NXDOMAIN:
@@ -205,6 +204,7 @@ class Resolver(multiprocessing.Process):
                 domain_dns_data_list['nserrors'].append("Timeout-%s " % record_type)
             except NoNameservers:
                 domain_dns_data_list['nserrors'].append("NoNS-%s " % record_type)
+                break
             except:
                 domain_dns_data_list['nserrors'].append("UNDEF-%s " % record_type)
 
