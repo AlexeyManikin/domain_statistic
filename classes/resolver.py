@@ -199,7 +199,7 @@ class Resolver(multiprocessing.Process):
             except NXDOMAIN:
                 domain_dns_data_list['nserrors'].append("NXDOMAIN-%s " % record_type)
             except NoAnswer:
-                domain_dns_data_list['nserrors'].append("NoAnswer-%s " % record_type)
+                pass
             except Timeout:
                 domain_dns_data_list['nserrors'].append("Timeout-%s " % record_type)
             except NoNameservers:
