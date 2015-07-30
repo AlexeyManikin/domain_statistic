@@ -257,7 +257,7 @@ class Resolver(multiprocessing.Process):
                 if dns_type == 'txt' or dns_type == 'cname' or dns_type == 'nserrors':
                     text = " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]]
                     if dns_type == 'txt':
-                        text.replace("\"", "")
+                        text = text.replace("\"", "")
 
                     set_statement += ", %s = '%s'" % (dns_type, self.connection.escape_string(text))
 
@@ -317,7 +317,7 @@ class Resolver(multiprocessing.Process):
             if dns_type == 'txt' or dns_type == 'cname' or dns_type == 'nserrors':
                 text = " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]]
                 if dns_type == 'txt':
-                    text.replace("\"", "")
+                    text = text.replace("\"", "")
 
                 default_value[dns_type][dns_type] = "'%s'" % self.connection.escape_string(text)
             else:
