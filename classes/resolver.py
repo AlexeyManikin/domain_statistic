@@ -189,7 +189,7 @@ class Resolver(multiprocessing.Process):
         :type domain_name: unicode
         :return:
         """
-        domain_dns_data_list = {'nserrors': ''}
+        domain_dns_data_list = {'nserrors': []}
 
         # получаем все интересные нам типы записей
         for record_type in ('NS', 'MX', 'A', 'TXT', 'AAAA', 'CNAME'):
@@ -198,15 +198,15 @@ class Resolver(multiprocessing.Process):
                 array_data.sort()
                 domain_dns_data_list[record_type.lower()] = array_data
             except NXDOMAIN:
-                domain_dns_data_list['nserrors'] += 'NXDOMAIN-%s ' % record_type
+                domain_dns_data_list['nserrors'].append("NXDOMAIN-%s " % record_type)
             except NoAnswer:
-                domain_dns_data_list['nserrors'] += 'NoAnswer-%s ' % record_type
+                domain_dns_data_list['nserrors'].append("NoAnswer-%s " % record_type)
             except Timeout:
-                domain_dns_data_list['nserrors'] += 'Timeout-%s ' % record_type
+                domain_dns_data_list['nserrors'].append("Timeout-%s " % record_type)
             except NoNameservers:
-                domain_dns_data_list['nserrors'] += 'NoNS-%s ' % record_type
+                domain_dns_data_list['nserrors'].append("NoNS-%s " % record_type)
             except:
-                domain_dns_data_list['nserrors'] += 'UNDEF-%s ' % record_type
+                domain_dns_data_list['nserrors'].append("UNDEF-%s " % record_type)
 
         return domain_dns_data_list
 
@@ -255,11 +255,11 @@ class Resolver(multiprocessing.Process):
         if register_info['delegated'] == 'Y':
             for dns_type in dns_data:
                 if dns_type == 'txt' or dns_type == 'cname' or dns_type == 'nserrors':
-                    set_statement += ", %s = '%s'" \
-                                     % (dns_type,
-                                        self.connection.escape_string(
-                                            " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]])
-                                        )
+                    text = " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]]
+                    if dns_type == 'txt':
+                        text.replace("\"", "")
+
+                    set_statement += ", %s = '%s'" % (dns_type, self.connection.escape_string(text))
 
                 else:
                     values = {0: None, 1: None, 2: None, 3: None}
@@ -359,7 +359,8 @@ class Resolver(multiprocessing.Process):
         """
 
         try:
-            self.write_to_file(BColor.process("Process %s running " % self.number))
+            self.write_to_file(BColor.process("Process %s running, need work %s domains"
+                                              % (self.number, len(self.domains))))
 
             added_domains = 0
             re_prefix = re.compile(r'\s*')
@@ -400,7 +401,7 @@ class Resolver(multiprocessing.Process):
                         run_sql = self._update_domain(domain_dns_data_array, as_array, domain_id['id'],
                                                       register_info)
 
-                    self.write_to_file(run_sql, sql=True)
+                    self.write_to_file(run_sql+";", sql=True)
 
                     try:
                         cursor.execute(run_sql)
