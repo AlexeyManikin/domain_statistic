@@ -81,6 +81,8 @@ class Resolver(multiprocessing.Process):
         for thread_number in range(0, count):
             data_for_process.append([])
 
+        counter_all = {}
+
         for prefix in PREFIX_LIST:
             BColor.process("Load prefix_list %s " % prefix)
             file_prefix = os.path.join(work_path, prefix+"_domains")
@@ -88,7 +90,7 @@ class Resolver(multiprocessing.Process):
 
             BColor.process("Load file %s " % file_prefix)
             line = file_rib_data.readline()
-            counter_all = 0
+            counter_all[prefix] = 0
             i = 0
 
             while line:
@@ -97,15 +99,10 @@ class Resolver(multiprocessing.Process):
 
                 data_for_process[i].append({'line': line, 'prefix': prefix})
                 i += 1
-                counter_all += 1
+                counter_all[prefix] += 1
                 line = file_rib_data.readline()
 
-            BColor.process("All load zone %s" % counter_all)
-
-            i = 0
-            for data in data_for_process:
-                BColor.process("data_for_process %s %s" % (i, len(data)))
-                i += 1
+            BColor.process("All load zone %s -  %s" % (prefix, counter_all[prefix]))
 
         process_list = []
         for i in range(0, count):
@@ -125,7 +122,7 @@ class Resolver(multiprocessing.Process):
                 return
 
         if delete_old:
-            Resolver.delete_not_updated_today()
+            Resolver.delete_not_updated_today(counter_all)
 
     def write_to_file(self, text, sql=False):
         """
@@ -151,20 +148,39 @@ class Resolver(multiprocessing.Process):
         file_handler.close()
 
     @staticmethod
-    def delete_not_updated_today():
+    def delete_not_updated_today(count_all_domain=False):
         """
+        :type count_all_domain: bool|dict
         :return:
         """
+
         connection = get_mysql_connection()
         cursor = connection.cursor(MySQLdb.cursors.DictCursor)
 
-        BColor.process("DELETE FROM domain WHERE load_today = 'N'")
-        cursor.execute("DELETE FROM domain WHERE load_today = 'N'")
-        cursor.execute("SET @TRIGGER_DISABLED = 1")
+        if not count_all_domain:
+            BColor.process("DELETE FROM domain WHERE load_today = 'N'")
+            cursor.execute("DELETE FROM domain WHERE load_today = 'N'")
+            cursor.execute("SET @TRIGGER_DISABLED = 1")
 
-        BColor.process("UPDATE domain SET load_today = 'N'")
-        cursor.execute("UPDATE domain SET load_today = 'N'")
-        cursor.execute("SET @TRIGGER_DISABLED = 0")
+            BColor.process("UPDATE domain SET load_today = 'N'")
+            cursor.execute("UPDATE domain SET load_today = 'N'")
+            cursor.execute("SET @TRIGGER_DISABLED = 0")
+        else:
+            for key_tld, tld_count_in_file in count_all_domain.iteritems():
+                cursor.execute("SELECT count(*) FROM domain WHERE tld = '%s'" % str(key_tld))
+                count_in_base = cursor.fetchone()
+
+                if count_in_base and int(count_in_base) >= int(tld_count_in_file):
+                    BColor.process("DELETE FROM domain WHERE load_today = 'N' AND tld = '%s'" % str(key_tld))
+                    cursor.execute("DELETE FROM domain WHERE load_today = 'N' AND tld = '%s'" % str(key_tld))
+                    cursor.execute("SET @TRIGGER_DISABLED = 1")
+
+                    BColor.process("UPDATE domain SET load_today = 'N' AND tld = '%s'" % str(key_tld))
+                    cursor.execute("UPDATE domain SET load_today = 'N' AND tld = '%s'" % str(key_tld))
+                    cursor.execute("SET @TRIGGER_DISABLED = 0")
+                else:
+                    BColor.error("TLD %s - count in file %s, count in base %s"
+                                 % (str(key_tld), str(count_in_base), str(tld_count_in_file)))
         connection.commit()
         connection.close()
 
