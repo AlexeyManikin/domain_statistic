@@ -52,7 +52,7 @@ class Resolver(multiprocessing.Process):
                                 'txt': 254,
                                 'ns': 44,
                                 'cname': 44,
-                                'nserrors': 30
+                                'nserrors': 80
                                 }
 
         self.log_path = log_path
@@ -135,8 +135,8 @@ class Resolver(multiprocessing.Process):
         else:
             log_file = os.path.abspath(os.path.join(self.log_path, 'log_%s' % pid))
 
-        f = open(log_file, 'w+')
-        write_text = "%s\n" % text
+        f = open(log_file, 'a')
+        write_text = "%s\n" % str(text)
         f.write(write_text)
         f.close()
 
@@ -198,15 +198,15 @@ class Resolver(multiprocessing.Process):
                 array_data.sort()
                 domain_dns_data_list[record_type.lower()] = array_data
             except NXDOMAIN:
-                domain_dns_data_list['nserrors'] = 'NXDOMAIN'
+                domain_dns_data_list['nserrors'] += 'NXDOMAIN-%s ' % record_type
             except NoAnswer:
-                domain_dns_data_list['nserrors'] = 'NoAnswer'
+                domain_dns_data_list['nserrors'] += 'NoAnswer-%s ' % record_type
             except Timeout:
-                domain_dns_data_list['nserrors'] = 'Timeout'
+                domain_dns_data_list['nserrors'] += 'Timeout-%s ' % record_type
             except NoNameservers:
-                domain_dns_data_list['nserrors'] = 'NoNameservers'
+                domain_dns_data_list['nserrors'] += 'NoNS-%s ' % record_type
             except:
-                domain_dns_data_list['nserrors'] = 'UNDEF'
+                domain_dns_data_list['nserrors'] += 'UNDEF-%s ' % record_type
 
         return domain_dns_data_list
 
@@ -369,7 +369,6 @@ class Resolver(multiprocessing.Process):
             # сюда добавляем айпишники, что находятся среди  А записей
             for domain_data in self.domains:
                 try:
-
                     data = domain_data['line'].split("\t")
 
                     domain = re.sub(re_prefix, '', data[0])
@@ -377,8 +376,12 @@ class Resolver(multiprocessing.Process):
 
                     if delegated == '1':
                         delegated = 'Y'
+                        domain_dns_data_array = self._get_ns_record(domain)
+                        as_array = self._get_asn_array(domain_dns_data_array)
                     else:
                         delegated = 'N'
+                        domain_dns_data_array = {}
+                        as_array = {}
 
                     register_info = {'registrant': re.sub(re_prefix, '', data[1]),
                                      'register_date': re.sub(re_prefix, '', data[2]),
@@ -390,13 +393,6 @@ class Resolver(multiprocessing.Process):
 
                     cursor.execute("SELECT id FROM domain WHERE domain_name = LOWER('%s')" % domain)
                     domain_id = cursor.fetchone()
-
-                    if delegated == 'Y':
-                        domain_dns_data_array = self._get_ns_record(domain)
-                        as_array = self._get_asn_array(domain_dns_data_array)
-                    else:
-                        domain_dns_data_array = {}
-                        as_array = {}
 
                     if not domain_id:
                         run_sql = self._insert_domain(domain_dns_data_array, as_array, register_info)
@@ -438,3 +434,4 @@ class Resolver(multiprocessing.Process):
         except:
             self.write_to_file(BColor.error("Process failed %s" % self.number))
             self.write_to_file(BColor.error(traceback.format_exc()))
+            return 1

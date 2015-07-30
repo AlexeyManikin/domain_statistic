@@ -57,7 +57,7 @@ class BColor(object):
                 pid = BColor.parsing_message("<BOLD> PID: " + str(os.getpid()) + "<RESET>")
             else:
                 pid = BColor.parsing_message("<BOLD> Process number: " + str(pid) + ", PID: " + str(os.getpid())
-                                           + "<RESET>")
+                                             + "<RESET>")
 
             if message_type == BColor.STATUS_OK:
                 message_type = BColor.parsing_message(' <GREEN> STATUS: <RESET>')
@@ -108,4 +108,4 @@ class BColor(object):
         :type pid: int
         :rtype: unicode
         """
-        BColor.format_message(BColor.STATUS_PROCESS, message + "... ", pid=pid)
+        return BColor.format_message(BColor.STATUS_PROCESS, message + "... ", pid=pid)
