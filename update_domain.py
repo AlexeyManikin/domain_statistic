@@ -73,6 +73,7 @@ if __name__ == "__main__":
 
         parser = argparse.ArgumentParser()
         parser.add_argument('-d', '--dir', type=str, help="Do`t download data, use exist from dir", action="store")
+        parser.add_argument('-v', '--verbose', type=bool, help="Show verbose log", action="store")
         parser.add_argument('-D', '--delete_old', type=bool, help="Do`t delete removed domains", action="store")
         args = parser.parse_args()
 
@@ -111,7 +112,7 @@ if __name__ == "__main__":
             delete_old = False
 
         Resolver.start_load_and_resolver_domain(as_list, os.path.abspath(os.path.join(path, 'work')),
-                                                delete_old=delete_old)
+                                                delete_old=delete_old, verbose=args.verbose)
 
     except Exception as e:
         BColor.error("Got an exception: %s" % e.message)

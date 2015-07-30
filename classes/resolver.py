@@ -58,20 +58,24 @@ class Resolver(multiprocessing.Process):
         self.log_path = log_path
 
     @staticmethod
-    def start_load_and_resolver_domain(net_array, work_path, delete_old=True, count=COUNT_THREAD):
+    def start_load_and_resolver_domain(net_array, work_path, delete_old=True, count=COUNT_THREAD, verbose=False):
         """
         Запускам процессы резолвинга, процесс должен быть синглинтоном
 
         :param net_array:
-        :param work_path:
-        :param delete_old:
-        :param count:
+        :type work_path: unicode
+        :type delete_old: bool
+        :type count: int
+        :type verbose: bool
         :return:
         """
 
-        log_path = os.path.abspath(os.path.join(work_path, 'log'))
-        if not os.path.exists(log_path):
-            os.makedirs(log_path)
+        if verbose:
+            log_path = os.path.abspath(os.path.join(work_path, 'log'))
+            if not os.path.exists(log_path):
+                os.makedirs(log_path)
+        else:
+            log_path = False
 
         data_for_process = []
         for thread_number in range(0, count):
@@ -125,20 +129,26 @@ class Resolver(multiprocessing.Process):
 
     def write_to_file(self, text, sql=False):
         """
+        Записываем подробный лог работы в файл
+
         :type text: unicode
         :type sql: bool
         :return:
         """
+
+        if not self.log_path:
+            return
+
         pid = str(os.getpid())
         if sql:
             log_file = os.path.abspath(os.path.join(self.log_path, 'sql_log_%s' % pid))
         else:
             log_file = os.path.abspath(os.path.join(self.log_path, 'log_%s' % pid))
 
-        f = open(log_file, 'a')
-        write_text = "%s\n" % str(text)
-        f.write(write_text)
-        f.close()
+        file_handler = open(log_file, 'a')
+        writed_text = "%s\n" % str(text)
+        file_handler.write(writed_text)
+        file_handler.close()
 
     @staticmethod
     def delete_not_updated_today():
@@ -258,9 +268,7 @@ class Resolver(multiprocessing.Process):
                     text = " ".join(dns_data[dns_type])[0:self.dns_type_length[dns_type]]
                     if dns_type == 'txt':
                         text = text.replace("\"", "")
-
                     set_statement += ", %s = '%s'" % (dns_type, self.connection.escape_string(text))
-
                 else:
                     values = {0: None, 1: None, 2: None, 3: None}
                     i = 0
@@ -268,7 +276,6 @@ class Resolver(multiprocessing.Process):
                         if record != '' and i <= 3:
                             values[i] = record
                             i += 1
-
                     for value in values:
                         if values[value] is None or values[value] == '':
                             set_statement += ", %s%s = NULL" % (dns_type, (int(value)+1))
@@ -276,7 +283,6 @@ class Resolver(multiprocessing.Process):
                             set_statement += ", %s%s = '%s'" % (dns_type, (int(value)+1),
                                                                 self.connection.escape_string(
                                                                     values[value])[0:self.dns_type_length[dns_type]])
-
             values = {0: None, 1: None, 2: None, 3: None}
             i = 0
             for record in as_data:
@@ -296,7 +302,6 @@ class Resolver(multiprocessing.Process):
         set_statement += ", free_date = STR_TO_DATE('%s', '%%d.%%m.%%Y')" % register_info['free_date']
         set_statement += ", registrant = LOWER('%s')" % register_info['registrant']
         set_statement += ", delegated = '%s'" % register_info['delegated']
-
         return update_sql_begin + set_statement + update_sql_end
 
     def _insert_domain(self, dns_data, as_data, register_info):
@@ -369,7 +374,6 @@ class Resolver(multiprocessing.Process):
             self._connect_mysql()
             cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
 
-            # сюда добавляем айпишники, что находятся среди  А записей
             for domain_data in self.domains:
                 try:
                     data = domain_data['line'].split("\t")
@@ -403,7 +407,7 @@ class Resolver(multiprocessing.Process):
                         run_sql = self._update_domain(domain_dns_data_array, as_array, domain_id['id'],
                                                       register_info)
 
-                    self.write_to_file(run_sql+";", sql=True)
+                    self.write_to_file(run_sql + ";", sql=True)
 
                     try:
                         cursor.execute(run_sql)
