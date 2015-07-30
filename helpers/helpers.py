@@ -16,6 +16,19 @@ from threading import Thread
 import socket
 
 
+def is_int(s):
+    """
+    Проверяем что переменная  INT
+    :param s:
+    :return:
+    """
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
 def check_prog_run(process_name):
     """
     Проверка на запущенность программы
@@ -29,6 +42,7 @@ def check_prog_run(process_name):
         return False
     except socket.error:
         return True
+
 
 def get_mysql_connection():
     """
@@ -46,6 +60,7 @@ def get_mysql_connection():
     connection.query("SET @@sql_mode:=TRADITIONAL")
 
     return connection
+
 
 def get_hostname():
     """
@@ -101,6 +116,7 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
     child_pid = p.children(recursive=True)
     for pid in child_pid:
         os.kill(pid.pid, sig)
+
 
 def microtime(get_as_float=False):
     """

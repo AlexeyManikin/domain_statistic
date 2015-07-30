@@ -20,6 +20,7 @@ from classes.downloader import Downloader
 from classes.converter import Converter
 from classes.resolver import Resolver
 from helpers.helpersCollor import BColor
+import argparse
 
 
 def save_prefix_list(prefix_list, file_name):
@@ -70,28 +71,52 @@ if __name__ == "__main__":
             BColor.error("Program %s already running" % PROGRAM_NAME)
             sys.exit(1)
 
-        BColor.process("Download files")
-        path = Downloader.download_data_for_current_date()
+        parser = argparse.ArgumentParser(add_help=True, version='1.0')
 
-        BColor.process("Unzip file")
-        converter = Converter(path)
+        parser.add_argument('-d', '--dir', type=str, help="Do`t download data, use exist from dir", action="store")
+        parser.add_argument('-v', '--verbose', help="Show verbose log", action="count")
+        parser.add_argument('-D', '--delete_old', type=bool, help="Do`t delete removed domains", action="store")
+        args = parser.parse_args()
 
-        BColor.process("Parsing rib file")
-        converter.parce_file_rib_file_to()
+        if args.verbose:
+            BColor.ok("Use verbose")
 
-        BColor.process("Get AS list")
-        as_list_text = converter.convert_rib_to_net_as()
+        if not args.dir:
+            BColor.process("Download files")
+            path = Downloader.download_data_for_current_date()
+            BColor.ok("Path to work dir %s" % path)
 
-        BColor.process("Save AS list")
-        path_to_prefix_file = os.path.abspath(os.path.join(path, 'prefix_list'))
-        save_prefix_list(as_list_text, path_to_prefix_file)
+            BColor.process("Unzip file")
+            converter = Converter(path, delete_work_dir=(not args.verbose))
 
-        BColor.process("Load AS list")
-        as_list = load_prefix_list_from_var(as_list_text)
-        # as_list = load_prefix_list_from_file(path_to_prefix_file)
+            BColor.process("Parsing rib file")
+            converter.parce_file_rib_file_to()
+
+            BColor.process("Get AS list")
+            as_list_text = converter.convert_rib_to_net_as()
+
+            BColor.process("Save AS list")
+            path_to_prefix_file = os.path.abspath(os.path.join(path, 'prefix_list'))
+            save_prefix_list(as_list_text, path_to_prefix_file)
+
+            BColor.process("Load AS list")
+            as_list = load_prefix_list_from_var(as_list_text)
+
+        else:
+            path = args.dir
+            BColor.ok("Use data path %s" % path)
+            path_to_prefix_file = os.path.abspath(os.path.join(path, 'prefix_list'))
+            as_list = load_prefix_list_from_file(path_to_prefix_file)
 
         BColor.process("Start resolve")
-        Resolver.start_load_and_resolver_domain(as_list, os.path.abspath(os.path.join(path, 'work')))
+
+        delete_old = True
+        if args.delete_old:
+            BColor.ok("Not delete removed domains")
+            delete_old = False
+
+        Resolver.start_load_and_resolver_domain(as_list, os.path.abspath(os.path.join(path, 'work')),
+                                                delete_old=delete_old, verbose=args.verbose)
 
     except Exception as e:
         BColor.error("Got an exception: %s" % e.message)

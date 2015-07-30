@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import time
 import os
+import traceback
 
 __author__ = 'alexeyymanikin'
 
@@ -24,7 +25,7 @@ class BColor(object):
         pass
 
     @staticmethod
-    def parce_message(message):
+    def parsing_message(message):
         """
         Красивый вывод в консоль
         :param message:
@@ -50,35 +51,61 @@ class BColor(object):
         :param message: unicode
         :return:
         """
-        date = BColor.parce_message("<BLACK><BOLD>[<RESET> " + time.strftime("%H:%M:%S") + "<BLACK><BOLD>]<RESET> ")
-        if pid is None:
-            pid = BColor.parce_message("<BOLD> PID " + str(os.getpid()) + "<RESET>")
-        else:
-            pid = BColor.parce_message("<BOLD> " + pid + " PID " + str(os.getpid()) + "<RESET>")
+        try:
+            date = BColor.parsing_message("[ " + time.strftime("%m/%d/%y %H:%M:%S") + " ] ")
+            if pid is None:
+                pid = BColor.parsing_message("<BOLD> PID: " + str(os.getpid()) + "<RESET>")
+            else:
+                pid = BColor.parsing_message("<BOLD> Process number: " + str(pid) + ", PID: " + str(os.getpid())
+                                             + "<RESET>")
 
-        if message_type == BColor.STATUS_OK:
-            message_type = BColor.parce_message(' <GREEN> STATUS: <RESET>')
-        elif message_type == BColor.STATUS_WARNING:
-            message_type = BColor.parce_message(' <YELLOW> WARNING: <RESET>')
-        elif message_type == BColor.STATUS_PROCESS:
-            message_type = BColor.parce_message(' <BLUE> PROCESS: <RESET>')
-        else:
-            message_type = BColor.parce_message(' <RED> ERROR: <RESET>')
+            if message_type == BColor.STATUS_OK:
+                message_type = BColor.parsing_message(' <GREEN> STATUS: <RESET>')
+            elif message_type == BColor.STATUS_WARNING:
+                message_type = BColor.parsing_message(' <YELLOW> WARNING: <RESET>')
+            elif message_type == BColor.STATUS_PROCESS:
+                message_type = BColor.parsing_message(' <BLUE> PROCESS: <RESET>')
+            else:
+                message_type = BColor.parsing_message(' <RED> ERROR: <RESET>')
 
-        print date + pid + message_type + " " + BColor.parce_message(message)
+            print date + pid + message_type + " " + BColor.parsing_message(message)
+            return date + pid + message_type + " " + BColor.parsing_message(message)
+        except:
+            print traceback.format_exc()
+            return traceback.format_exc()
 
     @staticmethod
     def ok(message, pid=None):
-        BColor.format_message(BColor.STATUS_OK, message, pid=pid)
+        """
+        :type message: unicode
+        :type pid: int
+        :rtype: unicode
+        """
+        return BColor.format_message(BColor.STATUS_OK, message, pid=pid)
 
     @staticmethod
     def warning(message, pid=None):
-        BColor.format_message(BColor.STATUS_WARNING, message, pid=pid)
+        """
+        :type message: unicode
+        :type pid: int
+        :rtype: unicode
+        """
+        return BColor.format_message(BColor.STATUS_WARNING, message, pid=pid)
 
     @staticmethod
     def error(message, pid=None):
-        BColor.format_message(BColor.STATUS_ERROR, message, pid=pid)
+        """
+        :type message: unicode
+        :type pid: int
+        :rtype: unicode
+        """
+        return BColor.format_message(BColor.STATUS_ERROR, message, pid=pid)
 
     @staticmethod
     def process(message, pid=None):
-        BColor.format_message(BColor.STATUS_PROCESS, message + " ...", pid=pid)
+        """
+        :type message: unicode
+        :type pid: int
+        :rtype: unicode
+        """
+        return BColor.format_message(BColor.STATUS_PROCESS, message + "... ", pid=pid)
