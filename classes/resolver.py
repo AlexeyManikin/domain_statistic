@@ -22,9 +22,10 @@ class Resolver(multiprocessing.Process):
 
     def __init__(self, number, domains_list, dns_server, array_net, log_path):
         """
-        :type number:
-        :param domains_list:
-        :param dns_server:
+        :type number: int
+        :type domains_list: list
+        :type dns_server: unicode
+        :type log_path: unicode
         :return:
         """
         multiprocessing.Process.__init__(self, name="resolver_%s" % number)
@@ -122,13 +123,18 @@ class Resolver(multiprocessing.Process):
         if delete_old:
             Resolver.delete_not_updated_today()
 
-    def write_to_file(self, text):
+    def write_to_file(self, text, sql=False):
         """
-        :param text:
+        :type text: unicode
+        :type sql: bool
         :return:
         """
         pid = str(os.getpid())
-        log_file = os.path.abspath(os.path.join(self.log_path, 'log_%s' % pid))
+        if sql:
+            log_file = os.path.abspath(os.path.join(self.log_path, 'sql_log_%s' % pid))
+        else:
+            log_file = os.path.abspath(os.path.join(self.log_path, 'log_%s' % pid))
+
         f = open(log_file, 'w+')
         write_text = "%s\n" % text
         f.write(write_text)
@@ -353,7 +359,7 @@ class Resolver(multiprocessing.Process):
         """
 
         try:
-            BColor.process("Process %s running " % self.number)
+            self.write_to_file(BColor.process("Process %s running " % self.number))
 
             added_domains = 0
             re_prefix = re.compile(r'\s*')
@@ -398,14 +404,14 @@ class Resolver(multiprocessing.Process):
                         run_sql = self._update_domain(domain_dns_data_array, as_array, domain_id['id'],
                                                       register_info)
 
-                    self.write_to_file(run_sql)
+                    self.write_to_file(run_sql, sql=True)
 
                     try:
                         cursor.execute(run_sql)
                         self.connection.commit()
                     except:
-                        BColor.error("MySQL exceptions (SQL %s)" % run_sql)
-                        BColor.error(traceback.format_exc())
+                        self.write_to_file(BColor.error("MySQL exceptions (SQL %s)" % run_sql))
+                        self.write_to_file(BColor.error(traceback.format_exc()))
 
                         # try again
                         time.sleep(5)
@@ -417,18 +423,18 @@ class Resolver(multiprocessing.Process):
                     added_domains += 1
 
                     if (added_domains % 1000) == 0:
-                        BColor.process("Thread %d success resolved %d domains" % (self.number, added_domains),
-                                       pid=self.number)
+                        self.write_to_file(BColor.process("Thread %d success resolved %d domains"
+                                                          % (self.number, added_domains), pid=self.number))
                 except:
                     data = domain_data['line'].split("\t")
                     domain = re.sub(re_prefix, '', data[0])
 
-                    BColor.error("Domain %s work failed process number %s" % (domain, self.number))
-                    BColor.error(traceback.format_exc())
+                    self.write_to_file(BColor.error("Domain %s work failed process number %s" % (domain, self.number)))
+                    self.write_to_file(BColor.error(traceback.format_exc()))
 
-            BColor.process("Process %s done " % self.number)
+            self.write_to_file(BColor.process("Process %s done " % self.number))
             self.connection.close()
             return 0
         except:
-            BColor.error("Process failed %s" % self.number)
-            BColor.error(traceback.format_exc())
+            self.write_to_file(BColor.error("Process failed %s" % self.number))
+            self.write_to_file(BColor.error(traceback.format_exc()))

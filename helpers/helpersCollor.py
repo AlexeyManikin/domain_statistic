@@ -52,7 +52,7 @@ class BColor(object):
         :return:
         """
         try:
-            date = BColor.parsing_message("[ " + time.strftime("%H:%M:%S") + " ] ")
+            date = BColor.parsing_message("[ " + time.strftime("%m/%d/%y %H:%M:%S") + " ] ")
             if pid is None:
                 pid = BColor.parsing_message("<BOLD> PID: " + str(os.getpid()) + "<RESET>")
             else:
@@ -69,21 +69,43 @@ class BColor(object):
                 message_type = BColor.parsing_message(' <RED> ERROR: <RESET>')
 
             print date + pid + message_type + " " + BColor.parsing_message(message)
+            return date + pid + message_type + " " + BColor.parsing_message(message)
         except:
             print traceback.format_exc()
+            return traceback.format_exc()
 
     @staticmethod
     def ok(message, pid=None):
-        BColor.format_message(BColor.STATUS_OK, message, pid=pid)
+        """
+        :type message: unicode
+        :type pid: int
+        :rtype: unicode
+        """
+        return BColor.format_message(BColor.STATUS_OK, message, pid=pid)
 
     @staticmethod
     def warning(message, pid=None):
-        BColor.format_message(BColor.STATUS_WARNING, message, pid=pid)
+        """
+        :type message: unicode
+        :type pid: int
+        :rtype: unicode
+        """
+        return BColor.format_message(BColor.STATUS_WARNING, message, pid=pid)
 
     @staticmethod
     def error(message, pid=None):
-        BColor.format_message(BColor.STATUS_ERROR, message, pid=pid)
+        """
+        :type message: unicode
+        :type pid: int
+        :rtype: unicode
+        """
+        return BColor.format_message(BColor.STATUS_ERROR, message, pid=pid)
 
     @staticmethod
     def process(message, pid=None):
-        BColor.format_message(BColor.STATUS_PROCESS, message + " ...", pid=pid)
+        """
+        :type message: unicode
+        :type pid: int
+        :rtype: unicode
+        """
+        BColor.format_message(BColor.STATUS_PROCESS, message + "... ", pid=pid)
