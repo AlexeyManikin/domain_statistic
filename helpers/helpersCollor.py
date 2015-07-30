@@ -25,7 +25,7 @@ class BColor(object):
         pass
 
     @staticmethod
-    def parce_message(message):
+    def parsing_message(message):
         """
         Красивый вывод в консоль
         :param message:
@@ -52,23 +52,23 @@ class BColor(object):
         :return:
         """
         try:
-            date = BColor.parce_message("[ " + time.strftime("%H:%M:%S") + " ] ")
+            date = BColor.parsing_message("[ " + time.strftime("%H:%M:%S") + " ] ")
             if pid is None:
-                pid = BColor.parce_message("<BOLD> PID: " + str(os.getpid()) + "<RESET>")
+                pid = BColor.parsing_message("<BOLD> PID: " + str(os.getpid()) + "<RESET>")
             else:
-                pid = BColor.parce_message("<BOLD> Process number: " + str(pid) + ", PID: " + str(os.getpid())
+                pid = BColor.parsing_message("<BOLD> Process number: " + str(pid) + ", PID: " + str(os.getpid())
                                            + "<RESET>")
 
             if message_type == BColor.STATUS_OK:
-                message_type = BColor.parce_message(' <GREEN> STATUS: <RESET>')
+                message_type = BColor.parsing_message(' <GREEN> STATUS: <RESET>')
             elif message_type == BColor.STATUS_WARNING:
-                message_type = BColor.parce_message(' <YELLOW> WARNING: <RESET>')
+                message_type = BColor.parsing_message(' <YELLOW> WARNING: <RESET>')
             elif message_type == BColor.STATUS_PROCESS:
-                message_type = BColor.parce_message(' <BLUE> PROCESS: <RESET>')
+                message_type = BColor.parsing_message(' <BLUE> PROCESS: <RESET>')
             else:
-                message_type = BColor.parce_message(' <RED> ERROR: <RESET>')
+                message_type = BColor.parsing_message(' <RED> ERROR: <RESET>')
 
-            print date + pid + message_type + " " + BColor.parce_message(message)
+            print date + pid + message_type + " " + BColor.parsing_message(message)
         except:
             print traceback.format_exc()
 

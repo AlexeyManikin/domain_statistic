@@ -20,7 +20,7 @@ from helpers.helpersCollor import BColor
 
 class Resolver(multiprocessing.Process):
 
-    def __init__(self, number, domains_list, dns_server, array_net):
+    def __init__(self, number, domains_list, dns_server, array_net, log_path):
         """
         :type number:
         :param domains_list:
@@ -54,6 +54,8 @@ class Resolver(multiprocessing.Process):
                                 'nserrors': 30
                                 }
 
+        self.log_path = log_path
+
     @staticmethod
     def start_load_and_resolver_domain(net_array, work_path, delete_old=True, count=COUNT_THREAD):
         """
@@ -65,6 +67,11 @@ class Resolver(multiprocessing.Process):
         :param count:
         :return:
         """
+
+        log_path = os.path.abspath(os.path.join(work_path, 'log'))
+        if not os.path.exists(log_path):
+            os.makedirs(log_path)
+
         data_for_process = []
         for thread_number in range(0, count):
             data_for_process.append([])
@@ -83,7 +90,6 @@ class Resolver(multiprocessing.Process):
                 if i >= count:
                     i = 0
 
-
                 data_for_process[i].append({'line': line, 'prefix': prefix})
                 i += 1
                 counter_all += 1
@@ -96,12 +102,11 @@ class Resolver(multiprocessing.Process):
                 BColor.process("data_for_process %s %s" % (i, len(data)))
                 i += 1
 
-
         process_list = []
         for i in range(0, count):
             BColor.process("Start process to work %s %s" % (i, len(data_for_process[i])))
-            resolver = Resolver(i,  data_for_process[i], '127.0.0.1', net_array)
-            resolver.daemon = False
+            resolver = Resolver(i,  data_for_process[i], '127.0.0.1', net_array, log_path)
+            resolver.daemon = True
             process_list.append(resolver)
             resolver.start()
 
@@ -116,6 +121,18 @@ class Resolver(multiprocessing.Process):
 
         if delete_old:
             Resolver.delete_not_updated_today()
+
+    def write_to_file(self, text):
+        """
+        :param text:
+        :return:
+        """
+        pid = str(os.getpid())
+        log_file = os.path.abspath(os.path.join(self.log_path, 'log_%s' % pid))
+        f = open(log_file, 'w+')
+        write_text = "%s\n" % text
+        f.write(write_text)
+        f.close()
 
     @staticmethod
     def delete_not_updated_today():
@@ -182,6 +199,8 @@ class Resolver(multiprocessing.Process):
                 domain_dns_data_list['nserrors'] = 'Timeout'
             except NoNameservers:
                 domain_dns_data_list['nserrors'] = 'NoNameservers'
+            except:
+                domain_dns_data_list['nserrors'] = 'UNDEF'
 
         return domain_dns_data_list
 
@@ -378,6 +397,9 @@ class Resolver(multiprocessing.Process):
                     else:
                         run_sql = self._update_domain(domain_dns_data_array, as_array, domain_id['id'],
                                                       register_info)
+
+                    self.write_to_file(run_sql)
+
                     try:
                         cursor.execute(run_sql)
                         self.connection.commit()
