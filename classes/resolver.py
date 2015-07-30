@@ -58,15 +58,17 @@ class Resolver(multiprocessing.Process):
         self.log_path = log_path
 
     @staticmethod
-    def start_load_and_resolver_domain(net_array, work_path, delete_old=True, count=COUNT_THREAD, verbose=False):
+    def start_load_and_resolver_domain(net_array, work_path, delete_old=True, count=COUNT_THREAD, verbose=False,
+                                       count_cycle=10):
         """
-        Запускам процессы резолвинга, процесс должен быть синглинтоном
+        Запускам процессы резолвинга
 
-        :param net_array:
+        :param net_array: unicode|list
         :type work_path: unicode
         :type delete_old: bool
         :type count: int
         :type verbose: bool
+        :type count_cycle: int
         :return:
         """
 
@@ -94,7 +96,7 @@ class Resolver(multiprocessing.Process):
             i = 0
 
             while line:
-                if i >= count:
+                if i >= count * count_cycle - 1:
                     i = 0
 
                 data_for_process[i].append({'line': line, 'prefix': prefix})
@@ -104,22 +106,29 @@ class Resolver(multiprocessing.Process):
 
             BColor.process("All load zone %s -  %s" % (prefix, counter_all[prefix]))
 
-        process_list = []
-        for i in range(0, count):
-            BColor.process("Start process to work %s %s" % (i, len(data_for_process[i])))
-            resolver = Resolver(i,  data_for_process[i], '127.0.0.1', net_array, log_path)
-            resolver.daemon = True
-            process_list.append(resolver)
-            resolver.start()
+        for iteration in range(0, count_cycle - 1):
+            process_list = []
+            for i in range(0, count):
 
-        BColor.process("Wait for threads finish...")
-        for process in process_list:
-            try:
-                # timeout 2 days
-                process.join(1728000)
-            except KeyboardInterrupt:
-                BColor.warning("Interrupted by user")
-                return
+                if iteration == 0:
+                    number_i = i
+                else:
+                    number_i = iteration * count + 1 + i
+
+                BColor.process("Start process to work %s %s" % (i, len(data_for_process[number_i])))
+                resolver = Resolver(number_i,  data_for_process[number_i], '127.0.0.1', net_array, log_path)
+                resolver.daemon = True
+                process_list.append(resolver)
+                resolver.start()
+
+            BColor.process("Wait for threads finish...")
+            for process in process_list:
+                try:
+                    # timeout 2 days
+                    process.join(1728000)
+                except KeyboardInterrupt:
+                    BColor.warning("Interrupted by user")
+                    return
 
         if delete_old:
             Resolver.delete_not_updated_today(counter_all)
@@ -143,8 +152,8 @@ class Resolver(multiprocessing.Process):
             log_file = os.path.abspath(os.path.join(self.log_path, 'log_%s' % pid))
 
         file_handler = open(log_file, 'a')
-        writed_text = "%s\n" % str(text)
-        file_handler.write(writed_text)
+        writing_text = "%s\n" % str(text)
+        file_handler.write(writing_text)
         file_handler.close()
 
     @staticmethod
@@ -444,6 +453,18 @@ class Resolver(multiprocessing.Process):
                     if (added_domains % 1000) == 0:
                         self.write_to_file(BColor.process("Thread %d success resolved %d domains"
                                                           % (self.number, added_domains), pid=self.number))
+
+                    # USE http://habrahabr.ru/post/178637/
+                    data = None
+                    domain = None
+                    delegated = None
+                    domain_dns_data_array = None
+                    as_array = None
+                    register_info = None
+                    domain_id = None
+                    run_sql = None
+
+
                 except:
                     data = domain_data['line'].split("\t")
                     domain = re.sub(re_prefix, '', data[0])

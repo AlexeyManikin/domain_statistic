@@ -71,11 +71,15 @@ if __name__ == "__main__":
             BColor.error("Program %s already running" % PROGRAM_NAME)
             sys.exit(1)
 
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(add_help=True, version='1.0')
+
         parser.add_argument('-d', '--dir', type=str, help="Do`t download data, use exist from dir", action="store")
-        parser.add_argument('-v', '--verbose', type=bool, help="Show verbose log", action="store")
+        parser.add_argument('-v', '--verbose', help="Show verbose log", action="count")
         parser.add_argument('-D', '--delete_old', type=bool, help="Do`t delete removed domains", action="store")
         args = parser.parse_args()
+
+        if args.verbose:
+            BColor.ok("Use verbose")
 
         if not args.dir:
             BColor.process("Download files")
@@ -83,7 +87,7 @@ if __name__ == "__main__":
             BColor.ok("Path to work dir %s" % path)
 
             BColor.process("Unzip file")
-            converter = Converter(path)
+            converter = Converter(path, delete_work_dir=(not args.verbose))
 
             BColor.process("Parsing rib file")
             converter.parce_file_rib_file_to()
