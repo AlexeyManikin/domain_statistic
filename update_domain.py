@@ -74,7 +74,7 @@ if __name__ == "__main__":
         parser = argparse.ArgumentParser(add_help=True, version='1.0')
 
         parser.add_argument('-d', '--dir', type=str, help="Do`t download data, use exist from dir", action="store")
-        parser.add_argument('-v', '--verbose', help="Show verbose log", action="count")
+        parser.add_argument('-s', '--show_verbose', help="Show verbose log", action="count")
         parser.add_argument('-D', '--delete_old', type=bool, help="Do`t delete removed domains", action="store")
         parser.add_argument('-n', '--name_server', type=str, help="Set name server", action="store")
         args = parser.parse_args()
