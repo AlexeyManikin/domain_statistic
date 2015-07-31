@@ -80,8 +80,9 @@ class Resolver(multiprocessing.Process):
         else:
             log_path = False
 
+        count_array_data = count * count_cycle - 1
         data_for_process = []
-        for thread_number in range(0, count * count_cycle + 1):
+        for thread_number in range(0, count_array_data):
             data_for_process.append([])
 
         counter_all = {}
@@ -97,7 +98,7 @@ class Resolver(multiprocessing.Process):
             i = 0
 
             while line:
-                if i >= count * count_cycle - 1:
+                if i > count_array_data:
                     i = 0
 
                 data_for_process[i].append({'line': line, 'prefix': prefix})
@@ -107,29 +108,24 @@ class Resolver(multiprocessing.Process):
 
             BColor.process("All load zone %s -  %s" % (prefix, counter_all[prefix]))
 
-        for iteration in range(0, count_cycle):
-            process_list = []
-            for i in range(0, count):
+        process_list = []
+        for i in range(0, count_array_data):
+            BColor.process("Start process to work %s %s" % (i, len(data_for_process[i])))
+            resolver = Resolver(i,  data_for_process[i], resolve_dns, net_array, log_path)
+            resolver.daemon = True
+            process_list.append(resolver)
+            resolver.start()
 
-                if iteration == 0:
-                    number_i = i
-                else:
-                    number_i = iteration * count + 1 + i
-
-                BColor.process("Start process to work %s %s" % (i, len(data_for_process[number_i])))
-                resolver = Resolver(number_i,  data_for_process[number_i], resolve_dns, net_array, log_path)
-                resolver.daemon = True
-                process_list.append(resolver)
-                resolver.start()
-
-            BColor.process("Wait for threads finish...")
-            for process in process_list:
-                try:
-                    # timeout 2 days
-                    process.join(1728000)
-                except KeyboardInterrupt:
-                    BColor.warning("Interrupted by user")
-                    return
+            if i % count == 0:
+                BColor.process("Wait for threads finish...")
+                for process in process_list:
+                    try:
+                        # timeout 2 days
+                        process.join(1728000)
+                    except KeyboardInterrupt:
+                        BColor.warning("Interrupted by user")
+                        return
+                process_list = []
 
         if delete_old:
             Resolver.delete_not_updated_today(counter_all)
