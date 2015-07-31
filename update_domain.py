@@ -76,6 +76,7 @@ if __name__ == "__main__":
         parser.add_argument('-d', '--dir', type=str, help="Do`t download data, use exist from dir", action="store")
         parser.add_argument('-v', '--verbose', help="Show verbose log", action="count")
         parser.add_argument('-D', '--delete_old', type=bool, help="Do`t delete removed domains", action="store")
+        parser.add_argument('-n', '--name_server', type=str, help="Set name server", action="store")
         args = parser.parse_args()
 
         if args.verbose:
@@ -115,8 +116,14 @@ if __name__ == "__main__":
             BColor.ok("Not delete removed domains")
             delete_old = False
 
+        name_server = '127.0.0.1'
+        if args.name_server:
+            BColor.ok("Use name server %s" % args.name_server)
+            name_server = args.name_server
+
         Resolver.start_load_and_resolver_domain(as_list, os.path.abspath(os.path.join(path, 'work')),
-                                                delete_old=delete_old, verbose=args.verbose)
+                                                delete_old=delete_old, verbose=args.verbose,
+                                                resolve_dns=name_server)
 
     except Exception as e:
         BColor.error("Got an exception: %s" % e.message)

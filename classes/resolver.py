@@ -59,7 +59,7 @@ class Resolver(multiprocessing.Process):
 
     @staticmethod
     def start_load_and_resolver_domain(net_array, work_path, delete_old=True, count=COUNT_THREAD, verbose=False,
-                                       count_cycle=10):
+                                       count_cycle=10, resolve_dns='127.0.0.1'):
         """
         Запускам процессы резолвинга
 
@@ -69,6 +69,7 @@ class Resolver(multiprocessing.Process):
         :type count: int
         :type verbose: bool
         :type count_cycle: int
+        :type resolve_dns: unicode
         :return:
         """
 
@@ -116,7 +117,7 @@ class Resolver(multiprocessing.Process):
                     number_i = iteration * count + 1 + i
 
                 BColor.process("Start process to work %s %s" % (i, len(data_for_process[number_i])))
-                resolver = Resolver(number_i,  data_for_process[number_i], '127.0.0.1', net_array, log_path)
+                resolver = Resolver(number_i,  data_for_process[number_i], resolve_dns, net_array, log_path)
                 resolver.daemon = True
                 process_list.append(resolver)
                 resolver.start()
@@ -176,10 +177,10 @@ class Resolver(multiprocessing.Process):
             cursor.execute("SET @TRIGGER_DISABLED = 0")
         else:
             for key_tld, tld_count_in_file in count_all_domain.iteritems():
-                cursor.execute("SELECT count(*) FROM domain WHERE tld = '%s'" % str(key_tld))
+                cursor.execute("SELECT count(*) as domain_count FROM domain WHERE tld = '%s'" % str(key_tld))
                 count_in_base = cursor.fetchone()
 
-                if count_in_base and int(count_in_base) >= int(tld_count_in_file):
+                if count_in_base and int(count_in_base['domain_count']) >= int(tld_count_in_file):
                     BColor.process("DELETE FROM domain WHERE load_today = 'N' AND tld = '%s'" % str(key_tld))
                     cursor.execute("DELETE FROM domain WHERE load_today = 'N' AND tld = '%s'" % str(key_tld))
                     cursor.execute("SET @TRIGGER_DISABLED = 1")
