@@ -81,7 +81,7 @@ class Resolver(multiprocessing.Process):
             log_path = False
 
         data_for_process = []
-        for thread_number in range(0, count):
+        for thread_number in range(0, count * count_cycle + 1):
             data_for_process.append([])
 
         counter_all = {}
