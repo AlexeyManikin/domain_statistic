@@ -107,7 +107,7 @@ class Resolver(multiprocessing.Process):
 
             BColor.process("All load zone %s -  %s" % (prefix, counter_all[prefix]))
 
-        for iteration in range(0, count_cycle - 1):
+        for iteration in range(0, count_cycle):
             process_list = []
             for i in range(0, count):
 
@@ -163,31 +163,38 @@ class Resolver(multiprocessing.Process):
         :type count_all_domain: bool|dict
         :return:
         """
-
         connection = get_mysql_connection()
         cursor = connection.cursor(MySQLdb.cursors.DictCursor)
+        sql_trigger_enable = "SET @TRIGGER_DISABLED = 0"
+        sql_trigger_disable = "SET @TRIGGER_DISABLED = 1"
 
         if not count_all_domain:
-            BColor.process("DELETE FROM domain WHERE load_today = 'N'")
-            cursor.execute("DELETE FROM domain WHERE load_today = 'N'")
-            cursor.execute("SET @TRIGGER_DISABLED = 1")
+            sql = "DELETE FROM domain WHERE load_today = 'N'"
+            BColor.process(sql)
+            cursor.execute(sql)
+            cursor.execute(sql_trigger_disable)
 
-            BColor.process("UPDATE domain SET load_today = 'N'")
-            cursor.execute("UPDATE domain SET load_today = 'N'")
-            cursor.execute("SET @TRIGGER_DISABLED = 0")
+            sql = "UPDATE domain SET load_today = 'N'"
+            BColor.process(sql)
+            cursor.execute(sql)
+            cursor.execute(sql_trigger_enable)
         else:
             for key_tld, tld_count_in_file in count_all_domain.iteritems():
                 cursor.execute("SELECT count(*) as domain_count FROM domain WHERE tld = '%s'" % str(key_tld))
                 count_in_base = cursor.fetchone()
+                BColor.process("Count zone (%s) in file %s, in base %s"
+                               % (str(key_tld), str(tld_count_in_file), str(count_in_base['domain_count'])))
 
                 if count_in_base and int(count_in_base['domain_count']) >= int(tld_count_in_file):
-                    BColor.process("DELETE FROM domain WHERE load_today = 'N' AND tld = '%s'" % str(key_tld))
-                    cursor.execute("DELETE FROM domain WHERE load_today = 'N' AND tld = '%s'" % str(key_tld))
-                    cursor.execute("SET @TRIGGER_DISABLED = 1")
+                    sql = "DELETE FROM domain WHERE load_today = 'N' AND tld = '%s'" % str(key_tld)
+                    BColor.process(sql)
+                    cursor.execute(sql)
+                    cursor.execute(sql_trigger_disable)
 
-                    BColor.process("UPDATE domain SET load_today = 'N' AND tld = '%s'" % str(key_tld))
-                    cursor.execute("UPDATE domain SET load_today = 'N' AND tld = '%s'" % str(key_tld))
-                    cursor.execute("SET @TRIGGER_DISABLED = 0")
+                    sql = "UPDATE domain SET load_today = 'N' WHERE tld = '%s'" % str(key_tld)
+                    BColor.process(sql)
+                    cursor.execute(sql)
+                    cursor.execute(sql_trigger_enable)
                 else:
                     BColor.error("TLD %s - count in file %s, count in base %s"
                                  % (str(key_tld), str(count_in_base), str(tld_count_in_file)))
