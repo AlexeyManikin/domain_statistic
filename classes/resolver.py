@@ -127,6 +127,15 @@ class Resolver(multiprocessing.Process):
                         return
                 process_list = []
 
+        if len(process_list):
+            for process in process_list:
+                try:
+                    # timeout 2 days
+                    process.join(1728000)
+                except KeyboardInterrupt:
+                    BColor.warning("Interrupted by user")
+                    return
+
         if delete_old:
             Resolver.delete_not_updated_today(counter_all)
 
