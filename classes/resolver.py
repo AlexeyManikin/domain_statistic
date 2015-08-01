@@ -80,7 +80,7 @@ class Resolver(multiprocessing.Process):
         else:
             log_path = False
 
-        count_array_data = count * count_cycle - 1
+        count_array_data = count * count_cycle
         data_for_process = []
         for thread_number in range(0, count_array_data):
             data_for_process.append([])
@@ -95,14 +95,8 @@ class Resolver(multiprocessing.Process):
             BColor.process("Load file %s " % file_prefix)
             line = file_rib_data.readline()
             counter_all[prefix] = 0
-            i = 0
-
             while line:
-                if i > count_array_data:
-                    i = 0
-
-                data_for_process[i].append({'line': line, 'prefix': prefix})
-                i += 1
+                data_for_process[counter_all[prefix] % count_array_data].append({'line': line, 'prefix': prefix})
                 counter_all[prefix] += 1
                 line = file_rib_data.readline()
 
