@@ -63,6 +63,10 @@ class Downloader(object):
         С http://archive.routeviews.org информацию по fullview, подробно описывает Павел в своем блоге
         http://phpsuxx.blogspot.com/2011/12/full-bgp.html
         http://phpsuxx.blogspot.com/2011/12/libbgpdump-debian-6-squeeze.html
+
+        для остальных зоне можно посмотреть
+        http://csa.ee/databases-zone-files/
+
         :rtype: unicode
         """
         now_date = datetime.date.today()

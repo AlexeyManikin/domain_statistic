@@ -59,7 +59,7 @@ class Resolver(multiprocessing.Process):
 
     @staticmethod
     def start_load_and_resolver_domain(net_array, work_path, delete_old=True, count=COUNT_THREAD, verbose=False,
-                                       count_cycle=10):
+                                       count_cycle=10, resolve_dns='127.0.0.1'):
         """
         Запускам процессы резолвинга
 
@@ -69,6 +69,7 @@ class Resolver(multiprocessing.Process):
         :type count: int
         :type verbose: bool
         :type count_cycle: int
+        :type resolve_dns: unicode
         :return:
         """
 
@@ -79,8 +80,9 @@ class Resolver(multiprocessing.Process):
         else:
             log_path = False
 
+        count_array_data = count * count_cycle
         data_for_process = []
-        for thread_number in range(0, count):
+        for thread_number in range(0, count_array_data):
             data_for_process.append([])
 
         counter_all = {}
@@ -93,35 +95,33 @@ class Resolver(multiprocessing.Process):
             BColor.process("Load file %s " % file_prefix)
             line = file_rib_data.readline()
             counter_all[prefix] = 0
-            i = 0
-
             while line:
-                if i >= count * count_cycle - 1:
-                    i = 0
-
-                data_for_process[i].append({'line': line, 'prefix': prefix})
-                i += 1
+                data_for_process[counter_all[prefix] % count_array_data].append({'line': line, 'prefix': prefix})
                 counter_all[prefix] += 1
                 line = file_rib_data.readline()
 
             BColor.process("All load zone %s -  %s" % (prefix, counter_all[prefix]))
 
-        for iteration in range(0, count_cycle - 1):
-            process_list = []
-            for i in range(0, count):
+        process_list = []
+        for i in range(0, count_array_data):
+            BColor.process("Start process to work %s %s" % (i, len(data_for_process[i])))
+            resolver = Resolver(i,  data_for_process[i], resolve_dns, net_array, log_path)
+            resolver.daemon = True
+            process_list.append(resolver)
+            resolver.start()
 
-                if iteration == 0:
-                    number_i = i
-                else:
-                    number_i = iteration * count + 1 + i
+            if i !=0 and i % count == 0:
+                BColor.process("Wait for threads finish...")
+                for process in process_list:
+                    try:
+                        # timeout 2 days
+                        process.join(1728000)
+                    except KeyboardInterrupt:
+                        BColor.warning("Interrupted by user")
+                        return
+                process_list = []
 
-                BColor.process("Start process to work %s %s" % (i, len(data_for_process[number_i])))
-                resolver = Resolver(number_i,  data_for_process[number_i], '127.0.0.1', net_array, log_path)
-                resolver.daemon = True
-                process_list.append(resolver)
-                resolver.start()
-
-            BColor.process("Wait for threads finish...")
+        if len(process_list):
             for process in process_list:
                 try:
                     # timeout 2 days
@@ -162,31 +162,38 @@ class Resolver(multiprocessing.Process):
         :type count_all_domain: bool|dict
         :return:
         """
-
         connection = get_mysql_connection()
         cursor = connection.cursor(MySQLdb.cursors.DictCursor)
+        sql_trigger_enable = "SET @TRIGGER_DISABLED = 0"
+        sql_trigger_disable = "SET @TRIGGER_DISABLED = 1"
 
         if not count_all_domain:
-            BColor.process("DELETE FROM domain WHERE load_today = 'N'")
-            cursor.execute("DELETE FROM domain WHERE load_today = 'N'")
-            cursor.execute("SET @TRIGGER_DISABLED = 1")
+            sql = "DELETE FROM domain WHERE load_today = 'N'"
+            BColor.process(sql)
+            cursor.execute(sql)
+            cursor.execute(sql_trigger_disable)
 
-            BColor.process("UPDATE domain SET load_today = 'N'")
-            cursor.execute("UPDATE domain SET load_today = 'N'")
-            cursor.execute("SET @TRIGGER_DISABLED = 0")
+            sql = "UPDATE domain SET load_today = 'N'"
+            BColor.process(sql)
+            cursor.execute(sql)
+            cursor.execute(sql_trigger_enable)
         else:
             for key_tld, tld_count_in_file in count_all_domain.iteritems():
-                cursor.execute("SELECT count(*) FROM domain WHERE tld = '%s'" % str(key_tld))
+                cursor.execute("SELECT count(*) as domain_count FROM domain WHERE tld = '%s'" % str(key_tld))
                 count_in_base = cursor.fetchone()
+                BColor.process("Count zone (%s) in file %s, in base %s"
+                               % (str(key_tld), str(tld_count_in_file), str(count_in_base['domain_count'])))
 
-                if count_in_base and int(count_in_base) >= int(tld_count_in_file):
-                    BColor.process("DELETE FROM domain WHERE load_today = 'N' AND tld = '%s'" % str(key_tld))
-                    cursor.execute("DELETE FROM domain WHERE load_today = 'N' AND tld = '%s'" % str(key_tld))
-                    cursor.execute("SET @TRIGGER_DISABLED = 1")
+                if count_in_base and int(count_in_base['domain_count']) >= int(tld_count_in_file):
+                    sql = "DELETE FROM domain WHERE load_today = 'N' AND tld = '%s'" % str(key_tld)
+                    BColor.process(sql)
+                    cursor.execute(sql)
+                    cursor.execute(sql_trigger_disable)
 
-                    BColor.process("UPDATE domain SET load_today = 'N' AND tld = '%s'" % str(key_tld))
-                    cursor.execute("UPDATE domain SET load_today = 'N' AND tld = '%s'" % str(key_tld))
-                    cursor.execute("SET @TRIGGER_DISABLED = 0")
+                    sql = "UPDATE domain SET load_today = 'N' WHERE tld = '%s'" % str(key_tld)
+                    BColor.process(sql)
+                    cursor.execute(sql)
+                    cursor.execute(sql_trigger_enable)
                 else:
                     BColor.error("TLD %s - count in file %s, count in base %s"
                                  % (str(key_tld), str(count_in_base), str(tld_count_in_file)))
