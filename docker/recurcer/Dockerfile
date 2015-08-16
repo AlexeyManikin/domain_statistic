@@ -21,22 +21,13 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E007F6BD
 RUN echo "deb http://ppa.launchpad.net/chazomaticus/minit/ubuntu quantal main" > /etc/apt/sources.list.d/minit.list
 RUN apt-get update && apt-get upgrade -y && apt-get install -y minit # etc.
 
-RUN $APT_GET_INSTALL build-essential cron libpython2.7 python python-pip python-all-dev python-subnettree python-psutil &&\
-    pip install dnspython && \
-#    cd /tmp && \
-#    wget -q --header 'Host: hosting-build' http://192.168.2.16:80/beget-python-mysql-python_1.2.5_amd64.deb && \
-#    wget -q --header 'Host: hosting-build' http://192.168.2.16:80/beget-python-pillow_2.7.0_amd64.deb && \
-#    dpkg -i --force-overwrite *.deb && rm -f *.deb && \
-    pip install --upgrade psutil
 
-RUN mkdir -p /home/domain_statistic && \
-    git clone -b master -- https://gitlab.beget.ru/amanikin/domain_statictic.git /home/domain_statistic && \
-    rm -rf /home/domain_statistic/.git && \
-    mkdir /home/domain_statistic/download && \
-    echo 4
+# Install pdns-recursor
+RUN apt-get install --no-install-recommends -qq -y build-essential pdns-recursor
+ADD config/recursor.conf /etc/powerdns/recursor.conf
 
 RUN mkdir -p /etc/minit
-
-ADD init.sh /etc/minit/startup
+ADD startup.sh /etc/minit/startup
+RUN chmod 755 /etc/minit/startup
 CMD ["/sbin/minit"]
 # EOF
