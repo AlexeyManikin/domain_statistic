@@ -1,2 +1,0 @@
-10 01 * * * /usr/bin/python /home/domain_statistic/update_as_info.py 
-10 01 * * * /usr/bin/python /home/domain_statistic/update_domain.py
