@@ -27,7 +27,8 @@
 * cd domain_statistic/docker
 * docker-compose build
 
- запускаем контейнеры
+запускаем контейнеры
+
 * docker-compoce up -d
 
 
