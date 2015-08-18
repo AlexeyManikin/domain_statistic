@@ -34,10 +34,19 @@ RUN apt-get install -y percona-server-server-5.6 percona-server-client-5.6
 
 # libmysql
 RUN apt-get install -y libmysqlclient16 libmysqlclient18 libmysqlclient18.1 libcap2 zip unzip unrar p7zip bzip2 gzip \
-                     exim4 exim4-daemon-heavy libaio1 libwrap0 libreadline6
+                     exim4 exim4-daemon-heavy libaio1 libwrap0 libreadline6 git
 
 ADD config/my.cnf /etc/mysql/my.cnf
-ADD ../../structure.sql /root/structure.sql
+
+RUN addgroup --gid 950 mysql || true
+RUN adduser --quiet --system --disabled-login --no-create-home --uid 950 --gid 950  mysql || true
+
+RUN cd /root/ && \
+    git clone -n https://github.com/AlexeyManikin/domain_statistic.git --depth 1 && \
+    cd domain_statistic && \
+    git checkout HEAD structure.sql && \
+    cp /root/domain_statistic/structure.sql /root/structure.sql && \
+    rm -rf /root/domain_statistic;
 
 RUN mkdir -p /etc/minit
 ADD startup.sh /etc/minit/startup
