@@ -2,8 +2,8 @@ DROP TABLE IF EXISTS `as_list`;
 CREATE TABLE `as_list` (
   `id` int(11) NOT NULL,
   `descriptions` varchar(255) DEFAULT NULL COMMENT 'Full as descriptions',
-  `country` varchar(45) DEFAULT NULL,
-  `date_register` datetime DEFAULT NULL,
+  `country` varchar(45) DEFAULT NULL COMMENT 'Country',
+  `date_register` datetime DEFAULT NULL COMMENT 'Date create',
   `organization_register` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -150,8 +150,8 @@ DROP TABLE IF EXISTS `domain_history`;
 CREATE TABLE `domain_history` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `domain_id` int(11) NOT NULL,
-  `date_start` varchar(45) DEFAULT NULL,
-  `date_end` varchar(45) DEFAULT NULL,
+  `date_start` date DEFAULT NULL,
+  `date_end` date DEFAULT NULL,
   `domain_name` varchar(256) DEFAULT NULL,
   `registrant` varchar(64) DEFAULT NULL,
   `tld` varchar(32) DEFAULT NULL,
@@ -183,5 +183,6 @@ CREATE TABLE `domain_history` (
   `cname` varchar(55) DEFAULT NULL,
   `nserrors` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `domain_id` (`domain_id`)
+  KEY `domain_id` (`domain_id`),
+  KEY `period` (`date_start`, `date_end`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
