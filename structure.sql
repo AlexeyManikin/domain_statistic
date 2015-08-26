@@ -82,9 +82,9 @@ DELIMITER ;
 DELIMITER ;;
 CREATE TRIGGER `domain_statistic`.`domain_BEFORE_UPDATE` BEFORE UPDATE ON `domain` FOR EACH ROW
 BEGIN
-	DECLARE max_id integer;
+    DECLARE max_id integer;
 
-	IF NEW.registrant <> OLD.registrant
+    IF NEW.registrant <> OLD.registrant
        OR NEW.register_date <> OLD.register_date
        OR NEW.register_date_end <> OLD.register_date_end
        OR NEW.free_date <> OLD.free_date
@@ -93,16 +93,16 @@ BEGIN
        OR NEW.a2 <> OLD.a2 
        OR NEW.a3 <> OLD.a3 
        OR NEW.a4 <> OLD.a4
-	     OR NEW.mx1 <> OLD.mx1
+       OR NEW.mx1 <> OLD.mx1
        OR NEW.mx2 <> OLD.mx2 
        OR NEW.mx3 <> OLD.mx3 
        OR NEW.mx4 <> OLD.mx4
-	     OR NEW.ns1 <> OLD.ns1
+       OR NEW.ns1 <> OLD.ns1
        OR NEW.ns2 <> OLD.ns2 
        OR NEW.ns3 <> OLD.ns3 
        OR NEW.ns4 <> OLD.ns4
-	     OR NEW.txt <> OLD.txt
-	     OR NEW.asn1 <> OLD.asn1
+       OR NEW.txt <> OLD.txt
+       OR NEW.asn1 <> OLD.asn1
        OR NEW.asn2 <> OLD.asn2 
        OR NEW.asn3 <> OLD.asn3 
        OR NEW.asn4 <> OLD.asn4
@@ -111,12 +111,11 @@ BEGIN
        OR NEW.aaaa3 <> OLD.aaaa3
        OR NEW.aaaa4 <> OLD.aaaa4
        OR NEW.cname <> OLD.cname
-       OR NEW.nserrors <> OLD.nserrors
-	THEN
-		  SELECT max(id) INTO max_id FROM domain_history WHERE domain_id = OLD.id;
-		  UPDATE domain_history SET date_end = NOW() WHERE id = max_id;
+    THEN
+          SELECT max(id) INTO max_id FROM domain_history WHERE domain_id = OLD.id;
+          UPDATE domain_history SET date_end = NOW() WHERE id = max_id;
                 
-      INSERT INTO domain_history(domain_id,date_start, date_end, domain_name,
+          INSERT INTO domain_history(domain_id,date_start, date_end, domain_name,
                                registrant, tld, register_date, register_date_end,
                                free_date, delegated, a1, a2,
                                a3, a4, mx1, mx2,
