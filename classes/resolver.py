@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-__author__ = 'alexeyymanikin'
+__author__ = 'Alexey Y Manikin'
 
 import multiprocessing
 from helpers.utils import *
@@ -247,7 +247,7 @@ class Resolver(multiprocessing.Process):
             except NoNameservers:
                 domain_dns_data_list['nserrors'].append("NoNS-%s " % record_type)
                 break
-            except:
+            except Exception:
                 domain_dns_data_list['nserrors'].append("UNDEF-%s " % record_type)
 
         return domain_dns_data_list
@@ -444,7 +444,7 @@ class Resolver(multiprocessing.Process):
                     try:
                         cursor.execute(run_sql)
                         self.connection.commit()
-                    except:
+                    except Exception:
                         self.write_to_file(BColor.error("MySQL exceptions (SQL %s)" % run_sql))
                         self.write_to_file(BColor.error(traceback.format_exc()))
 
@@ -472,7 +472,7 @@ class Resolver(multiprocessing.Process):
                     run_sql = None
 
 
-                except:
+                except Exception:
                     data = domain_data['line'].split("\t")
                     domain = re.sub(re_prefix, '', data[0])
 
@@ -482,7 +482,7 @@ class Resolver(multiprocessing.Process):
             self.write_to_file(BColor.process("Process %s done " % self.number))
             self.connection.close()
             return 0
-        except:
+        except Exception:
             self.write_to_file(BColor.error("Process failed %s" % self.number))
             self.write_to_file(BColor.error(traceback.format_exc()))
             return 1

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-__author__ = 'alexeyymanikin'
+__author__ = 'Alexey Y Manikin'
 
 import datetime
 from classes.command.wget import Wget
