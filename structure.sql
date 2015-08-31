@@ -56,6 +56,7 @@ CREATE TABLE `domain` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DELIMITER ;;
+DROP TRIGGER IF EXISTS `domain_statistic`.`domain_AFTER_INSERT`;
 CREATE TRIGGER `domain_statistic`.`domain_AFTER_INSERT` AFTER INSERT ON `domain` FOR EACH ROW
 BEGIN
     INSERT INTO domain_history(domain_id,date_start, date_end, domain_name,
@@ -80,6 +81,7 @@ END ;;
 DELIMITER ;
 
 DELIMITER ;;
+DROP TRIGGER IF EXISTS `domain_statistic`.`domain_BEFORE_UPDATE`;
 CREATE TRIGGER `domain_statistic`.`domain_BEFORE_UPDATE` BEFORE UPDATE ON `domain` FOR EACH ROW
 BEGIN
     DECLARE max_id integer;
@@ -137,6 +139,7 @@ BEGIN
 END ;;
 DELIMITER ;
 DELIMITER ;;
+DROP TRIGGER IF EXISTS `domain_statistic`.`domain_BEFORE_DELETE`;
 CREATE TRIGGER `domain_statistic`.`domain_BEFORE_DELETE` BEFORE DELETE ON `domain` FOR EACH ROW
 BEGIN 
   DECLARE max_id integer;
@@ -184,4 +187,29 @@ CREATE TABLE `domain_history` (
   PRIMARY KEY (`id`),
   KEY `domain_id` (`domain_id`),
   KEY `period` (`date_start`, `date_end`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `regru_providers`;
+CREATE TABLE `regru_providers` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `date_create` date NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `link` varchar(255) NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `status` varchar(255) NOT NULL DEFAULT 'noactive',
+  `count_ns` int(11) NOT NULL DEFAULT '2',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `regru_stat_data`;
+CREATE TABLE `regru_stat_data` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `date` date NOT NULL,
+  `provider_id` int(11) DEFAULT NULL,
+  `value` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `provider_id` (`provider_id`),
+  KEY `date` (`date`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
