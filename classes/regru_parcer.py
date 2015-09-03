@@ -7,6 +7,7 @@ import urllib2
 import re
 from helpers.helpers import get_mysql_connection
 import MySQLdb
+import traceback
 
 
 # Данный медот очень устарелый - скопипастил его для проверки результатов
@@ -96,17 +97,18 @@ class RegruParcer(object):
         for provider in array:
             try:
                 cursor.execute("SELECT id FROM regru_providers WHERE name = LOWER('%s')" % provider['name'])
-                provider_id = cursor.fetchone()
+                provider_id = cursor.fetchone()['id']
                 if not provider_id:
-                    cursor.execute("INSERT INTO regru_providers (date_create, name, link) "\
-                                    "VALUES (NOW(), LOWER('%s'), LOWER('%s'))" % (provider['name'], provider['name']))
+                    cursor.execute("INSERT INTO regru_providers (date_create, name, link)"\
+                                    " VALUE (NOW(), LOWER('%s'), LOWER('%s'))" % (provider['name'], provider['name']))
                     self.connection.commit()
                     cursor.execute("SELECT id FROM regru_providers WHERE name = LOWER('%s')" % provider['name'])
-                    provider_id = cursor.fetchone()
+                    provider_id = cursor.fetchone()['id']
 
                 cursor.execute("INSERT INTO regru_stat_data (date, provider_id, value)"\
-                               " VALUES (NOW(), %s, %s)" % (provider_id, provider['domain']))
+                               " VALUE (NOW(), '%s', '%s')" % (provider_id, provider['domain']))
             except Exception:
+                print traceback.format_exc()
                 continue
 
     def run(self):
@@ -117,10 +119,12 @@ class RegruParcer(object):
 
         site_data = self.download_data()
         if not site_data:
+            print "Not site data"
             return False
 
         array_info = self.get_array_info(site_data)
         if not array_info:
+            print "Not array info"
             return False
 
         self.insert_array_in_base(array_info)
