@@ -110,6 +110,8 @@ class RegruParcer(object):
                     cursor.execute("INSERT INTO regru_stat_data (date, provider_id, value)"\
                                    " VALUE (NOW(), '%s', '%s')" % (provider_id, provider['domain']))
                     self.connection.commit()
+                else:
+                    print "Error"
 
             except Exception:
                 print traceback.format_exc()
