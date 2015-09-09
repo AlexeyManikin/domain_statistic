@@ -21,10 +21,8 @@ RUN locale-gen
 # Prepare environment
 ENV DEBIAN_FRONTEND noninteractive
 
-# This is roughly equivalent to add-apt-repository ppa:chazomaticus/minit.
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E007F6BD
-RUN echo "deb http://ppa.launchpad.net/chazomaticus/minit/ubuntu quantal main" > /etc/apt/sources.list.d/minit.list
-RUN apt-get update && apt-get upgrade -y && apt-get install -y minit # etc.
+ADD install_minit.sh /usr/local/sbin/install_minit.sh
+RUN /bin/bash /usr/local/sbin/install_minit.sh
 
 RUN apt-key adv --keyserver keys.gnupg.net --recv-keys 1C4CBDCDCD2EFD2A
 RUN echo "deb http://repo.percona.com/apt quantal main" >> /etc/apt/sources.list.d/percona.list
@@ -52,6 +50,7 @@ RUN mkdir -p /etc/minit
 ADD startup.sh /etc/minit/startup
 RUN chmod 755 /etc/minit/startup
 CMD ["/sbin/minit"]
+# EOF
 
 
 
