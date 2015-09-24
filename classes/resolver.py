@@ -6,7 +6,6 @@ __author__ = 'Alexey Y Manikin'
 import multiprocessing
 from helpers.utils import *
 import dns.resolver
-import SubnetTree
 from helpers.helperUnicode import *
 from config.main import *
 import MySQLdb
