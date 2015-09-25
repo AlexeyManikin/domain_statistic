@@ -7,7 +7,6 @@ from helpers.helpers import get_mysql_connection
 from config.main import START_YEAR, START_MONTH, START_DAY, PREFIX_LIST
 import datetime
 import MySQLdb
-import pprint
 
 
 class Statistic(object):
@@ -98,9 +97,9 @@ ORDER BY count(*) desc""" % (zone, date, date)
             as_array = {}
 
             for i in range(1, 5):
-                sql = """SELECT as%s as as, count(*) as count FROM domain_history
+                sql = """SELECT asn%s as as_number, count(*) as count FROM domain_history
     WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
-    GROUP BY as%s
+    GROUP BY asn%s
     HAVING count(*) > 50
     ORDER BY count(*) desc""" % (i, zone, date, date, i)
 
@@ -108,10 +107,15 @@ ORDER BY count(*) desc""" % (zone, date, date)
                 data = cursor.fetchall()
 
                 for row in data:
-                    if row['as'] in as_array:
-                        as_array[row['as']] += row['count']
+                    if row['as_number'] == None:
+                        asn = 0
                     else:
-                        as_array[row['as']] = row['count']
+                        asn = row['as_number']
+
+                    if asn in as_array:
+                        as_array[asn] += row['count']
+                    else:
+                        as_array[asn] = row['count']
 
             for key in as_array:
                 sql_insert_date = " ('%s','%s','%s', '%s')" % (date, zone, key, as_array[key])
@@ -120,7 +124,7 @@ ORDER BY count(*) desc""" % (zone, date, date)
                 else:
                     sql_insert += sql_insert_date
 
-            sql = "INSERT INTO as_count_statistic(`date`, `tld`, `as`, `count`) VALUE " + sql_insert
+            sql = "INSERT INTO as_count_statistic(`date`, `tld`, `asn`, `count`) VALUE " + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)

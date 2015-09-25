@@ -186,7 +186,9 @@ CREATE TABLE `domain_history` (
   `nserrors` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `domain_id` (`domain_id`),
-  KEY `period` (`date_start`, `date_end`)
+  KEY `period` (`date_start`, `date_end`),
+  KEY `period_tld` (`date_start`, `date_end`, `tld`),
+  KEY `period_tld_delegated` (`date_start`, `date_end`, `tld`, `delegated`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `regru_providers`;
@@ -222,20 +224,21 @@ CREATE TABLE `domain_count_statistic` (
   `count` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `date` (`date`),
-  KEY `date_zone` (`date`, `tld`)
+  UNIQUE KEY `uniq` (`date`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `as_count_statistic`;
 CREATE TABLE `as_count_statistic` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `date` date NOT NULL,
-  `as` int(11) DEFAULT NULL,
+  `asn` int(11) DEFAULT NULL,
   `tld` varchar(32) DEFAULT NULL,
   `count` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `date` (`date`),
-  KEY `date_as` (`date`, `as`),
-  KEY `tld` (`tld`)
+  KEY `date_as` (`date`, `asn`),
+  KEY `tld` (`tld`),
+  UNIQUE KEY `uniq` (`date`, `asn`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `mx_count_statistic`;
@@ -248,7 +251,8 @@ CREATE TABLE `mx_count_statistic` (
   PRIMARY KEY (`id`),
   KEY `date` (`date`),
   KEY `date_mx` (`date`, `mx`),
-  KEY `tld` (`tld`)
+  KEY `tld` (`tld`),
+  UNIQUE KEY `uniq` (`date`, `mx`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `ns_count_statistic`;
@@ -261,7 +265,8 @@ CREATE TABLE `ns_count_statistic` (
   PRIMARY KEY (`id`),
   KEY `date` (`date`),
   KEY `date_ns` (`date`, `ns`),
-  KEY `tld` (`tld`)
+  KEY `tld` (`tld`),
+  UNIQUE KEY `uniq` (`date`, `ns`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `registrant_count_statistic`;
@@ -274,7 +279,8 @@ CREATE TABLE `registrant_count_statistic` (
   PRIMARY KEY (`id`),
   KEY `date` (`date`),
   KEY `date_registrant` (`date`, `registrant`),
-  KEY `tld` (`tld`)
+  KEY `tld` (`tld`),
+  UNIQUE KEY `uniq` (`date`, `registrant`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `a_count_statistic`;
@@ -287,7 +293,8 @@ CREATE TABLE `a_count_statistic` (
   PRIMARY KEY (`id`),
   KEY `date` (`date`),
   KEY `date_a` (`date`, `a`),
-  KEY `tld` (`tld`)
+  KEY `tld` (`tld`),
+  UNIQUE KEY `uniq` (`date`, `a`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `cname_count_statistic`;
@@ -300,5 +307,6 @@ CREATE TABLE `cname_count_statistic` (
   PRIMARY KEY (`id`),
   KEY `date` (`date`),
   KEY `date_cname` (`date`, `cname`),
-  KEY `tld` (`tld`)
+  KEY `tld` (`tld`),
+  UNIQUE KEY `uniq` (`date`, `cname`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
