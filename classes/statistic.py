@@ -279,7 +279,7 @@ ORDER BY count(*) desc""" % (zone, date, date)
         :return:
         """
         today = datetime.date.today()
-        date = self.get_date_after_without_statistic('registarnt')
+        date = self.get_date_after_without_statistic('registrant')
 
         for prefix in PREFIX_LIST:
             self._update_registrant_count_per_zone(date, today, prefix)
@@ -295,13 +295,14 @@ ORDER BY count(*) desc""" % (zone, date, date)
         while date <= today:
             sql_insert = ""
             a_array = {}
+            asn_array = {}
 
             for i in range(1, 5):
-                sql = """SELECT a%s as a, count(*) as count FROM domain_history
+                sql = """SELECT a%s as a, asn%s as asn, count(*) as count FROM domain_history
 WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
 GROUP BY a%s
 HAVING count(*) > 50
-ORDER BY count(*) desc""" % (i, zone, date, date, i)
+ORDER BY count(*) desc""" % (i, i, zone, date, date, i)
 
                 cursor.execute(sql)
                 data = cursor.fetchall()
@@ -312,14 +313,27 @@ ORDER BY count(*) desc""" % (i, zone, date, date, i)
                     else:
                         a_array[row['a']] = row['count']
 
+                for row in data:
+                    if row['asn'] == None:
+                        asn = 0
+                    else:
+                        asn = row['asn']
+
+                    asn_array[row['a']] = asn
+
             for key in a_array:
-                sql_insert_date = " ('%s','%s','%s', '%s')" % (date, zone, key, a_array[key])
+                if key in asn_array:
+                    asn = asn_array[key]
+                else:
+                    asn = 0
+
+                sql_insert_date = " ('%s','%s','%s', '%s', '%s')" % (date, zone, key, a_array[key], asn)
                 if len(sql_insert) > 5:
                     sql_insert += ", " + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
-            sql = "INSERT INTO a_count_statistic(`date`, `tld`, `a`, `count`) VALUE " + sql_insert
+            sql = "INSERT INTO a_count_statistic(`date`, `tld`, `a`, `count`, `asn`) VALUE " + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)
