@@ -20,3 +20,7 @@ MYSQL_PASSWD = 'domain_statisticdomain_statistic'
 MYSQL_DATABASE = 'domain_statistic'
 
 COUNT_THREAD = 300
+
+START_YEAR = 2015
+START_MONTH = 8
+START_DAY = 1
