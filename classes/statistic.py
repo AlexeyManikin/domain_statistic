@@ -314,7 +314,7 @@ ORDER BY count(*) desc""" % (i, i, zone, date, date, i)
                         a_array[row['a']] = row['count']
 
                 for row in data:
-                    if row['asn'] == None:
+                    if row['asn'] is None:
                         asn = 0
                     else:
                         asn = row['asn']
