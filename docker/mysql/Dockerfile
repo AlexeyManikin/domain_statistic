@@ -13,7 +13,6 @@ RUN \
   apt-get install -y byobu curl git htop man unzip vim wget && \
   rm -rf /var/lib/apt/lists/*
 
-
 # fix locales
 ADD config/locales /var/lib/locales/supported.d/local
 RUN locale-gen
