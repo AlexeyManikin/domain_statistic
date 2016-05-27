@@ -42,9 +42,13 @@
 # Тестовый доступ к БД
 
  Сервер: manikin.beget.ru
+ 
  Порт: 3310
+ 
  Пользователь: amanikin_stat
+ 
  Пароль: openstatistic
+ 
  База: domain_statistic
 
 Если кто не умеет пользоваться консолью, установил PhpMyAdmin: http://pma.amanikin.ru
