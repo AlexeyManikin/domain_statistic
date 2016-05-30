@@ -7,6 +7,7 @@ from helpers.helpers import get_mysql_connection
 import datetime
 import MySQLdb
 
+# https://habrahabr.ru/post/95148/
 
 class Screenshoter(object):
     def __init__(self):
