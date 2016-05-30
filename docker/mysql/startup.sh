@@ -26,7 +26,7 @@ if  find /home/mysql/ -maxdepth 0 -empty | xargs -r false; then
     mysqld --verbose --external-locking --delay-key-write=0 --query-cache-size=0 &
     sleep 10
     echo "create database domain_statistic;" | mysql mysql;
-    echo "GRANT ALL PRIVILEGES ON domain_statistic.* TO domain_statistic@% IDENTIFIED BY 'domain_statisticdomain_statistic';" | mysql mysql;
+    echo "GRANT ALL PRIVILEGES ON `domain_statistic`.* TO `domain_statistic`@'%' IDENTIFIED BY 'domain_statisticdomain_statistic';" | mysql mysql;
     echo "FLUSH PRIVILEGES;" | mysql mysql;
     cat /root/structure.sql | mysql domain_statistic;
     MYPASSWD=$RANDOM$RANDOM$RANDOM

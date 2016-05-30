@@ -1,18 +1,18 @@
 mysql:
   build: mysql/
-  name: "mysql_domain_statistic"
+  name: "mysql_open_domain_statistic"
   mem_limit: "20G"
   volumes:
     - counteiner_data/datadir/:/home/mysql:rw
 
 recurcer:
   build: recurcer/
-  name: "domain_statistic_recurcer"
+  name: "domain_open_statistic_recurcer"
   mem_limit: "3G"
 
 runner:
   build: runner/
-  name: "domain_statistic_runner"
+  name: "domain_open_statistic_runner"
   links:
      - "mysql:db"
      - "recurcer:resolver"

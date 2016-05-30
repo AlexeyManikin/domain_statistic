@@ -12,7 +12,7 @@ CREATE TABLE `as_list` (
 DROP TABLE IF EXISTS `domain`;
 CREATE TABLE `domain` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `domain_name` varchar(256) DEFAULT NULL,
+  `domain_name` varchar(255) DEFAULT NULL,
   `registrant` varchar(64) DEFAULT NULL,
   `tld` varchar(32) DEFAULT NULL,
   `register_date` datetime DEFAULT NULL,
@@ -48,7 +48,31 @@ CREATE TABLE `domain` (
   UNIQUE KEY `domain_name` (`domain_name`(100)),
   KEY `registrant` (`registrant`),
   KEY `deligated` (`delegated`),
-  KEY `load_today` (`load_today`)
+  KEY `load_today` (`load_today`),
+  KEY `i_ns` (`ns1`,`ns2`,`ns3`,`ns4`),
+  KEY `i_ns1` (`ns1`),
+  KEY `i_ns2` (`ns2`),
+  KEY `i_ns3` (`ns3`),
+  KEY `i_ns4` (`ns4`),
+  KEY `domain` (`domain_name`),
+  KEY `i_asn` (`asn1`),
+  KEY `i_asn2` (`asn2`),
+  KEY `i_asn3` (`asn3`),
+  KEY `i_asn4` (`asn4`),
+  KEY `i_asns` (`asn1`,`asn2`,`asn3`,`asn4`),
+  KEY `i_a1` (`a1`),
+  KEY `i_a2` (`a2`),
+  KEY `i_a3` (`a3`),
+  KEY `i_a4` (`a4`),
+  KEY `i_a` (`a1`,`a2`,`a3`,`a4`),
+  KEY `i_tld` (`tld`),
+  FULLTEXT KEY `i_ftd` (`domain_name`),
+  FULLTEXT KEY `ns1_ft` (`ns1`),
+  FULLTEXT KEY `ns2_ft` (`ns2`),
+  FULLTEXT KEY `ns3_ft` (`ns3`),
+  FULLTEXT KEY `ns4_ft` (`ns4`),
+  FULLTEXT KEY `ns_all_ft` (`ns1`,`ns2`,`ns3`,`ns4`),
+  FULLTEXT KEY `i_ft_tld` (`tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DELIMITER ;;
@@ -198,7 +222,9 @@ CREATE TABLE `regru_providers` (
   `status` varchar(255) NOT NULL DEFAULT 'noactive',
   `count_ns` int(11) NOT NULL DEFAULT '2',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
+  UNIQUE KEY `name` (`name`),
+  KEY `i_name` (`name`),
+  KEY `i_count_ns` (`count_ns`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `regru_stat_data`;
@@ -232,10 +258,11 @@ CREATE TABLE `as_count_statistic` (
   `tld` varchar(32) DEFAULT NULL,
   `count` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq` (`date`,`asn`,`tld`),
   KEY `date` (`date`),
-  KEY `date_tld` (`date`, `tld`),
-  UNIQUE KEY `uniq` (`date`, `asn`, `tld`),
-  KEY asn (`asn`)
+  KEY `date_tld` (`date`,`tld`),
+  KEY `asn` (`asn`),
+  KEY `i_as_tld` (`asn`,`tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `mx_count_statistic`;
@@ -259,9 +286,12 @@ CREATE TABLE `ns_count_statistic` (
   `tld` varchar(32) DEFAULT NULL,
   `count` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq` (`date`,`ns`,`tld`),
   KEY `date` (`date`),
-  KEY `date_tld` (`date`, `tld`),
-  UNIQUE KEY `uniq` (`date`, `ns`, `tld`)
+  KEY `date_tld` (`date`,`tld`),
+  KEY `i_ns` (`ns`),
+  KEY `i_ns_tld` (`ns`,`tld`),
+  KEY `i_date_ns` (`ns`,`date`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `registrant_count_statistic`;
@@ -286,10 +316,11 @@ CREATE TABLE `a_count_statistic` (
   `tld` varchar(32) DEFAULT NULL,
   `count` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq` (`date`,`a`,`tld`),
   KEY `date` (`date`),
-  KEY `date_tld` (`date`, `tld`),
-  UNIQUE KEY `uniq` (`date`, `a`, `tld`),
-  KEY asn (`asn`)
+  KEY `date_tld` (`date`,`tld`),
+  KEY `asn` (`asn`),
+  KEY `i_a` (`a`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `cname_count_statistic`;
@@ -300,7 +331,7 @@ CREATE TABLE `cname_count_statistic` (
   `tld` varchar(32) DEFAULT NULL,
   `count` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq` (`date`,`cname`,`tld`),
   KEY `date` (`date`),
-  KEY `date_tld` (`date`, `tld`),
-  UNIQUE KEY `uniq` (`date`, `cname`, `tld`)
+  KEY `date_tld` (`date`,`tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
