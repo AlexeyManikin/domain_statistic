@@ -8,7 +8,7 @@ import os
 
 # Default logger
 CURRENT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__))+'/../')
-MAX_AS_NUMBER = 350000
+MAX_AS_NUMBER = 450000
 
 PREFIX_LIST = ['ru', 'su', 'rf']
 DEFAULT_TIMEOUT = 3.0
