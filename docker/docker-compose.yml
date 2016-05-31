@@ -4,11 +4,14 @@ mysql:
   mem_limit: "20G"
   volumes:
     - counteiner_data/datadir/:/home/mysql:rw
+    - mysql/config/my.cnf:/etc/mysql/my.cnf:rw
 
 recurcer:
   build: recurcer/
   name: "domain_open_statistic_recurcer"
   mem_limit: "3G"
+  volumes:
+    - recurcer/config/recursor.conf:/etc/powerdns/recursor.conf:ro
 
 runner:
   build: runner/
@@ -19,3 +22,4 @@ runner:
   mem_limit: "20G"
   volumes:
      - counteiner_data/download/:/home/domain_statistic/download:rw
+     - runner/config/root:/var/spool/cron/crontabs/root:ro
