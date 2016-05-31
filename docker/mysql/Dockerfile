@@ -41,6 +41,10 @@ RUN cd /root/ && \
     rm -rf /root/domain_statistic;
 
 RUN mkdir -p /etc/minit
+
+ADD create_base.sh /root/create_base.sh
+RUN chmod 755 /root/create_base.sh
+
 ADD startup.sh /etc/minit/startup
 RUN chmod 755 /etc/minit/startup
 CMD ["/sbin/minit"]
