@@ -93,7 +93,7 @@ class AsInet(object):
 
             return return_array
         except Exception:
-            print traceback.format_exc()
+            print(traceback.format_exc())
             return []
 
     def parsing_as(self, show_log=False, max_as=MAX_AS_NUMBER):
@@ -176,7 +176,7 @@ class AsInet(object):
                            'USE_FAST': 0}
 
         if show_log:
-            print "AS Number %s" % number
+            print("AS Number %s" % number)
             pprint.pprint(as_info)
 
         if as_info['DATE_REGISTER'] == '':
