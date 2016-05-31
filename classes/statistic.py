@@ -18,6 +18,7 @@ class Statistic(object):
     # mx_count_statistic
     # as_count_statistic
     # domain_count_statistic
+    # as_domain_old_count_statistic
 
     def __init__(self):
         """
@@ -380,7 +381,7 @@ ORDER BY count(*) desc""" % (zone, date, date)
             self.connection.commit()
             date += datetime.timedelta(days=1)
 
-    def cname_count_statistic(self):
+    def update_cname_count_statistic(self):
         """
         Обновлене статистики по CNAME записям
         :return:
@@ -389,7 +390,52 @@ ORDER BY count(*) desc""" % (zone, date, date)
         date = self.get_date_after_without_statistic('cname')
 
         for prefix in PREFIX_LIST:
-            self._update_a_count_per_zone(date, today, prefix)
+            self._update_cname_count_per_zone(date, today, prefix)
+
+    def _update_as_domain_old_count_per_zone(self, date, today, zone):
+            """
+            Особого смысла смотреть по всем 4 а записям не вижу, только лишняя нагрузка на базу. На данные
+            статистики почти не влияет.
+            :type date: date
+            :type today: date
+            :type zone: unicode
+            :return:
+            """
+            cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+            while date <= today:
+                sql_insert = ""
+                sql = """SELECT asn1 as asn, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
+    FROM domain_history
+    WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
+    GROUP BY asn1
+    HAVING count(*) > 50
+    ORDER BY count(*) desc""" % (zone, date, date)
+
+                cursor.execute(sql)
+                data = cursor.fetchall()
+
+                for row in data:
+                    sql_insert_date = " ('%s','%s','%s','%s')" % (date, row['asn'], zone, row['old'])
+                    if len(sql_insert) > 5:
+                        sql_insert += ", " + sql_insert_date
+                    else:
+                        sql_insert += sql_insert_date
+
+                sql = "INSERT INTO as_domain_old_count_statistic(`date`, `asn`, `tld`, `old`) VALUE " + sql_insert
+                cursor.execute(sql)
+                self.connection.commit()
+                date += datetime.timedelta(days=1)
+
+    def update_as_domain_old_count_statistic(self):
+        """
+        Обновлене статистики по среднему возрасту доменов
+        :return:
+        """
+        today = datetime.date.today()
+        date = self.get_date_after_without_statistic('as_domain_old')
+
+        for prefix in PREFIX_LIST:
+            self._update_as_domain_old_count_per_zone(date, today, prefix)
 
     def update_all_statistic(self):
         """
@@ -402,3 +448,5 @@ ORDER BY count(*) desc""" % (zone, date, date)
         self.update_mx_count_statistic()
         self.update_ns_count_statistic()
         self.update_registrant_count_statistic()
+        self.update_cname_count_statistic()
+        self.update_as_domain_old_count_statistic()
