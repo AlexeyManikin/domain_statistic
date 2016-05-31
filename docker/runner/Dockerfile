@@ -28,6 +28,14 @@ RUN /bin/bash /usr/local/sbin/install_minit.sh
 ADD install_code.sh /usr/local/sbin/install_code.sh
 RUN /bin/bash /usr/local/sbin/install_code.sh
 
+# need for developing
+RUN apt-get update && \
+    apt-get install -y openssh-server && \
+    mkdir /root/.ssh;
+
+ADD config/sshd_config /etc/ssh/sshd_config
+ADD config/authorized_keys /root/.ssh/authorized_keys
+
 ADD init.sh /etc/minit/startup
 RUN chmod 755 /etc/minit/startup
 CMD ["/sbin/minit"]

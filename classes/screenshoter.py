@@ -8,6 +8,7 @@ import datetime
 import MySQLdb
 
 # https://habrahabr.ru/post/95148/
+# https://github.com/adamn/python-webkit2png
 
 class Screenshoter(object):
     def __init__(self):
