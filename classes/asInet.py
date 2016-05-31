@@ -9,6 +9,7 @@ import MySQLdb
 import pprint
 import urllib2
 import traceback
+import time
 
 from helpers.helperUnicode import as_default_string
 from helpers.helpers import get_mysql_connection
@@ -166,6 +167,7 @@ class AsInet(object):
                        'USE_FAST': 1}
         else:
             try:
+                time.sleep(1)
                 as_info = self._get_asn_description(number)
             except:
                 as_info = {'AS': number,

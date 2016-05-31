@@ -55,3 +55,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+docker/counteiner_data/download
+docker/counteiner_data/datadir

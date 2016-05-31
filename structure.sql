@@ -375,5 +375,5 @@ CREATE TABLE `a_domain_old_count_statistic` (
   KEY `date` (`date`),
   KEY `a` (`a`),
   KEY `a_tld` (`a`, `tld`),
-  KEY `date_tld` (`date`, `tld`),
+  KEY `date_tld` (`date`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
