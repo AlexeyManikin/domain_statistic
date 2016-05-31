@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 __author__ = 'Alexey Y Manikin'
 
 from helpers.helpers import get_mysql_connection
-from config.main import START_YEAR, START_MONTH, START_DAY, PREFIX_LIST
+from config.main import START_YEAR, START_MONTH, START_DAY, PREFIX_LIST, MINIMUM_DOMAIN_COUNT
 import datetime
 import MySQLdb
 
@@ -19,6 +19,9 @@ class Statistic(object):
     # as_count_statistic
     # domain_count_statistic
     # as_domain_old_count_statistic
+    # ns_domain_old_count_statistic
+    # a_domain_old_count_statistic
+
 
     def __init__(self):
         """
@@ -101,8 +104,8 @@ ORDER BY count(*) desc""" % (zone, date, date)
                 sql = """SELECT asn%s as as_number, count(*) as count FROM domain_history
     WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
     GROUP BY asn%s
-    HAVING count(*) > 50
-    ORDER BY count(*) desc""" % (i, zone, date, date, i)
+    HAVING count(*) > %s
+    ORDER BY count(*) desc""" % (i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
 
                 cursor.execute(sql)
                 data = cursor.fetchall()
@@ -157,8 +160,8 @@ ORDER BY count(*) desc""" % (zone, date, date)
                 sql = """SELECT mx%s as mx, count(*) as count FROM domain_history
     WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
     GROUP BY mx%s
-    HAVING count(*) > 50
-    ORDER BY count(*) desc""" % (i, zone, date, date, i)
+    HAVING count(*) > %s
+    ORDER BY count(*) desc""" % (i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
 
                 cursor.execute(sql)
                 data = cursor.fetchall()
@@ -208,8 +211,8 @@ ORDER BY count(*) desc""" % (zone, date, date)
                 sql = """SELECT ns%s as ns, count(*) as count FROM domain_history
     WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
     GROUP BY ns%s
-    HAVING count(*) > 50
-    ORDER BY count(*) desc""" % (i, zone, date, date, i)
+    HAVING count(*) > %s
+    ORDER BY count(*) desc""" % (i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
 
                 cursor.execute(sql)
                 data = cursor.fetchall()
@@ -256,8 +259,8 @@ ORDER BY count(*) desc""" % (zone, date, date)
             sql = """SELECT registrant as registrant, count(*) as count FROM domain_history
 WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
 GROUP BY registrant
-HAVING count(*) > 50
-ORDER BY count(*) desc""" % (zone, date, date)
+HAVING count(*) > %s
+ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
 
             cursor.execute(sql)
             data = cursor.fetchall()
@@ -302,8 +305,8 @@ ORDER BY count(*) desc""" % (zone, date, date)
                 sql = """SELECT a%s as a, asn%s as asn, count(*) as count FROM domain_history
 WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
 GROUP BY a%s
-HAVING count(*) > 50
-ORDER BY count(*) desc""" % (i, i, zone, date, date, i)
+HAVING count(*) > %s
+ORDER BY count(*) desc""" % (i, i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
 
                 cursor.execute(sql)
                 data = cursor.fetchall()
@@ -363,8 +366,8 @@ ORDER BY count(*) desc""" % (i, i, zone, date, date, i)
             sql = """SELECT cname as cname, count(*) as count FROM domain_history
 WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
 GROUP BY cname
-HAVING count(*) > 50
-ORDER BY count(*) desc""" % (zone, date, date)
+HAVING count(*) > %s
+ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
 
             cursor.execute(sql)
             data = cursor.fetchall()
@@ -408,8 +411,8 @@ ORDER BY count(*) desc""" % (zone, date, date)
     FROM domain_history
     WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
     GROUP BY asn1
-    HAVING count(*) > 50
-    ORDER BY count(*) desc""" % (zone, date, date)
+    HAVING count(*) > %s
+    ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
 
                 cursor.execute(sql)
                 data = cursor.fetchall()
@@ -428,7 +431,7 @@ ORDER BY count(*) desc""" % (zone, date, date)
 
     def update_as_domain_old_count_statistic(self):
         """
-        Обновлене статистики по среднему возрасту доменов
+        Обновлене статистики по среднему возрасту доменов на автономной системе
         :return:
         """
         today = datetime.date.today()
@@ -436,6 +439,114 @@ ORDER BY count(*) desc""" % (zone, date, date)
 
         for prefix in PREFIX_LIST:
             self._update_as_domain_old_count_per_zone(date, today, prefix)
+
+    def _update_ns_domain_old_count_per_zone(self, date, today, zone):
+        """
+        :type date: date
+        :type today: date
+        :type zone: unicode
+        :return:
+        """
+        cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+        while date <= today:
+            ns_list = {}
+
+            for i in [1, 2, 3, 4]:
+                sql = """SELECT ns%s as ns, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
+    FROM domain_history
+    WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
+    GROUP BY ns%i
+    HAVING count(*) > %s
+    ORDER BY count(*) desc""" % (i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
+                cursor.execute(sql)
+                data = cursor.fetchall()
+                for row in data:
+                    if row['ns'] not in ns_list:
+                        ns_list[row['ns']] = []
+                    ns_list[row['ns']].append({'i': i,
+                                               'old': row['old'],
+                                               'count': row['count']})
+
+            sql_insert = ""
+
+            for key in ns_list:
+                summary_value = 0
+                summary_count = 0
+                for item in ns_list[key]:
+                    summary_value = summary_value + item['old'] * item['count']
+                    summary_count = summary_count + item['count']
+
+                if summary_count == 0:
+                    summary_count = 1
+
+                old = round((summary_value / summary_count), 2)
+
+                sql_insert_date = " ('%s','%s','%s','%s')" % (date, key, zone, old)
+                if len(sql_insert) > 5:
+                    sql_insert += ", " + sql_insert_date
+                else:
+                    sql_insert += sql_insert_date
+
+            sql = "INSERT INTO ns_domain_old_count_statistic(`date`, `ns`, `tld`, `old`) VALUE " + sql_insert
+            cursor.execute(sql)
+            self.connection.commit()
+            date += datetime.timedelta(days=1)
+
+    def update_ns_domain_old_count_statistic(self):
+        """
+        Обновлене статистики по среднему возрасту доменов на NS серверах
+        :return:
+        """
+        today = datetime.date.today()
+        date = self.get_date_after_without_statistic('ns_domain_old')
+
+        for prefix in PREFIX_LIST:
+            self._update_ns_domain_old_count_per_zone(date, today, prefix)
+
+    def _update_a_domain_old_count_per_zone(self, date, today, zone):
+        """
+        Особого смысла смотреть по всем 4 а записям не вижу, только лишняя нагрузка на базу. На данные
+        статистики почти не влияет.
+        :type date: date
+        :type today: date
+        :type zone: unicode
+        :return:
+        """
+        cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+        while date <= today:
+            sql_insert = ""
+            sql = """SELECT a1 as a, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
+FROM domain_history
+WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
+GROUP BY a1
+HAVING count(*) > %s
+ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
+
+            cursor.execute(sql)
+            data = cursor.fetchall()
+
+            for row in data:
+                sql_insert_date = " ('%s','%s','%s','%s')" % (date, row['a'], zone, row['old'])
+                if len(sql_insert) > 5:
+                    sql_insert += ", " + sql_insert_date
+                else:
+                    sql_insert += sql_insert_date
+
+            sql = "INSERT INTO a_domain_old_count_statistic(`date`, `a`, `tld`, `old`) VALUE " + sql_insert
+            cursor.execute(sql)
+            self.connection.commit()
+            date += datetime.timedelta(days=1)
+
+    def update_a_domain_old_count_statistic(self):
+        """
+        Обновлене статистики по среднему возрасту доменов на IP адресах
+        :return:
+        """
+        today = datetime.date.today()
+        date = self.get_date_after_without_statistic('a_domain_old')
+
+        for prefix in PREFIX_LIST:
+            self._update_a_domain_old_count_per_zone(date, today, prefix)
 
     def update_all_statistic(self):
         """
@@ -450,3 +561,5 @@ ORDER BY count(*) desc""" % (zone, date, date)
         self.update_registrant_count_statistic()
         self.update_cname_count_statistic()
         self.update_as_domain_old_count_statistic()
+        self.update_ns_domain_old_count_statistic()
+        self.update_a_domain_old_count_statistic()
