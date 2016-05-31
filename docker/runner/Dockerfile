@@ -20,6 +20,8 @@ RUN \
   pip install dnspython && \
   pip install --upgrade psutil && \
   apt-get clean && \
+  rm -rf /etc/localtime && \
+  ln -s /usr/share/zoneinfo/Europe/Moscow /etc/localtime && \
   rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/*;
 
 ADD install_minit.sh /usr/local/sbin/install_minit.sh

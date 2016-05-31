@@ -7,6 +7,7 @@ from helpers.helpers import get_mysql_connection
 from config.main import START_YEAR, START_MONTH, START_DAY, PREFIX_LIST, MINIMUM_DOMAIN_COUNT
 import datetime
 import MySQLdb
+import pprint
 
 
 class Statistic(object):
@@ -21,7 +22,6 @@ class Statistic(object):
     # as_domain_old_count_statistic
     # ns_domain_old_count_statistic
     # a_domain_old_count_statistic
-
 
     def __init__(self):
         """
@@ -84,8 +84,9 @@ ORDER BY count(*) desc""" % (zone, date, date)
         today = datetime.date.today()
         date = self.get_date_after_without_statistic('domain')
 
-        for prefix in PREFIX_LIST:
-            self._update_domain_count_per_zone(date, today, prefix)
+        if date is not None:
+            for prefix in PREFIX_LIST:
+                self._update_domain_count_per_zone(date, today, prefix)
 
     def _update_as_count_per_zone(self, date, today, zone):
         """
@@ -141,8 +142,9 @@ ORDER BY count(*) desc""" % (zone, date, date)
         today = datetime.date.today()
         date = self.get_date_after_without_statistic('as')
 
-        for prefix in PREFIX_LIST:
-            self._update_as_count_per_zone(date, today, prefix)
+        if date is not None:
+            for prefix in PREFIX_LIST:
+                self._update_as_count_per_zone(date, today, prefix)
 
     def _update_mx_count_per_zone(self, date, today, zone):
         """
@@ -192,8 +194,9 @@ ORDER BY count(*) desc""" % (zone, date, date)
         today = datetime.date.today()
         date = self.get_date_after_without_statistic('mx')
 
-        for prefix in PREFIX_LIST:
-            self._update_mx_count_per_zone(date, today, prefix)
+        if date is not None:
+            for prefix in PREFIX_LIST:
+                self._update_mx_count_per_zone(date, today, prefix)
 
     def _update_ns_count_per_zone(self, date, today, zone):
         """
@@ -243,8 +246,9 @@ ORDER BY count(*) desc""" % (zone, date, date)
         today = datetime.date.today()
         date = self.get_date_after_without_statistic('ns')
 
-        for prefix in PREFIX_LIST:
-            self._update_ns_count_per_zone(date, today, prefix)
+        if date is not None:
+            for prefix in PREFIX_LIST:
+                self._update_ns_count_per_zone(date, today, prefix)
 
     def _update_registrant_count_per_zone(self, date, today, zone):
         """
@@ -285,8 +289,9 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
         today = datetime.date.today()
         date = self.get_date_after_without_statistic('registrant')
 
-        for prefix in PREFIX_LIST:
-            self._update_registrant_count_per_zone(date, today, prefix)
+        if date is not None:
+            for prefix in PREFIX_LIST:
+                self._update_registrant_count_per_zone(date, today, prefix)
 
     def _update_a_count_per_zone(self, date, today, zone):
         """
@@ -350,8 +355,9 @@ ORDER BY count(*) desc""" % (i, i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
         today = datetime.date.today()
         date = self.get_date_after_without_statistic('a')
 
-        for prefix in PREFIX_LIST:
-            self._update_a_count_per_zone(date, today, prefix)
+        if date is not None:
+            for prefix in PREFIX_LIST:
+                self._update_a_count_per_zone(date, today, prefix)
 
     def _update_cname_count_per_zone(self, date, today, zone):
         """
@@ -392,8 +398,9 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
         today = datetime.date.today()
         date = self.get_date_after_without_statistic('cname')
 
-        for prefix in PREFIX_LIST:
-            self._update_cname_count_per_zone(date, today, prefix)
+        if date is not None:
+            for prefix in PREFIX_LIST:
+                self._update_cname_count_per_zone(date, today, prefix)
 
     def _update_as_domain_old_count_per_zone(self, date, today, zone):
             """
@@ -437,8 +444,9 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
         today = datetime.date.today()
         date = self.get_date_after_without_statistic('as_domain_old')
 
-        for prefix in PREFIX_LIST:
-            self._update_as_domain_old_count_per_zone(date, today, prefix)
+        if date is not None:
+            for prefix in PREFIX_LIST:
+                self._update_as_domain_old_count_per_zone(date, today, prefix)
 
     def _update_ns_domain_old_count_per_zone(self, date, today, zone):
         """
@@ -500,8 +508,9 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
         today = datetime.date.today()
         date = self.get_date_after_without_statistic('ns_domain_old')
 
-        for prefix in PREFIX_LIST:
-            self._update_ns_domain_old_count_per_zone(date, today, prefix)
+        if date is not None:
+            for prefix in PREFIX_LIST:
+                self._update_ns_domain_old_count_per_zone(date, today, prefix)
 
     def _update_a_domain_old_count_per_zone(self, date, today, zone):
         """
@@ -545,8 +554,9 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
         today = datetime.date.today()
         date = self.get_date_after_without_statistic('a_domain_old')
 
-        for prefix in PREFIX_LIST:
-            self._update_a_domain_old_count_per_zone(date, today, prefix)
+        if date is not None:
+            for prefix in PREFIX_LIST:
+                self._update_a_domain_old_count_per_zone(date, today, prefix)
 
     def update_all_statistic(self):
         """

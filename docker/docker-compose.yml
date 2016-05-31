@@ -2,6 +2,8 @@ mysql:
   build: mysql/
   name: "mysql_open_domain_statistic"
   mem_limit: "20G"
+  ports:
+    - "3311:33060"
   volumes:
     - counteiner_data/datadir/:/home/mysql:rw
     - mysql/config/my.cnf:/etc/mysql/my.cnf:rw

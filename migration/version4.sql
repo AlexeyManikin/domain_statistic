@@ -8,7 +8,7 @@ CREATE TABLE `as_domain_old_count_statistic` (
   KEY `date` (`date`),
   KEY `asn` (`asn`),
   KEY `asn_tld` (`asn`, `tld`),
-  KEY `date_tld` (`date`, `tld`),
+  KEY `date_tld` (`date`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `ns_domain_old_count_statistic` (
@@ -21,7 +21,7 @@ CREATE TABLE `ns_domain_old_count_statistic` (
   KEY `date` (`date`),
   KEY `ns` (`ns`),
   KEY `ns_tld` (`ns`, `tld`),
-  KEY `date_tld` (`date`, `tld`),
+  KEY `date_tld` (`date`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `a_domain_old_count_statistic` (
@@ -34,5 +34,5 @@ CREATE TABLE `a_domain_old_count_statistic` (
   KEY `date` (`date`),
   KEY `a` (`a`),
   KEY `a_tld` (`a`, `tld`),
-  KEY `date_tld` (`date`, `tld`),
+  KEY `date_tld` (`date`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;

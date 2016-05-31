@@ -19,7 +19,7 @@ from classes.asInet import AsInet
 if __name__ == "__main__":
     try:
         as_parser = AsInet()
-        as_parser.parsing_as(show_log=False)
+        as_parser.parsing_as(show_log=True)
     except Exception as e:
         print "Got an exception: %s" % e.message
         print traceback.format_exc()
