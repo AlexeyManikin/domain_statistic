@@ -1,5 +1,5 @@
 FROM ubuntu:14.04
-LABEL version="1.0"
+LABEL version="1.1"
 
 MAINTAINER Alexey Manikin <alexey@beget.ru>
 
