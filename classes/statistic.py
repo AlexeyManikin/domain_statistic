@@ -425,6 +425,10 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
                 data = cursor.fetchall()
 
                 for row in data:
+
+                    if row['asn'] is None or row['asn'] == 'None':
+                        row['asn'] = 0
+
                     sql_insert_date = " ('%s','%s','%s','%s')" % (date, row['asn'], zone, row['old'])
                     if len(sql_insert) > 5:
                         sql_insert += ", " + sql_insert_date
