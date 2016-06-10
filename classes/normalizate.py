@@ -25,13 +25,16 @@ class DbNormalizate(object):
         """
         self.connection.close()
 
-    def _normalizate_delete_record(self):
+    def _normalization_delete_record(self):
         """
         Нормализация удаленных и вновь добавленных доменов. То есть если домен был удален и зарегистрирован,
         у него должна быть одна история
         :return:
         """
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        if self.show_log:
+            BColor.ok("Select deleted domain from domain_history")
 
         sql = """SELECT DISTINCT domain_id AS domain_id FROM domain_history
 WHERE domain_id NOT IN (SELECT id FROM domain)"""
@@ -52,10 +55,12 @@ WHERE domain_id NOT IN (SELECT id FROM domain)"""
                 BColor.ok("Updated %s, not updated %s" % (count_update, count_not_update))
 
             sql = "SELECT DISTINCT domain_name FROM domain_history WHERE domain_id = %s" % (row['domain_id'])
+            BColor.warning(sql)
             cursor.execute(sql)
             domain_history = cursor.fetchone()
 
-            sql = "SELECT id FROM domain WHERE domain_name = %s" % (domain_history['domain_name'])
+            sql = "SELECT id FROM domain WHERE domain_name = '%s'" % (domain_history['domain_name'])
+            BColor.warning(sql)
             cursor.execute(sql)
             domain = cursor.fetchone()
 
@@ -65,18 +70,18 @@ WHERE domain_id NOT IN (SELECT id FROM domain)"""
                                                                               row['domain_id'],
                                                                               domain['id']))
 
-                sql_update = "UPDATE domain_history SET domain_id = %s WHERE domain_id = %s" % (row['domain_id'],
-                                                                                                domain['id'])
-                #cursor.execute(sql_update)
+                sql_update = "UPDATE domain_history SET domain_id = %s WHERE domain_id = %s" % (domain['id'],
+                                                                                                row['domain_id'])
+                cursor.execute(sql_update)
                 count_update += 1
             else:
                 count_not_update += 1
 
             current_domain += 1
 
-    def normalizate_db(self):
+    def normalization_db(self):
         """
         Обновление всех статистик
         :return:
         """
-        self._normalizate_delete_record()
+        self._normalization_delete_record()

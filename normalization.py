@@ -19,7 +19,7 @@ from classes.normalizate import DbNormalizate
 if __name__ == "__main__":
     try:
         norm = DbNormalizate(show_log=True)
-        norm.normalizate_db()
+        norm.normalization_db()
     except Exception as e:
         print "Got an exception: %s" % e.message
         print traceback.format_exc()
