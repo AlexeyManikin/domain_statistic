@@ -100,7 +100,7 @@ class RegruParcer(object):
                 provider_id = cursor.fetchone()
                 if not provider_id:
                     cursor.execute("INSERT INTO regru_providers (date_create, name, link)"\
-                                    " VALUE (NOW(), LOWER('%s'), LOWER('%s'))" % (provider['name'], provider['name']))
+                                    " VALUE (CURDATE(), LOWER('%s'), LOWER('%s'))" % (provider['name'], provider['name']))
                     self.connection.commit()
                     cursor.execute("SELECT id FROM regru_providers WHERE name = LOWER('%s')" % provider['name'])
                     provider_id = cursor.fetchone()
@@ -108,7 +108,7 @@ class RegruParcer(object):
                 if provider_id:
                     provider_id = provider_id['id']
                     cursor.execute("INSERT INTO regru_stat_data (date, provider_id, value)"\
-                                   " VALUE (NOW(), '%s', '%s')" % (provider_id, provider['domain']))
+                                   " VALUE (CURDATE(), '%s', '%s')" % (provider_id, provider['domain']))
                     self.connection.commit()
                 else:
                     print "Error"
