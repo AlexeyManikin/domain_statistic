@@ -127,4 +127,4 @@ if __name__ == "__main__":
 
     except Exception as e:
         BColor.error("Got an exception: %s" % e.message)
-        print traceback.format_exc()
+        print(traceback.format_exc())

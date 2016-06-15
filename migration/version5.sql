@@ -17,7 +17,7 @@ CREATE TABLE `domain_param_int` (
   `value` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `period` (`date_start`, `date_end`),
-  KEY `last` (`last`)
+  KEY `last` (`last`),
   KEY `domain_id` (`domain_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
@@ -32,7 +32,7 @@ CREATE TABLE `domain_param_string` (
   `value` VARCHAR(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `period` (`date_start`, `date_end`),
-  KEY `last` (`last`)
+  KEY `last` (`last`),
   KEY `domain_id` (`domain_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
@@ -47,6 +47,19 @@ CREATE TABLE `domain_param_text` (
   `value` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `period` (`date_start`, `date_end`),
-  KEY `last` (`last`)
+  KEY `last` (`last`),
   KEY `domain_id` (`domain_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `ns_domain_group_count_statistic` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `date` date NOT NULL,
+  `ns_group` VARCHAR(70) DEFAULT NULL,
+  `tld` VARCHAR(32) DEFAULT NULL,
+  `count` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `date` (`date`),
+  KEY `ns_group` (`ns_group`),
+  KEY `ns_group_tld` (`ns_group`, `tld`),
+  KEY `date_tld` (`date`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;

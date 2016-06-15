@@ -21,5 +21,5 @@ if __name__ == "__main__":
         as_parser = AsInet()
         as_parser.parsing_as(show_log=False)
     except Exception as e:
-        print "Got an exception: %s" % e.message
-        print traceback.format_exc()
+        print("Got an exception: %s" % e.message)
+        print(traceback.format_exc())

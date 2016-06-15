@@ -377,3 +377,17 @@ CREATE TABLE `a_domain_old_count_statistic` (
   KEY `a_tld` (`a`, `tld`),
   KEY `date_tld` (`date`, `tld`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `ns_domain_group_count_statistic`;
+CREATE TABLE `ns_domain_group_count_statistic` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `date` date NOT NULL,
+  `ns_group` VARCHAR(70) DEFAULT NULL,
+  `tld` VARCHAR(32) DEFAULT NULL,
+  `count` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `date` (`date`),
+  KEY `ns_group` (`ns_group`),
+  KEY `ns_group_tld` (`ns_group`, `tld`),
+  KEY `date_tld` (`date`, `tld`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
