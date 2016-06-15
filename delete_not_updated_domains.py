@@ -26,7 +26,7 @@ def print_log(log_flag, text):
     :return:
     """
     if log_flag:
-        print text
+        print(text)
 
 if __name__ == "__main__":
     show_log = True
@@ -39,4 +39,4 @@ if __name__ == "__main__":
 
     except Exception as e:
         BColor.error("Got an exception: %s" % e.message)
-        print traceback.format_exc()
+        print(traceback.format_exc())

@@ -7,7 +7,6 @@ from helpers.helpers import get_mysql_connection
 from config.main import START_YEAR, START_MONTH, START_DAY, PREFIX_LIST, MINIMUM_DOMAIN_COUNT
 import datetime
 import MySQLdb
-import pprint
 
 
 class Statistic(object):
@@ -22,6 +21,7 @@ class Statistic(object):
     # as_domain_old_count_statistic
     # ns_domain_old_count_statistic
     # a_domain_old_count_statistic
+    # ns_domain_group_count_statistic
 
     def __init__(self):
         """
@@ -56,7 +56,7 @@ class Statistic(object):
         """
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
-            sql_insert = ""
+            sql_insert = ''
             sql = """SELECT count(*) as count FROM domain_history
 WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
 ORDER BY count(*) desc""" % (zone, date, date)
@@ -71,7 +71,7 @@ ORDER BY count(*) desc""" % (zone, date, date)
                 else:
                     sql_insert += sql_insert_date
 
-            sql = "INSERT INTO domain_count_statistic(`date`, `tld`, `count`) VALUE " + sql_insert
+            sql = 'INSERT INTO domain_count_statistic(`date`, `tld`, `count`) VALUE ' + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)
@@ -98,7 +98,7 @@ ORDER BY count(*) desc""" % (zone, date, date)
 
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
-            sql_insert = ""
+            sql_insert = ''
             as_array = {}
 
             for i in range(1, 5):
@@ -125,11 +125,11 @@ ORDER BY count(*) desc""" % (zone, date, date)
             for key in as_array:
                 sql_insert_date = " ('%s','%s','%s', '%s')" % (date, zone, key, as_array[key])
                 if len(sql_insert) > 5:
-                    sql_insert += ", " + sql_insert_date
+                    sql_insert += ', ' + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
-            sql = "INSERT INTO as_count_statistic(`date`, `tld`, `asn`, `count`) VALUE " + sql_insert
+            sql = 'INSERT INTO as_count_statistic(`date`, `tld`, `asn`, `count`) VALUE ' + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)
@@ -155,7 +155,7 @@ ORDER BY count(*) desc""" % (zone, date, date)
         """
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
-            sql_insert = ""
+            sql_insert = ''
             mx_array = {}
 
             for i in range(1, 5):
@@ -181,7 +181,7 @@ ORDER BY count(*) desc""" % (zone, date, date)
                 else:
                     sql_insert += sql_insert_date
 
-            sql = "INSERT INTO mx_count_statistic(`date`, `tld`, `mx`, `count`) VALUE " + sql_insert
+            sql = 'INSERT INTO mx_count_statistic(`date`, `tld`, `mx`, `count`) VALUE ' + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)
@@ -207,7 +207,7 @@ ORDER BY count(*) desc""" % (zone, date, date)
         """
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
-            sql_insert = ""
+            sql_insert = ''
             ns_array = {}
 
             for i in range(1, 5):
@@ -229,11 +229,11 @@ ORDER BY count(*) desc""" % (zone, date, date)
             for key in ns_array:
                 sql_insert_date = " ('%s','%s','%s', '%s')" % (date, zone, key, ns_array[key])
                 if len(sql_insert) > 5:
-                    sql_insert += ", " + sql_insert_date
+                    sql_insert += ', ' + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
-            sql = "INSERT INTO ns_count_statistic(`date`, `tld`, `ns`, `count`) VALUE " + sql_insert
+            sql = 'INSERT INTO ns_count_statistic(`date`, `tld`, `ns`, `count`) VALUE ' + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)
@@ -259,7 +259,7 @@ ORDER BY count(*) desc""" % (zone, date, date)
         """
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
-            sql_insert = ""
+            sql_insert = ''
             sql = """SELECT registrant as registrant, count(*) as count FROM domain_history
 WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
 GROUP BY registrant
@@ -276,7 +276,7 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
                 else:
                     sql_insert += sql_insert_date
 
-            sql = "INSERT INTO registrant_count_statistic(`date`, `registrant`, `tld`, `count`) VALUE " + sql_insert
+            sql = 'INSERT INTO registrant_count_statistic(`date`, `registrant`, `tld`, `count`) VALUE ' + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)
@@ -302,7 +302,7 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
         """
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
-            sql_insert = ""
+            sql_insert = ''
             a_array = {}
             asn_array = {}
 
@@ -338,11 +338,11 @@ ORDER BY count(*) desc""" % (i, i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
 
                 sql_insert_date = " ('%s','%s','%s', '%s', '%s')" % (date, zone, key, a_array[key], asn)
                 if len(sql_insert) > 5:
-                    sql_insert += ", " + sql_insert_date
+                    sql_insert += ', ' + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
-            sql = "INSERT INTO a_count_statistic(`date`, `tld`, `a`, `count`, `asn`) VALUE " + sql_insert
+            sql = 'INSERT INTO a_count_statistic(`date`, `tld`, `a`, `count`, `asn`) VALUE ' + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)
@@ -381,11 +381,11 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
             for row in data:
                 sql_insert_date = " ('%s','%s','%s','%s')" % (date, row['cname'], zone, row['count'])
                 if len(sql_insert) > 5:
-                    sql_insert += ", " + sql_insert_date
+                    sql_insert += ', ' + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
-            sql = "INSERT INTO cname_count_statistic(`date`, `cname`, `tld`, `count`) VALUE " + sql_insert
+            sql = 'INSERT INTO cname_count_statistic(`date`, `cname`, `tld`, `count`) VALUE ' + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)
@@ -431,11 +431,11 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
 
                     sql_insert_date = " ('%s','%s','%s','%s')" % (date, row['asn'], zone, row['old'])
                     if len(sql_insert) > 5:
-                        sql_insert += ", " + sql_insert_date
+                        sql_insert += ', ' + sql_insert_date
                     else:
                         sql_insert += sql_insert_date
 
-                sql = "INSERT INTO as_domain_old_count_statistic(`date`, `asn`, `tld`, `old`) VALUE " + sql_insert
+                sql = 'INSERT INTO as_domain_old_count_statistic(`date`, `asn`, `tld`, `old`) VALUE ' + sql_insert
                 cursor.execute(sql)
                 self.connection.commit()
                 date += datetime.timedelta(days=1)
@@ -495,11 +495,11 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
 
                 sql_insert_date = " ('%s','%s','%s','%s')" % (date, key, zone, old)
                 if len(sql_insert) > 5:
-                    sql_insert += ", " + sql_insert_date
+                    sql_insert += ', ' + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
-            sql = "INSERT INTO ns_domain_old_count_statistic(`date`, `ns`, `tld`, `old`) VALUE " + sql_insert
+            sql = 'INSERT INTO ns_domain_old_count_statistic(`date`, `ns`, `tld`, `old`) VALUE ' + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)
@@ -541,11 +541,11 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
             for row in data:
                 sql_insert_date = " ('%s','%s','%s','%s')" % (date, row['a'], zone, row['old'])
                 if len(sql_insert) > 5:
-                    sql_insert += ", " + sql_insert_date
+                    sql_insert += ', ' + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
-            sql = "INSERT INTO a_domain_old_count_statistic(`date`, `a`, `tld`, `old`) VALUE " + sql_insert
+            sql = 'INSERT INTO a_domain_old_count_statistic(`date`, `a`, `tld`, `old`) VALUE ' + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)
@@ -562,6 +562,89 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
             for prefix in PREFIX_LIST:
                 self._update_a_domain_old_count_per_zone(date, today, prefix)
 
+    def _update_ns_domain_group_count_statistic(self, date, today, zone):
+        """
+        :type date: date
+        :type today: date
+        :type zone: unicode
+        :return:
+        """
+        cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+        if date <= today:
+            ns_array = {}
+            provider_array = {}
+
+            for i in range(1, 5):
+                sql = """SELECT ns%s as ns, count(*) as count FROM domain_history
+                        WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
+                        GROUP BY ns%s
+                        HAVING count(*) > %s
+                        ORDER BY count(*) desc""" % (i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
+
+                cursor.execute(sql)
+                data = cursor.fetchall()
+
+                for row in data:
+                    if row['ns'] in ns_array:
+                        ns_array[row['ns']] += row['count']
+                    else:
+                        ns_array[row['ns']] = row['count']
+
+            for key in ns_array:
+                try:
+                    if '.net.ru.' in key or '.com.ua.' in key:
+                        provider = key.split('.')[-4]
+                    else:
+                        provider = key.split('.')[-3]
+
+                    if provider in provider_array:
+                        provider_array[provider] += ns_array[key]
+                    else:
+                        provider_array[provider] = ns_array[key]
+
+                except Exception as e:
+                    # ну что бывает, не запоминаем это значение
+                    print("\n\n\nGot an exception: %s\n\n\n" % e.message)
+
+            sql_insert = ''
+            for key in provider_array:
+                like = '%.' + key + '.%'
+
+                sql = """SELECT count(*) as count FROM domain_history
+                        WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s' AND
+                              (ns1 like '%s' OR ns2 like '%s' OR ns3 like '%s' OR ns4 like '%s')
+                """ % (zone, date, date, like, like, like, like)
+
+                cursor.execute(sql)
+                data = cursor.fetchone()
+
+                sql_insert_date = " ('%s','%s','%s','%s')" % (date, key, zone, data['count'])
+                if len(sql_insert) > 5:
+                    sql_insert += ', ' + sql_insert_date
+                else:
+                    sql_insert += sql_insert_date
+
+
+            sql = 'INSERT INTO ns_domain_group_count_statistic(`date`, `ns_group`, `tld`, `count`) VALUE ' \
+                  + sql_insert
+
+            cursor.execute(sql)
+            self.connection.commit()
+
+            date += datetime.timedelta(days=1)
+
+    def update_ns_domain_group_count_statistic(self):
+        """
+        Обновлене статистики по груперованным провайдерам
+        :return:
+        """
+        today = datetime.date.today()
+        date = self.get_date_after_without_statistic('ns_domain_group')
+
+        if date is not None:
+            for prefix in PREFIX_LIST:
+                self._update_ns_domain_group_count_statistic(date, today, prefix)
+
     def update_all_statistic(self):
         """
         Обновление всех статистик
@@ -577,3 +660,4 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
         self.update_as_domain_old_count_statistic()
         self.update_ns_domain_old_count_statistic()
         self.update_a_domain_old_count_statistic()
+        self.update_ns_domain_group_count_statistic()

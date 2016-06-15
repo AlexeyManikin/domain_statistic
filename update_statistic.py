@@ -15,7 +15,6 @@ logfile = os.path.join(CURRENT_DIR, '%s.debug' % PROGRAM_NAME)
 import traceback
 from helpers.helpersCollor import BColor
 from classes.statistic import Statistic
-import pprint
 
 if __name__ == "__main__":
     try:
@@ -23,4 +22,4 @@ if __name__ == "__main__":
         statistic.update_all_statistic()
     except Exception as e:
         BColor.error("Got an exception: %s" % e.message)
-        print traceback.format_exc()
+        print(traceback.format_exc())
