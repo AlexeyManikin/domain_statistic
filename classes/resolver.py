@@ -109,7 +109,7 @@ class Resolver(multiprocessing.Process):
             process_list.append(resolver)
             resolver.start()
 
-            if i !=0 and i % count == 0:
+            if i != 0 and i % count == 0:
                 BColor.process("Wait for threads finish...")
                 for process in process_list:
                     try:

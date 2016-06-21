@@ -20,6 +20,13 @@ MYSQL_USER = 'domain_statistic'
 MYSQL_PASSWD = 'domain_statisticdomain_statistic'
 MYSQL_DATABASE = 'domain_statistic'
 
+# for remote connection
+# MYSQL_HOST = 'amanikin.ru'
+# MYSQL_PORT = 3311
+# MYSQL_USER = 'addition'
+# MYSQL_PASSWD = '120686'
+# MYSQL_DATABASE = 'domain_statistic'
+
 COUNT_THREAD = 300
 
 START_YEAR = 2015
