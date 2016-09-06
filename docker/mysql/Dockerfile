@@ -6,6 +6,9 @@ MAINTAINER Alexey Manikin <alexey@beget.ru>
 # Prepare environment
 ENV DEBIAN_FRONTEND noninteractive
 
+# keys.gnupg.net - 84.112.2.30
+RUN apt-key adv --keyserver 84.112.2.30 --recv-keys 1C4CBDCDCD2EFD2A
+
 # Install.
 RUN \
   sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list && \
@@ -13,7 +16,6 @@ RUN \
   apt-get -y upgrade && \
   apt-get install -y build-essential && \
   apt-get install -y software-properties-common && \
-  apt-key adv --keyserver keys.gnupg.net --recv-keys 1C4CBDCDCD2EFD2A && \
   echo "deb http://repo.percona.com/apt quantal main" >> /etc/apt/sources.list.d/percona.list && \
   echo "deb-src http://repo.percona.com/apt quantal main" >> /etc/apt/sources.list.d/percona.list && \
   apt-get update && \
