@@ -24,7 +24,7 @@ runner:
   mem_limit: "100G"
   volumes:
      - ./counteiner_data/download/:/home/domain_statistic/download:rw
-     - ./runner/config/root:/var/spool/cron/crontabs/root:ro
+     - ./runner/config/root:/var/spool/cron/crontabs/root:rw
 
 devrunner:
   build: runner/
@@ -38,5 +38,5 @@ devrunner:
   volumes:
      - ../:/home/domain_statistic:rw
      - ./counteiner_data/download/:/home/domain_statistic/download:rw
-     - ./runner/config/root_dev:/var/spool/cron/crontabs/root:ro
+     - ./runner/config/root_dev:/var/spool/cron/crontabs/root:rw
 
