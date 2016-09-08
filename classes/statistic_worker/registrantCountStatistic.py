@@ -10,13 +10,13 @@ import datetime
 from config.main import MINIMUM_DOMAIN_COUNT
 
 
-class nsCountStatistic(multiprocessing.Process):
+class RegistrantCountStatistic(multiprocessing.Process):
 
     def __init__(self, number, data, today, zone):
         """
         :param number:
         """
-        multiprocessing.Process.__init__(self, name="ns_count_%s" % number)
+        multiprocessing.Process.__init__(self, name="registrant_count_%s" % number)
         self.number = number
         self.connection = None
 
@@ -30,7 +30,7 @@ class nsCountStatistic(multiprocessing.Process):
         """
         self.connection = get_mysql_connection()
 
-    def _update_ns_count_per_zone(self, date, today, zone):
+    def _update_registrant_count_per_zone(self, date, today, zone):
         """
         :type date: date
         :type today: date
@@ -40,33 +40,25 @@ class nsCountStatistic(multiprocessing.Process):
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
             sql_insert = ''
-            ns_array = {}
+            sql = """SELECT registrant as registrant, count(*) as count FROM domain_history
+WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
+GROUP BY registrant
+HAVING count(*) > %s
+ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
 
-            for i in range(1, 5):
-                sql = """SELECT ns%s as ns, count(*) as count FROM domain_history
-    WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
-    GROUP BY ns%s
-    HAVING count(*) > %s
-    ORDER BY count(*) desc""" % (i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
+            cursor.execute(sql)
+            data = cursor.fetchall()
 
-                cursor.execute(sql)
-                data = cursor.fetchall()
-
-                for row in data:
-                    if row['ns'] in ns_array:
-                        ns_array[row['ns']] += row['count']
-                    else:
-                        ns_array[row['ns']] = row['count']
-
-            for key in ns_array:
-                sql_insert_date = " ('%s','%s','%s', '%s')" % (date, zone, key, ns_array[key])
+            for row in data:
+                sql_insert_date = " ('%s','%s','%s','%s')" % (date, row['registrant'], zone, row['count'])
                 if len(sql_insert) > 5:
-                    sql_insert += ', ' + sql_insert_date
+                    sql_insert += ", " + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
-            sql = 'INSERT INTO ns_count_statistic(`date`, `tld`, `ns`, `count`) VALUE ' + sql_insert
+            sql = 'INSERT INTO registrant_count_statistic(`date`, `registrant`, `tld`, `count`) VALUE ' + sql_insert
             cursor.execute(sql)
+            self.connection.commit()
             date += datetime.timedelta(days=1)
 
     def run(self):
@@ -75,6 +67,6 @@ class nsCountStatistic(multiprocessing.Process):
         :return:
         """
         self._connect_mysql()
-        self._update_ns_count_per_zone(self.data, self.today, self.zone)
+        self._update_registrant_count_per_zone(self.data, self.today, self.zone)
         self.connection.commit()
         self.connection.close()

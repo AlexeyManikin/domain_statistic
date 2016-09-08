@@ -10,7 +10,7 @@ import datetime
 from config.main import MINIMUM_DOMAIN_COUNT
 
 
-class nsDomainOldCountStatistic(multiprocessing.Process):
+class NsDomainOldCountStatistic(multiprocessing.Process):
 
     def __init__(self, number, data, today, zone):
         """
