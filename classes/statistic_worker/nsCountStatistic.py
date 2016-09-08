@@ -10,13 +10,13 @@ import datetime
 from config.main import MINIMUM_DOMAIN_COUNT
 
 
-class aDomainOldCountStatistic(multiprocessing.Process):
+class NsCountStatistic(multiprocessing.Process):
 
     def __init__(self, number, data, today, zone):
         """
         :param number:
         """
-        multiprocessing.Process.__init__(self, name="a_domain_old_count_%s" % number)
+        multiprocessing.Process.__init__(self, name="ns_count_%s" % number)
         self.number = number
         self.connection = None
 
@@ -30,10 +30,8 @@ class aDomainOldCountStatistic(multiprocessing.Process):
         """
         self.connection = get_mysql_connection()
 
-    def _update_a_domain_old_count_per_zone(self, date, today, zone):
+    def _update_ns_count_per_zone(self, date, today, zone):
         """
-        Особого смысла смотреть по всем 4 а записям не вижу, только лишняя нагрузка на базу. На данные
-        статистики почти не влияет.
         :type date: date
         :type today: date
         :type zone: unicode
@@ -41,25 +39,33 @@ class aDomainOldCountStatistic(multiprocessing.Process):
         """
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
-            sql_insert = ""
-            sql = """SELECT a1 as a, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
-FROM domain_history
-WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
-GROUP BY a1
-HAVING count(*) > %s
-ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
+            sql_insert = ''
+            ns_array = {}
 
-            cursor.execute(sql)
-            data = cursor.fetchall()
+            for i in range(1, 5):
+                sql = """SELECT ns%s as ns, count(*) as count FROM domain_history
+    WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
+    GROUP BY ns%s
+    HAVING count(*) > %s
+    ORDER BY count(*) desc""" % (i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
 
-            for row in data:
-                sql_insert_date = " ('%s','%s','%s','%s')" % (date, row['a'], zone, row['old'])
+                cursor.execute(sql)
+                data = cursor.fetchall()
+
+                for row in data:
+                    if row['ns'] in ns_array:
+                        ns_array[row['ns']] += row['count']
+                    else:
+                        ns_array[row['ns']] = row['count']
+
+            for key in ns_array:
+                sql_insert_date = " ('%s','%s','%s', '%s')" % (date, zone, key, ns_array[key])
                 if len(sql_insert) > 5:
                     sql_insert += ', ' + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
-            sql = 'INSERT INTO a_domain_old_count_statistic(`date`, `a`, `tld`, `old`) VALUE ' + sql_insert
+            sql = 'INSERT INTO ns_count_statistic(`date`, `tld`, `ns`, `count`) VALUE ' + sql_insert
             cursor.execute(sql)
             date += datetime.timedelta(days=1)
 
@@ -69,6 +75,6 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
         :return:
         """
         self._connect_mysql()
-        self._update_a_domain_old_count_per_zone(self.data, self.today, self.zone)
+        self._update_ns_count_per_zone(self.data, self.today, self.zone)
         self.connection.commit()
         self.connection.close()

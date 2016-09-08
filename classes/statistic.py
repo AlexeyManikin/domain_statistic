@@ -9,17 +9,18 @@ import MySQLdb
 import traceback
 from config.main import *
 
-from classes.statistic.groupProviderStatistic import GroupProviderStatistic
-from classes.statistic.cnameCountStatistic import cnameCountStatistic
-from classes.statistic.aCountStatistic import aCountStatistic
-from classes.statistic.asCountStatistic import asCountStatistic
-from classes.statistic.domainCountStatistic import domainCountStatistic
-from classes.statistic.mxCountStatistic import mxCountStatistic
-from classes.statistic.nsCountStatistic import nsCountStatistic
-from classes.statistic.registrantCountStatistic import registrantCountStatistic
-from classes.statistic.asDomainOldCountStatistic import asDomainOldCountStatistic
-from classes.statistic.nsDomainOldCountStatistic import nsDomainOldCountStatistic
-from classes.statistic.aDomainOldCountStatistic import aDomainOldCountStatistic
+from classes.statistic_worker.groupProviderStatistic import GroupProviderStatistic
+
+from classes.statistic_worker.cnameCountStatistic import CnameCountStatistic
+from classes.statistic_worker.aCountStatistic import ACountStatistic
+from classes.statistic_worker.asCountStatistic import AsCountStatistic
+from classes.statistic_worker.domainCountStatistic import DomainCountStatistic
+from classes.statistic_worker.mxCountStatistic import MxCountStatistic
+from classes.statistic_worker.nsCountStatistic import NsCountStatistic
+from classes.statistic_worker.registrantCountStatistic import RegistrantCountStatistic
+from classes.statistic_worker.asDomainOldCountStatistic import AsDomainOldCountStatistic
+from classes.statistic_worker.nsDomainOldCountStatistic import NsDomainOldCountStatistic
+from classes.statistic_worker.aDomainOldCountStatistic import ADomainOldCountStatistic
 
 
 class Statistic(object):
@@ -67,7 +68,7 @@ class Statistic(object):
         if date is not None:
             for prefix in PREFIX_LIST:
                 self.count_ptheread += 1
-                worker = domainCountStatistic(self.count_ptheread, date, self.today, prefix)
+                worker = DomainCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
                 self.process_list.append(worker)
                 worker.start()
@@ -82,7 +83,7 @@ class Statistic(object):
         if date is not None:
             for prefix in PREFIX_LIST:
                 self.count_ptheread += 1
-                worker = asCountStatistic(self.count_ptheread, date, self.today, prefix)
+                worker = AsCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
                 self.process_list.append(worker)
                 worker.start()
@@ -97,7 +98,7 @@ class Statistic(object):
         if date is not None:
             for prefix in PREFIX_LIST:
                 self.count_ptheread += 1
-                worker = mxCountStatistic(self.count_ptheread, date, self.today, prefix)
+                worker = MxCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
                 self.process_list.append(worker)
                 worker.start()
@@ -112,7 +113,7 @@ class Statistic(object):
         if date is not None:
             for prefix in PREFIX_LIST:
                 self.count_ptheread += 1
-                worker = nsCountStatistic(self.count_ptheread, date, self.today, prefix)
+                worker = NsCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
                 self.process_list.append(worker)
                 worker.start()
@@ -127,7 +128,7 @@ class Statistic(object):
         if date is not None:
             for prefix in PREFIX_LIST:
                 self.count_ptheread += 1
-                worker = registrantCountStatistic(self.count_ptheread, date, self.today, prefix)
+                worker = RegistrantCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
                 self.process_list.append(worker)
                 worker.start()
@@ -142,7 +143,7 @@ class Statistic(object):
         if date is not None:
             for prefix in PREFIX_LIST:
                 self.count_ptheread += 1
-                worker = aCountStatistic(self.count_ptheread, date, self.today, prefix)
+                worker = ACountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
                 self.process_list.append(worker)
                 worker.start()
@@ -157,7 +158,7 @@ class Statistic(object):
         if date is not None:
             for prefix in PREFIX_LIST:
                 self.count_ptheread += 1
-                worker = cnameCountStatistic(self.count_ptheread, date, self.today, prefix)
+                worker = CnameCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
                 self.process_list.append(worker)
                 worker.start()
@@ -172,7 +173,7 @@ class Statistic(object):
         if date is not None:
             for prefix in PREFIX_LIST:
                 self.count_ptheread += 1
-                worker = asDomainOldCountStatistic(self.count_ptheread, date, self.today, prefix)
+                worker = AsDomainOldCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
                 self.process_list.append(worker)
                 worker.start()
@@ -202,7 +203,7 @@ class Statistic(object):
         if date is not None:
             for prefix in PREFIX_LIST:
                 self.count_ptheread += 1
-                worker = aDomainOldCountStatistic(self.count_ptheread, date, self.today, prefix)
+                worker = ADomainOldCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
                 self.process_list.append(worker)
                 worker.start()
@@ -350,6 +351,7 @@ class Statistic(object):
 
         for process in self.process_list:
             try:
+                print("Join")
                 # timeout 2 days
                 process.join(1728000)
             except KeyboardInterrupt:
