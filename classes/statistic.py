@@ -188,7 +188,7 @@ class Statistic(object):
         if date is not None:
             for prefix in PREFIX_LIST:
                 self.count_ptheread += 1
-                worker = nsDomainOldCountStatistic(self.count_ptheread, date, self.today, prefix)
+                worker = NsDomainOldCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
                 self.process_list.append(worker)
                 worker.start()
@@ -351,7 +351,6 @@ class Statistic(object):
 
         for process in self.process_list:
             try:
-                print("Join")
                 # timeout 2 days
                 process.join(1728000)
             except KeyboardInterrupt:
