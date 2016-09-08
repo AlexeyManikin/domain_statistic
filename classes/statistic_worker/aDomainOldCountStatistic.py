@@ -7,15 +7,16 @@ from helpers.helpers import get_mysql_connection
 import MySQLdb
 import multiprocessing
 import datetime
+from config.main import MINIMUM_DOMAIN_COUNT
 
 
-class domainCountStatistic(multiprocessing.Process):
+class ADomainOldCountStatistic(multiprocessing.Process):
 
     def __init__(self, number, data, today, zone):
         """
         :param number:
         """
-        multiprocessing.Process.__init__(self, name="domain_count_%s" % number)
+        multiprocessing.Process.__init__(self, name="a_domain_old_count_%s" % number)
         self.number = number
         self.connection = None
 
@@ -29,8 +30,10 @@ class domainCountStatistic(multiprocessing.Process):
         """
         self.connection = get_mysql_connection()
 
-    def _update_domain_count_per_zone(self, date, today, zone):
+    def _update_a_domain_old_count_per_zone(self, date, today, zone):
         """
+        Особого смысла смотреть по всем 4 а записям не вижу, только лишняя нагрузка на базу. На данные
+        статистики почти не влияет.
         :type date: date
         :type today: date
         :type zone: unicode
@@ -38,24 +41,26 @@ class domainCountStatistic(multiprocessing.Process):
         """
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
-            sql_insert = ''
-            sql = """SELECT count(*) as count FROM domain_history
-    WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
-    ORDER BY count(*) desc""" % (zone, date, date)
+            sql_insert = ""
+            sql = """SELECT a1 as a, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
+FROM domain_history
+WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
+GROUP BY a1
+HAVING count(*) > %s
+ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
 
             cursor.execute(sql)
             data = cursor.fetchall()
 
             for row in data:
-                sql_insert_date = " ('%s','%s','%s')" % (date, zone, row['count'])
+                sql_insert_date = " ('%s','%s','%s','%s')" % (date, row['a'], zone, row['old'])
                 if len(sql_insert) > 5:
-                    sql_insert += ", " + sql_insert_date
+                    sql_insert += ', ' + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
-            sql = 'INSERT INTO domain_count_statistic(`date`, `tld`, `count`) VALUE ' + sql_insert
+            sql = 'INSERT INTO a_domain_old_count_statistic(`date`, `a`, `tld`, `old`) VALUE ' + sql_insert
             cursor.execute(sql)
-            self.connection.commit()
             date += datetime.timedelta(days=1)
 
     def run(self):
@@ -64,6 +69,6 @@ class domainCountStatistic(multiprocessing.Process):
         :return:
         """
         self._connect_mysql()
-        self._update_domain_count_per_zone(self.data, self.today, self.zone)
+        self._update_a_domain_old_count_per_zone(self.data, self.today, self.zone)
         self.connection.commit()
         self.connection.close()
