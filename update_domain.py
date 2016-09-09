@@ -20,6 +20,7 @@ from classes.downloader import Downloader
 from classes.converter import Converter
 from classes.resolver import Resolver
 from helpers.helpersCollor import BColor
+from classes.statistic import Statistic
 import argparse
 
 
@@ -75,6 +76,7 @@ if __name__ == "__main__":
 
         parser.add_argument('-d', '--dir', type=str, help="Do`t download data, use exist from dir", action="store")
         parser.add_argument('-s', '--show_verbose', help="Show verbose log", action="count")
+        parser.add_argument('-s', '--update_statistic', help="Update statistic after update domain", action="count")
         parser.add_argument('-D', '--delete_old', type=bool, help="Do`t delete removed domains", action="store")
         parser.add_argument('-n', '--name_server', type=str, help="Set name server", action="store")
         args = parser.parse_args()
@@ -124,6 +126,11 @@ if __name__ == "__main__":
         Resolver.start_load_and_resolver_domain(as_list, os.path.abspath(os.path.join(path, 'work')),
                                                 delete_old=delete_old, verbose=args.show_verbose,
                                                 resolve_dns=name_server)
+
+        if args.update_statistic:
+            BColor.ok("Update statistic")
+            statistic = Statistic()
+            statistic.update_all_statistic()
 
     except Exception as e:
         BColor.error("Got an exception: %s" % e.message)

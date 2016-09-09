@@ -8,5 +8,5 @@ cd /dev && chmod 666 full null random tty urandom zero;
 cat /etc/hosts | grep resolver | awk '{print "nameserver "$1}' > /etc/resolv.conf || true
 
 /etc/init.d/ssh start;
-cron;
+cron >> /root/cron;
 # EOF
