@@ -26,17 +26,17 @@ runner:
      - ./counteiner_data/download/:/home/domain_statistic/download:rw
      - ./runner/config/root:/var/spool/cron/crontabs/root:rw
 
-devrunner:
-  build: runner/
-  name: "domain_open_statistic_runner_dev"
-  links:
-     - "mysql:db"
-     - "recurcer:resolver"
-  mem_limit: "100G"
-  ports:
-    - "2222:2222"
-  volumes:
-     - ../:/home/domain_statistic:rw
-     - ./counteiner_data/download/:/home/domain_statistic/download:rw
-     - ./runner/config/root_dev:/var/spool/cron/crontabs/root:rw
+#devrunner:
+#  build: runner/
+#  name: "domain_open_statistic_runner_dev"
+#  links:
+#     - "mysql:db"
+#     - "recurcer:resolver"
+#  mem_limit: "100G"
+#  ports:
+#    - "2222:2222"
+#  volumes:
+#     - ../:/home/domain_statistic:rw
+#     - ./counteiner_data/download/:/home/domain_statistic/download:rw
+#     - ./runner/config/root_dev:/var/spool/cron/crontabs/root:rw
 
