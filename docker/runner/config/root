@@ -1,4 +1,4 @@
 10 1 */15 * * /usr/bin/python /home/domain_statistic/update_as_info.py >> /home/domain_statistic/download/update_as_info.log
-5 0 * * * /usr/bin/python /home/domain_statistic/update_domain.py -n `cat /etc/resolv.conf | awk '{print $2}'` -s >> /home/domain_statistic/download/update_domain.log 
+5 0 * * * /usr/bin/python /home/domain_statistic/update_domain.py -n `cat /etc/resolv.conf | awk '{print $2}'` -u >> /home/domain_statistic/download/update_domain.log
 30 12 * * * /usr/bin/python /home/domain_statistic/update_regru.py >> /home/domain_statistic/download/update_regru.log
 1 10 */30 * * /usr/bin/python /home/domain_statistic/normalization.py
