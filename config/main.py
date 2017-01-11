@@ -20,6 +20,8 @@ MYSQL_USER = 'domain_statistic'
 MYSQL_PASSWD = 'domain_statisticdomain_statistic'
 MYSQL_DATABASE = 'domain_statistic'
 
+PRKI_JSON_URL = 'http://rpki:8080/export.json'
+
 COUNT_THREAD = 300
 
 START_YEAR = 2015

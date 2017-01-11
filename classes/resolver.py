@@ -14,6 +14,7 @@ from collections import defaultdict
 from helpers.helpers import get_mysql_connection, is_int
 from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
 import time
+from classes.rpkiCheker import RpkiChecker
 from helpers.helpersCollor import BColor
 
 
@@ -281,12 +282,13 @@ class Resolver(multiprocessing.Process):
                 asn_for_a_records_array.append(self.list_ip_address[ip_as_str_byte])
         return asn_for_a_records_array
 
-    def _update_domain(self, dns_data, as_data, domain_id, register_info):
+    def _update_domain(self, dns_data, as_data, domain_id, register_info, rpki_status):
         """
         Возвращаем сворфмированный SQL
         :param dns_data:
         :param as_data:
         :param domain_id:
+        :param rpki_status:
         :return:
         """
         update_sql_begin = "UPDATE domain SET "
@@ -328,6 +330,11 @@ class Resolver(multiprocessing.Process):
                     set_statement += ", asn%s = '%s'" % ((int(value)+1),
                                                          self.connection.escape_string(values[value]))
 
+            if rpki_status == 0 or rpki_status == 1:
+                set_statement += ", rpki = '%s'" % (int(rpki_status))
+            else:
+                set_statement += ", rpki = NULL"
+
         set_statement += ", register_date = STR_TO_DATE('%s', '%%d.%%m.%%Y')" % register_info['register_date']
         set_statement += ", register_date_end = STR_TO_DATE('%s', '%%d.%%m.%%Y')" % register_info['register_end_date']
         set_statement += ", free_date = STR_TO_DATE('%s', '%%d.%%m.%%Y')" % register_info['free_date']
@@ -335,17 +342,18 @@ class Resolver(multiprocessing.Process):
         set_statement += ", delegated = '%s'" % register_info['delegated']
         return update_sql_begin + set_statement + update_sql_end
 
-    def _insert_domain(self, dns_data, as_data, register_info):
+    def _insert_domain(self, dns_data, as_data, register_info, rpki_status):
         """
         :param dns_data:
         :param as_data:
         :param register_info:
+        :param rpki_status:
         :return:
         """
         sql_insert = "INSERT INTO " \
                      "domain(tld, register_date, register_date_end, free_date, domain_name, registrant," \
                      " delegated, a1, a2, a3, a4, ns1, ns2, ns3, ns4, mx1, mx2, mx3, mx4, txt, asn1, " \
-                     "asn2, asn3, asn4, aaaa1, aaaa2, aaaa3, aaaa4, cname, last_update, nserrors) VALUE "
+                     "asn2, asn3, asn4, aaaa1, aaaa2, aaaa3, aaaa4, cname, last_update, nserrors, rpki) VALUE "
 
         default_value = defaultdict(lambda: defaultdict(lambda: 'NULL'))
 
@@ -371,10 +379,13 @@ class Resolver(multiprocessing.Process):
                 default_value['asn'][i] = "'%s'" % self.connection.escape_string(dns_row)
                 i += 1
 
+        if rpki_status == 0 or rpki_status == 1:
+            default_value['rpki'] = rpki_status
+
         sql_insert_date = """ ('%s', STR_TO_DATE('%s', '%%d.%%m.%%Y'), STR_TO_DATE('%s', '%%d.%%m.%%Y'),
                                 STR_TO_DATE('%s', '%%d.%%m.%%Y'), LOWER('%s'), LOWER('%s'),
                                 '%s', %s, %s, %s, %s, %s, %s,  %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s,  NOW(), %s)""" \
+                                %s, %s, %s, %s, %s, %s, %s, %s, %s,  NOW(), %s, %s)""" \
                           % (register_info['prefix'], register_info['register_date'],
                              register_info['register_end_date'], register_info['free_date'],
                              register_info['domain'], register_info['registrant'], register_info['delegated'],
@@ -386,7 +397,7 @@ class Resolver(multiprocessing.Process):
                              default_value['asn'][2], default_value['asn'][3],
                              default_value['aaaa'][0], default_value['aaaa'][1], default_value['aaaa'][2],
                              default_value['aaaa'][3], default_value['cname']['cname'],
-                             default_value['nserrors']['nserrors'])
+                             default_value['nserrors']['nserrors'], default_value['rpki'])
 
         return sql_insert + sql_insert_date
 
@@ -404,6 +415,7 @@ class Resolver(multiprocessing.Process):
             re_prefix = re.compile(r'\s*')
             self._connect_mysql()
             cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+            rpki = RpkiChecker()
 
             for domain_data in self.domains:
                 try:
@@ -416,10 +428,16 @@ class Resolver(multiprocessing.Process):
                         delegated = 'Y'
                         domain_dns_data_array = self._get_ns_record(domain)
                         as_array = self._get_asn_array(domain_dns_data_array)
+                        try:
+                            status = rpki.check_ip(domain_dns_data_array['a'][0], as_array[0])
+                            rpki_status = status['code']
+                        except:
+                            rpki_status = -2
                     else:
                         delegated = 'N'
                         domain_dns_data_array = {}
                         as_array = {}
+                        rpki_status = -2
 
                     register_info = {'registrant': re.sub(re_prefix, '', data[1]),
                                      'register_date': re.sub(re_prefix, '', data[2]),
@@ -433,10 +451,10 @@ class Resolver(multiprocessing.Process):
                     domain_id = cursor.fetchone()
 
                     if not domain_id:
-                        run_sql = self._insert_domain(domain_dns_data_array, as_array, register_info)
+                        run_sql = self._insert_domain(domain_dns_data_array, as_array, register_info, rpki_status)
                     else:
                         run_sql = self._update_domain(domain_dns_data_array, as_array, domain_id['id'],
-                                                      register_info)
+                                                      register_info, rpki_status)
 
                     self.write_to_file(run_sql + ";", sql=True)
 
@@ -460,7 +478,7 @@ class Resolver(multiprocessing.Process):
                         self.write_to_file(BColor.process("Thread %d success resolved %d domains"
                                                           % (self.number, added_domains), pid=self.number))
 
-                    # USE http://habrahabr.ru/post/178637/
+                    # READ http://habrahabr.ru/post/178637/
                     data = None
                     domain = None
                     delegated = None
@@ -469,7 +487,6 @@ class Resolver(multiprocessing.Process):
                     register_info = None
                     domain_id = None
                     run_sql = None
-
 
                 except Exception:
                     data = domain_data['line'].split("\t")
@@ -481,6 +498,7 @@ class Resolver(multiprocessing.Process):
             self.write_to_file(BColor.process("Process %s done " % self.number))
             self.connection.close()
             return 0
+
         except Exception:
             self.write_to_file(BColor.error("Process failed %s" % self.number))
             self.write_to_file(BColor.error(traceback.format_exc()))
