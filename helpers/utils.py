@@ -6,14 +6,16 @@ from config.eq_domain import eq_domains
 import re
 from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
 
+
 def convert_string_to_date(date):
     """
     Дату в строчном представлении конвертируем в объект 01.02.2009
     :type date: unicode
     :rtype: datetime
     """
-    format = "%d.%m.%Y"
-    return datetime.strptime(date, format)
+    date_format = "%d.%m.%Y"
+    return datetime.strptime(date, date_format)
+
 
 def load_domains_file_to_memory(file_name):
     """
@@ -21,10 +23,10 @@ def load_domains_file_to_memory(file_name):
     :type file_name: unicode
     :return:
     """
-    file = open(file_name, 'r')
+    read_file = open(file_name, 'r')
     domains_list_as_array = []
     readed_lines = 0
-    for line in file:
+    for line in read_file:
         # Убираем разделитель в конце строки
         line = line.strip()
         domain_data = line.split("\t")
@@ -35,6 +37,7 @@ def load_domains_file_to_memory(file_name):
             break
   
     return domains_list_as_array
+
 
 def normalize_domain_list(domain_names):
     """
@@ -72,6 +75,7 @@ def normalize_domain_list(domain_names):
   
     return domain_normalized
 
+
 def compare_domains(domain_first, domain_second):
     """
     Кастомный компаратор доменов, некоторые домены нужно сравнивать сложно
@@ -87,6 +91,7 @@ def compare_domains(domain_first, domain_second):
         return True
   
     return False
+
 
 def normalize_asn(asn_list):
     """

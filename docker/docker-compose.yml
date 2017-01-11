@@ -21,10 +21,20 @@ runner:
   links:
      - "mysql:db"
      - "recurcer:resolver"
+     - "rpki:rpki"
   mem_limit: "100G"
   volumes:
      - ./counteiner_data/download/:/home/domain_statistic/download:rw
      - ./runner/config/root:/var/spool/cron/crontabs/root:rw
+
+rpki:
+  build: rpki/
+  mem_limit: "3G"
+  volumes:
+     - ./rpki/config/config:/home/my-configuration.conf:ro
+  ports:
+    - "8085:8080"
+    - "8282:8282"
 
 #devrunner:
 #  build: runner/
@@ -32,6 +42,7 @@ runner:
 #  links:
 #     - "mysql:db"
 #     - "recurcer:resolver"
+#     - "rpki:rpki"
 #  mem_limit: "100G"
 #  ports:
 #    - "2222:2222"
