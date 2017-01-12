@@ -61,6 +61,31 @@ BEGIN
 END ;;
 DELIMITER ;
 
+DELIMITER ;;
+DROP TRIGGER IF EXISTS `domain_statistic`.`domain_AFTER_INSERT`;
+CREATE TRIGGER `domain_statistic`.`domain_AFTER_INSERT` AFTER INSERT ON `domain` FOR EACH ROW
+BEGIN
+    INSERT INTO domain_history(domain_id,date_start, date_end, domain_name,
+                               registrant, tld, register_date, register_date_end,
+                               free_date, delegated, a1, a2,
+                               a3, a4, mx1, mx2,
+                               mx3, mx4, ns1, ns2,
+                               ns3, ns4, txt, asn1,
+                               asn2, asn3, asn4, aaaa1,
+                               aaaa2, aaaa3, aaaa4, cname,
+                               nserrors, rpki)
+                           VALUE(NEW.id, NOW(), '2099-01-01', NEW.domain_name,
+                               NEW.registrant, NEW.tld, NEW.register_date, NEW.register_date_end,
+                               NEW.free_date, NEW.delegated, NEW.a1, NEW.a2,
+                               NEW.a3, NEW.a4, NEW.mx1, NEW.mx2,
+                               NEW.mx3, NEW.mx4, NEW.ns1, NEW.ns2,
+                               NEW.ns3, NEW.ns4, NEW.txt, NEW.asn1,
+                               NEW.asn2, NEW.asn3, NEW.asn4, NEW.aaaa1,
+                               NEW.aaaa2, NEW.aaaa3, NEW.aaaa4, NEW.cname,
+                               NEW.nserrors, NEW.rpki);
+END ;;
+DELIMITER ;
+
 DROP TABLE IF EXISTS `rpki`;
 CREATE TABLE `rpki` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
