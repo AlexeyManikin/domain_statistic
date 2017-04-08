@@ -20,7 +20,7 @@ MYSQL_USER = 'domain_statistic'
 MYSQL_PASSWD = 'domain_statisticdomain_statistic'
 MYSQL_DATABASE = 'domain_statistic'
 
-COUNT_THREAD = 300
+COUNT_THREAD = 180
 
 START_YEAR = 2015
 START_MONTH = 8
