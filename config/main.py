@@ -16,13 +16,12 @@ DEFAULT_TIMEOUT = 3.0
 
 MYSQL_HOST = 'db'
 MYSQL_PORT = 33060
-MYSQL_USER = 'domain_statistic'
+MYSQL_USER = DB_USER
 MYSQL_PASSWD = 'domain_statisticdomain_statistic'
 MYSQL_DATABASE = 'domain_statistic'
 
 PRKI_JSON_URL = 'http://rpki:8080/export.json'
-
-COUNT_THREAD = 300
+COUNT_THREAD = 180
 
 START_YEAR = 2015
 START_MONTH = 8
