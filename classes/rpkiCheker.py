@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 __author__ = 'alexeyymanikin'
 
-
 import re
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
 import SubnetTree
 from helpers.helperUnicode import as_bytes
@@ -51,13 +48,13 @@ class RpkiChecker(object):
         """
         headers = {'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'}
         try:
-            req = urllib2.Request(url_server, None, headers)
-            response = urllib2.urlopen(req)
+            req = urllib.request.Request(url_server, None, headers)
+            response = urllib.request.urlopen(req)
             if int(response.getcode()) == 200:
                 return response.read()
             else:
                 return False
-        except urllib2.URLError:
+        except urllib.error.URLError:
             return False
 
     def load_rpki_list(self):
@@ -129,14 +126,18 @@ class RpkiChecker(object):
             else:
                 asn = 0
 
-            run_sql = "SELECT id FROM rpki WHERE prefix = '%s' AND maxLength = '%s' AND asn = '%s'" \
-                      % (index['prefix'], index['maxLength'], asn)
+            run_sql = """SELECT id FROM rpki 
+                         WHERE prefix = '%s' AND maxLength = '%s' AND asn = '%s'""" % (index['prefix'],
+                                                                                       index['maxLength'],
+                                                                                       asn)
             cursor.execute(run_sql)
             rpki_id = cursor.fetchone()
 
             if not rpki_id:
-                run_sql = "INSERT INTO rpki(prefix, maxLength, asn, ta, last_update) VALUE('%s', '%s', '%s', '%s', NOW())" \
-                          % (index['prefix'], index['maxLength'], asn, index['ta'])
+                run_sql = """INSERT INTO rpki(prefix, maxLength, asn, ta, last_update) 
+                             VALUE('%s', '%s', '%s', '%s', NOW()) """ % (index['prefix'],
+                                                                         index['maxLength'],
+                                                                         asn, index['ta'])
             else:
                 run_sql = "UPDATE rpki SET last_update = NOW(), load_today = 'Y', ta = '%s' " % (index['ta']) \
                           + "WHERE prefix = '%s' AND maxLength = '%s' AND asn = '%s'" % (index['prefix'],

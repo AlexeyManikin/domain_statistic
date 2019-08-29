@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 __author__ = 'Alexey Y Manikin'
 
@@ -7,6 +7,7 @@ from helpers.helpers import get_mysql_connection
 import MySQLdb
 import multiprocessing
 import datetime
+from config.main import PREFIX_LIST_ZONE
 
 
 class DomainCountStatistic(multiprocessing.Process):
@@ -21,7 +22,7 @@ class DomainCountStatistic(multiprocessing.Process):
 
         self.today = today
         self.data = data
-        self.zone = zone
+        self.zone = PREFIX_LIST_ZONE[zone]
 
     def _connect_mysql(self):
         """
@@ -40,14 +41,14 @@ class DomainCountStatistic(multiprocessing.Process):
         while date <= today:
             sql_insert = ''
             sql = """SELECT count(*) as count FROM domain_history
-    WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
+    WHERE tld = %s AND date_start <= '%s' AND date_end >= '%s'
     ORDER BY count(*) desc""" % (zone, date, date)
 
             cursor.execute(sql)
             data = cursor.fetchall()
 
             for row in data:
-                sql_insert_date = " ('%s','%s','%s')" % (date, zone, row['count'])
+                sql_insert_date = " ('%s', %s, '%s')" % (date, zone, row['count'])
                 if len(sql_insert) > 5:
                     sql_insert += ", " + sql_insert_date
                 else:

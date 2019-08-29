@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 __author__ = 'Alexey Y Manikin'
 
 from helpers.helpers import get_mysql_connection
 import MySQLdb
 import multiprocessing
+from config.main import PREFIX_LIST_ZONE
 
 
 class GroupProviderStatistic(multiprocessing.Process):
@@ -20,7 +21,7 @@ class GroupProviderStatistic(multiprocessing.Process):
         self.key = key
         self.data = data
         self.date = date
-        self.zone = zone
+        self.zone = PREFIX_LIST_ZONE[zone]
 
     def _connect_mysql(self):
         """
@@ -47,11 +48,11 @@ class GroupProviderStatistic(multiprocessing.Process):
             elif 'ns4' in row and row['ns4'] is not None and search_string in row['ns4']:
                 count += 1
 
-        sql_insert_date = " ('%s','%s','%s','%s')" % (self.date, self.key, self.zone, count)
+        sql_insert_date = " ('%s','%s', %s,'%s')" % (self.date, self.key, self.zone, count)
         sql = 'INSERT INTO ns_domain_group_count_statistic(`date`, `ns_group`, `tld`, `count`) VALUE ' \
               + sql_insert_date
 
-        print("process %s - sql %s" % (self.number, sql))
+        print(("process %s - sql %s" % (self.number, sql)))
 
         self._connect_mysql()
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)

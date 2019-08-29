@@ -10,8 +10,8 @@ import time
 import signal
 import MySQLdb
 from config.main import *
-from Queue import Queue
-from helperUnicode import as_default_string, as_unicode
+from queue import Queue
+from .helperUnicode import as_default_string, as_unicode
 from threading import Thread
 import socket
 
@@ -29,7 +29,7 @@ def is_int(s):
         return False
 
 
-def check_prog_run(process_name):
+def check_program_run(process_name):
     """
     Проверка на запущенность программы
     :type process_name: unicode
@@ -56,7 +56,7 @@ def get_mysql_connection():
                                  use_unicode=True,
                                  charset="utf8")
 
-    connection.query("SET SESSION wait_timeout = 36000")
+    connection.query("SET SESSION wait_timeout = 3600000")
     connection.query("SET @@sql_mode:=TRADITIONAL")
 
     return connection
@@ -86,7 +86,7 @@ def get_util(name):
     p = SubprocessRunner(command=command, env=env)
     p.run()
 
-    return p.wait().rstrip("\n")
+    return p.wait().rstrip("\n".encode('utf-8'))
 
 
 def pid_exists(pid):
@@ -164,7 +164,7 @@ class SubprocessRunner(object):
             if self.logger:
                 self.logger.error("%s : Error when write log" % (as_unicode(self.log_prefix)))
 
-        command = map(lambda item: as_default_string(item), self.command)
+        command = [as_default_string(item) for item in self.command]
         self.process = subprocess.Popen(command, **self.process_options)
 
     def wait(self, extended_return=False, write_output_in_log=True):
@@ -214,7 +214,7 @@ class SubprocessRunner(object):
                 queue.put(line.rstrip('\n'))
             err.close()
 
-        command = map(lambda item: as_default_string(item), self.command)
+        command = [as_default_string(item) for item in self.command]
         self.process = subprocess.Popen(command, **self.process_options)
 
         q_out = Queue()

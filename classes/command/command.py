@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 __author__ = 'alekseymanikin'
 
 import helpers.helpers as Helper
-import types
 from warnings import warn
 
 
@@ -58,7 +55,7 @@ class Command(object):
         :type values: unicode
         :return:
         """
-        if not isinstance(values, types.ListType):
+        if not isinstance(values, list):
             values = [values]
         for value in values:
             self._set_single_option_(name, value)
@@ -69,11 +66,11 @@ class Command(object):
         :return:
         """
         for option in options:
-            if isinstance(option, types.DictType):
+            if isinstance(option, dict):
                 for name in option:
                     self.set_option(name, option[name])
             else:
-                if isinstance(option, types.StringTypes):
+                if isinstance(option, str):
                     self.set_option(option)
                 else:
                     raise TypeError("option '%s' of wrong type" % option)

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 __author__ = 'Alexey Y Manikin'
 
 import datetime
@@ -55,11 +53,6 @@ class Downloader(object):
         """
         Скачивает все необходимы файлы для парсинга
 
-        С R01 данные по локальным зонам
-        https://partner.r01.ru/zones/ru_domains.gz
-        https://partner.r01.ru/zones/su_domains.gz
-        https://partner.r01.ru/zones/rf_domains.gz
-
         С http://archive.routeviews.org информацию по fullview, подробно описывает Павел в своем блоге
         http://phpsuxx.blogspot.com/2011/12/full-bgp.html
         http://phpsuxx.blogspot.com/2011/12/libbgpdump-debian-6-squeeze.html
@@ -73,9 +66,9 @@ class Downloader(object):
         delta = datetime.timedelta(days=1)
         now_date = now_date - delta
 
-        files_list = [{'url': 'https://partner.r01.ru/zones/ru_domains.gz', 'file_name': 'ru_domains.gz'},
-                      {'url': 'https://partner.r01.ru/zones/su_domains.gz', 'file_name': 'su_domains.gz'},
-                      {'url': 'https://partner.r01.ru/zones/rf_domains.gz', 'file_name': 'rf_domains.gz'},
+        files_list = [{'url': 'https://ru-tld.ru/files/RU_Domains_ru-tld.ru.gz', 'file_name': 'ru_domains.gz'},
+                      {'url': 'https://ru-tld.ru/files/SU_Domains_ru-tld.ru.gz', 'file_name': 'su_domains.gz'},
+                      {'url': 'https://ru-tld.ru/files/RF_Domains_ru-tld.ru.gz', 'file_name': 'rf_domains.gz'},
                       {'url': 'http://archive.routeviews.org/bgpdata/%s/RIBS/rib.%s.0600.bz2'
                               % (now_date.strftime("%Y.%m"), now_date.strftime("%Y%m%d")), 'file_name': 'rib.bz2'}]
 

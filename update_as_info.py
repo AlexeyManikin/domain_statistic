@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 __author__ = 'Alexey Y Manikin'
 
 import sys
@@ -15,11 +13,9 @@ logfile = os.path.join(CURRENT_DIR, '%s.debug' % PROGRAM_NAME)
 import traceback
 from classes.asInet import AsInet
 
-
 if __name__ == "__main__":
     try:
         as_parser = AsInet()
         as_parser.parsing_as(show_log=False)
     except Exception as e:
-        print("Got an exception: %s" % e.message)
-        print(traceback.format_exc())
+        print((traceback.format_exc()))

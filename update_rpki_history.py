@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 __author__ = 'Alexey Y Manikin'
 
@@ -21,5 +21,5 @@ if __name__ == "__main__":
         checker = RpkiChecker()
         checker.update_base()
     except Exception as e:
-        print("Got an exception: %s" % e.message)
-        print(traceback.format_exc())
+        print(("Got an exception: %s" % e))
+        print((traceback.format_exc()))

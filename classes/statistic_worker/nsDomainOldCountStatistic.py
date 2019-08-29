@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 __author__ = 'Alexey Y Manikin'
 
@@ -7,7 +7,7 @@ from helpers.helpers import get_mysql_connection
 import MySQLdb
 import multiprocessing
 import datetime
-from config.main import MINIMUM_DOMAIN_COUNT
+from config.main import MINIMUM_DOMAIN_COUNT, PREFIX_LIST_ZONE
 
 
 class NsDomainOldCountStatistic(multiprocessing.Process):
@@ -22,7 +22,7 @@ class NsDomainOldCountStatistic(multiprocessing.Process):
 
         self.today = today
         self.data = data
-        self.zone = zone
+        self.zone = PREFIX_LIST_ZONE[zone]
 
     def _connect_mysql(self):
         """
@@ -44,7 +44,7 @@ class NsDomainOldCountStatistic(multiprocessing.Process):
             for i in [1, 2, 3, 4]:
                 sql = """SELECT ns%s as ns, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
     FROM domain_history
-    WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
+    WHERE tld = %s AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
     GROUP BY ns%i
     HAVING count(*) > %s
     ORDER BY count(*) desc""" % (i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
@@ -71,7 +71,7 @@ class NsDomainOldCountStatistic(multiprocessing.Process):
 
                 old = round((summary_value / summary_count), 2)
 
-                sql_insert_date = " ('%s','%s','%s','%s')" % (date, key, zone, old)
+                sql_insert_date = " ('%s','%s', %s,'%s')" % (date, key, zone, old)
                 if len(sql_insert) > 5:
                     sql_insert += ', ' + sql_insert_date
                 else:

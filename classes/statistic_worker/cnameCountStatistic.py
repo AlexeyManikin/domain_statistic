@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 __author__ = 'Alexey Y Manikin'
 
@@ -7,7 +7,7 @@ from helpers.helpers import get_mysql_connection
 import MySQLdb
 import multiprocessing
 import datetime
-from config.main import MINIMUM_DOMAIN_COUNT
+from config.main import MINIMUM_DOMAIN_COUNT, PREFIX_LIST_ZONE
 
 
 class CnameCountStatistic(multiprocessing.Process):
@@ -23,7 +23,7 @@ class CnameCountStatistic(multiprocessing.Process):
 
         self.today = today
         self.data = data
-        self.zone = zone
+        self.zone = PREFIX_LIST_ZONE[zone]
 
     def _connect_mysql(self):
         """
@@ -42,7 +42,7 @@ class CnameCountStatistic(multiprocessing.Process):
         while date <= today:
             sql_insert = ""
             sql = """SELECT cname as cname, count(*) as count FROM domain_history
-    WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
+    WHERE tld = %s AND date_start <= '%s' AND date_end >= '%s'
     GROUP BY cname
     HAVING count(*) > %s
     ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
@@ -51,7 +51,7 @@ class CnameCountStatistic(multiprocessing.Process):
             data = cursor.fetchall()
 
             for row in data:
-                sql_insert_date = " ('%s','%s','%s','%s')" % (date, row['cname'], zone, row['count'])
+                sql_insert_date = " ('%s','%s', %s, '%s')" % (date, row['cname'], zone, row['count'])
                 if len(sql_insert) > 5:
                     sql_insert += ', ' + sql_insert_date
                 else:

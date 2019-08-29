@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 __author__ = 'Alexey Y Manikin'
 
@@ -7,7 +7,7 @@ from helpers.helpers import get_mysql_connection
 import MySQLdb
 import multiprocessing
 import datetime
-from config.main import MINIMUM_DOMAIN_COUNT
+from config.main import MINIMUM_DOMAIN_COUNT, PREFIX_LIST_ZONE
 
 
 class RegistrantCountStatistic(multiprocessing.Process):
@@ -22,7 +22,7 @@ class RegistrantCountStatistic(multiprocessing.Process):
 
         self.today = today
         self.data = data
-        self.zone = zone
+        self.zone = PREFIX_LIST_ZONE[zone]
 
     def _connect_mysql(self):
         """
@@ -40,8 +40,8 @@ class RegistrantCountStatistic(multiprocessing.Process):
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
             sql_insert = ''
-            sql = """SELECT registrant as registrant, count(*) as count FROM domain_history
-WHERE tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
+            sql = """SELECT registrant_id as registrant, count(*) as count FROM domain_history
+WHERE tld = %s AND date_start <= '%s' AND date_end >= '%s'
 GROUP BY registrant
 HAVING count(*) > %s
 ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
@@ -50,13 +50,13 @@ ORDER BY count(*) desc""" % (zone, date, date, MINIMUM_DOMAIN_COUNT)
             data = cursor.fetchall()
 
             for row in data:
-                sql_insert_date = " ('%s','%s','%s','%s')" % (date, row['registrant'], zone, row['count'])
+                sql_insert_date = " ('%s','%s', %s,'%s')" % (date, row['registrant'], zone, row['count'])
                 if len(sql_insert) > 5:
                     sql_insert += ", " + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
-            sql = 'INSERT INTO registrant_count_statistic(`date`, `registrant`, `tld`, `count`) VALUE ' + sql_insert
+            sql = 'INSERT INTO registrant_count_statistic(`date`, `registrant_id`, `tld`, `count`) VALUE ' + sql_insert
             cursor.execute(sql)
             self.connection.commit()
             date += datetime.timedelta(days=1)

@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 __author__ = 'Alexey Y Manikin'
 
 from helpers.helpers import get_mysql_connection
 import MySQLdb
 import multiprocessing
 import datetime
-from config.main import MINIMUM_DOMAIN_COUNT
+from config.main import MINIMUM_DOMAIN_COUNT, PREFIX_LIST_ZONE
 
 
 class ACountStatistic(multiprocessing.Process):
@@ -46,15 +44,18 @@ class ACountStatistic(multiprocessing.Process):
 
             for i in range(1, 5):
                 sql = """SELECT a%s as a, asn%s as asn, count(*) as count FROM domain_history
-WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
+WHERE delegated = 'Y' AND tld = %s AND date_start <= '%s' AND date_end >= '%s'
 GROUP BY a%s
 HAVING count(*) > %s
-ORDER BY count(*) desc""" % (i, i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
+ORDER BY count(*) desc""" % (i, i, PREFIX_LIST_ZONE[zone], date, date, i, MINIMUM_DOMAIN_COUNT)
 
                 cursor.execute(sql)
                 data = cursor.fetchall()
 
                 for row in data:
+                    if row['a'] is None:
+                        row['a'] = 0
+
                     if row['a'] in a_array:
                         a_array[row['a']] += row['count']
                     else:
@@ -74,7 +75,11 @@ ORDER BY count(*) desc""" % (i, i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
                 else:
                     asn = 0
 
-                sql_insert_date = " ('%s','%s','%s', '%s', '%s')" % (date, zone, key, a_array[key], asn)
+                sql_insert_date = " ('%s', %s,'%s', '%s', '%s')" % (date,
+                                                                    PREFIX_LIST_ZONE[zone],
+                                                                    key,
+                                                                    a_array[key],
+                                                                    asn)
                 if len(sql_insert) > 5:
                     sql_insert += ', ' + sql_insert_date
                 else:

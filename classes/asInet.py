@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 __author__ = 'alexeyymanikin'
 
 import re
 import dns.resolver
 import MySQLdb
 import pprint
-import urllib2
+import urllib.request
+import urllib.error
+import urllib.parse
 import traceback
 import time
 
@@ -17,7 +17,6 @@ from config.main import MAX_AS_NUMBER
 
 
 class AsInet(object):
-
     URL_AS_INFO = 'http://www.cidr-report.org/as2.0/autnums.html'
 
     def __init__(self):
@@ -48,39 +47,39 @@ class AsInet(object):
         """
         headers = {'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'}
         try:
-            req = urllib2.Request(AsInet.URL_AS_INFO, None, headers)
-            response = urllib2.urlopen(req)
+            req = urllib.request.Request(AsInet.URL_AS_INFO, None, headers)
+            response = urllib.request.urlopen(req)
             if int(response.getcode()) == 200:
                 return response.read()
             else:
                 return False
-        except urllib2.URLError:
+        except urllib.error.URLError:
             return False
 
-    def _get_all_as_info(self):
+    @staticmethod
+    def _get_all_as_info():
         """
         Получаем список всех AS с их описанием с сайта
         http://www.cidr-report.org/as2.0/autnums.html
-        https://github.com/AlexeyManikin/domain_statistic/issues/1
         пример строки <a href="/cgi-bin/as-report?as=AS0&view=2.0">AS0    </a> -Reserved AS-, ZZ
+        <a href="/cgi-bin/as-report?as=AS8&view=2.0">AS8    </a> RICE-AS - Rice University, US
         :rtype: dict
         """
 
-        re_domain_table = re.compile(r'<PRE>(.*)</PRE>', re.IGNORECASE | re.DOTALL | re.UNICODE)
-        re_parce_data = re.compile(r'>(.*)</a> (.*), (.*)', re.IGNORECASE | re.DOTALL | re.UNICODE)
-        re_parce_as = re.compile(r'AS([0-9]*)', re.IGNORECASE | re.DOTALL | re.UNICODE)
+        re_domain_table = re.compile(r'<PRE>(.*)</PRE>', re.DOTALL | re.UNICODE)
+        re_parse_data = re.compile(r'>(.*)</a> (.*), (.*)', re.IGNORECASE | re.DOTALL | re.UNICODE)
+        re_parse_as = re.compile(r'AS([0-9]*)', re.IGNORECASE | re.DOTALL | re.UNICODE)
 
         return_array = {}
-        data = AsInet.download_data()
-
+        data = str(AsInet.download_data()[0:-1])
         try:
             tag_pre = re.findall(re_domain_table, data)
-            strings = as_default_string(tag_pre[0]).split(as_default_string("\n"))
+            strings = as_default_string(tag_pre[0]).split(as_default_string("\\n"))
 
             for string in strings:
                 try:
-                    result = re.findall(re_parce_data, string)
-                    as_num = re.findall(re_parce_as, result[0][0])
+                    result = re.findall(re_parse_data, string)
+                    as_num = re.findall(re_parse_as, result[0][0])
 
                     as_desc = "%s" % result[0][1]
                     as_country = "%s" % result[0][2]
@@ -94,6 +93,7 @@ class AsInet(object):
 
             return return_array
         except Exception:
+            print(data)
             print(traceback.format_exc())
             return []
 
@@ -104,14 +104,17 @@ class AsInet(object):
         :type max_as: int
         :return:
         """
-
         as_data = self._get_all_as_info()
+
         for i in range(1, max_as):
+            print("Update as %s" % i)
             self.update_as(i, as_data,  show_log=show_log)
+
+        self.update_as(198610, as_data, show_log=show_log)
 
     def _get_asn_description(self, number):
         """
-        :type number: int
+        :type number: intexit
         :return:
         """
         answers = self.resolver.query('AS' + str(number) + '.asn.cymru.com', 'TXT')
@@ -143,6 +146,7 @@ class AsInet(object):
     def update_as(self, number, as_data, show_log=False):
         """
         Обновляем информацию об AS в базе данных
+        :param show_log:
         :type number: int
         :type as_data: dict
         :return:
@@ -167,7 +171,7 @@ class AsInet(object):
                        'USE_FAST': 1}
         else:
             try:
-                time.sleep(1)
+                time.sleep(.2)
                 as_info = self._get_asn_description(number)
             except:
                 as_info = {'AS': number,
@@ -178,17 +182,17 @@ class AsInet(object):
                            'USE_FAST': 0}
 
         if show_log:
-            print("AS Number %s" % number)
+            print(("AS Number %s" % number))
             pprint.pprint(as_info)
 
         if as_info['DATE_REGISTER'] == '':
             as_info['DATE_REGISTER'] = '2001-01-01'
 
         if as_info['COUNTRY'] == '':
-            as_info['COUNTRY'] = 'undef'
+            as_info['COUNTRY'] = '-'
 
         if as_info['ORGANIZATION'] == '':
-            as_info['ORGANIZATION'] = 'undef'
+            as_info['ORGANIZATION'] = '-'
 
         if count['count'] == 0:
             cursor.execute(

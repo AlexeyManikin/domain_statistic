@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 __author__ = 'alexeyymanikin'
 
 import shutil
@@ -24,7 +22,7 @@ class Converter(object):
         self.path = path
         self.show_log = show_log
         self.work_path = self._create_work_dir()
-        self.prefix = PREFIX_LIST
+        self.prefix = PREFIX_LIST_ZONE.keys()
         self.delete_work_dir = delete_work_dir
 
         for prefix in self.prefix:
@@ -86,7 +84,7 @@ class Converter(object):
 
         return True
 
-    def parce_file_rib_file_to(self, path_rib_file=False, path_to=False):
+    def parse_file_rib_file_to(self, path_rib_file=False, path_to=False):
         """
         :type path_rib_file: unicode
         :type path_to: unicode

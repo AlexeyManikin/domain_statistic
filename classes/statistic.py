@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 __author__ = 'Alexey Y Manikin'
 
 from helpers.helpers import get_mysql_connection
@@ -21,6 +19,12 @@ from classes.statistic_worker.registrantCountStatistic import RegistrantCountSta
 from classes.statistic_worker.asDomainOldCountStatistic import AsDomainOldCountStatistic
 from classes.statistic_worker.nsDomainOldCountStatistic import NsDomainOldCountStatistic
 from classes.statistic_worker.aDomainOldCountStatistic import ADomainOldCountStatistic
+from classes.statistic_worker.begetAsFromStatistic import BegetAsFromStatistic
+from classes.statistic_worker.begetAsToStatistic import BegetAsToStatistic
+from classes.statistic_worker.begetNsFromStatistic import BegetNsFromStatistic
+from classes.statistic_worker.begetNsToStatistic import BegetNsToStatistic
+from classes.statistic_worker.begetRegistrantFromStatistic import BegetRegistrantFromStatistic
+from classes.statistic_worker.begetRegistrantToStatistic import BegetRegistrantToStatistic
 
 
 class Statistic(object):
@@ -66,7 +70,7 @@ class Statistic(object):
         date = self.get_date_after_without_statistic('domain')
 
         if date is not None:
-            for prefix in PREFIX_LIST:
+            for prefix in PREFIX_LIST_ZONE.keys():
                 self.count_ptheread += 1
                 worker = DomainCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
@@ -81,7 +85,8 @@ class Statistic(object):
         date = self.get_date_after_without_statistic('as')
 
         if date is not None:
-            for prefix in PREFIX_LIST:
+            for prefix in PREFIX_LIST_ZONE.keys():
+                print(prefix)
                 self.count_ptheread += 1
                 worker = AsCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
@@ -96,7 +101,7 @@ class Statistic(object):
         date = self.get_date_after_without_statistic('mx')
 
         if date is not None:
-            for prefix in PREFIX_LIST:
+            for prefix in PREFIX_LIST_ZONE.keys():
                 self.count_ptheread += 1
                 worker = MxCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
@@ -111,7 +116,7 @@ class Statistic(object):
         date = self.get_date_after_without_statistic('ns')
 
         if date is not None:
-            for prefix in PREFIX_LIST:
+            for prefix in PREFIX_LIST_ZONE.keys():
                 self.count_ptheread += 1
                 worker = NsCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
@@ -126,7 +131,7 @@ class Statistic(object):
         date = self.get_date_after_without_statistic('registrant')
 
         if date is not None:
-            for prefix in PREFIX_LIST:
+            for prefix in PREFIX_LIST_ZONE.keys():
                 self.count_ptheread += 1
                 worker = RegistrantCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
@@ -141,7 +146,7 @@ class Statistic(object):
         date = self.get_date_after_without_statistic('a')
 
         if date is not None:
-            for prefix in PREFIX_LIST:
+            for prefix in PREFIX_LIST_ZONE.keys():
                 self.count_ptheread += 1
                 worker = ACountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
@@ -156,7 +161,7 @@ class Statistic(object):
         date = self.get_date_after_without_statistic('cname')
 
         if date is not None:
-            for prefix in PREFIX_LIST:
+            for prefix in PREFIX_LIST_ZONE.keys():
                 self.count_ptheread += 1
                 worker = CnameCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
@@ -171,7 +176,7 @@ class Statistic(object):
         date = self.get_date_after_without_statistic('as_domain_old')
 
         if date is not None:
-            for prefix in PREFIX_LIST:
+            for prefix in PREFIX_LIST_ZONE.keys():
                 self.count_ptheread += 1
                 worker = AsDomainOldCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
@@ -186,7 +191,7 @@ class Statistic(object):
         date = self.get_date_after_without_statistic('ns_domain_old')
 
         if date is not None:
-            for prefix in PREFIX_LIST:
+            for prefix in PREFIX_LIST_ZONE.keys():
                 self.count_ptheread += 1
                 worker = NsDomainOldCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
@@ -201,7 +206,7 @@ class Statistic(object):
         date = self.get_date_after_without_statistic('a_domain_old')
 
         if date is not None:
-            for prefix in PREFIX_LIST:
+            for prefix in PREFIX_LIST_ZONE.keys():
                 self.count_ptheread += 1
                 worker = ADomainOldCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
@@ -221,7 +226,7 @@ class Statistic(object):
         while date <= today:
             connection = get_mysql_connection()
             cursor = connection.cursor(MySQLdb.cursors.DictCursor)
-            print("date is %s" % date)
+            print(("date is %s" % date))
 
             ns_array = {}
             provider_array = {}
@@ -275,8 +280,8 @@ class Statistic(object):
 
                 except Exception as e:
                     # ну что бывает, не запоминаем это значение
-                    print("Got an exception: %s" % e.message)
-                    print(traceback.format_exc())
+                    print(("Got an exception: %s" % e.message))
+                    print((traceback.format_exc()))
 
             sql = """SELECT ns1, ns2, ns3, ns4 FROM domain_history
                     WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
@@ -291,7 +296,7 @@ class Statistic(object):
 
             for key in provider_array:
                 search_string = key
-                print("%s Search key is %s" % (i, search_string))
+                print(("%s Search key is %s" % (i, search_string)))
 
                 worker = GroupProviderStatistic(i, search_string, data, zone, date)
                 worker.daemon = True
@@ -329,14 +334,97 @@ class Statistic(object):
         date = self.get_date_after_without_statistic('ns_domain_group')
 
         if date is not None:
-            for prefix in PREFIX_LIST:
+            for prefix in PREFIX_LIST_ZONE.keys():
                 self._update_ns_domain_group_count_statistic_python(date, today, prefix, 25)
+
+    def update_beget_as_from(self):
+        """
+        :return:
+        """
+        date = self.get_date_after_without_statistic('beget_domain_as_from')
+
+        if date is not None:
+            for prefix in PREFIX_LIST_ZONE.keys():
+                self.count_ptheread += 1
+                worker = BegetAsFromStatistic(self.count_ptheread, date, self.today, prefix)
+                worker.daemon = True
+                self.process_list.append(worker)
+                worker.start()
+
+    def update_beget_as_to(self):
+        """
+        :return:
+        """
+        date = self.get_date_after_without_statistic('beget_domain_as_to')
+
+        if date is not None:
+            for prefix in PREFIX_LIST_ZONE.keys():
+                self.count_ptheread += 1
+                worker = BegetAsToStatistic(self.count_ptheread, date, self.today, prefix)
+                worker.daemon = True
+                self.process_list.append(worker)
+                worker.start()
+
+    def update_beget_ns_from(self):
+        """
+        :return:
+        """
+        date = self.get_date_after_without_statistic('beget_domain_ns_from')
+
+        if date is not None:
+            for prefix in PREFIX_LIST_ZONE.keys():
+                self.count_ptheread += 1
+                worker = BegetNsFromStatistic(self.count_ptheread, date, self.today, prefix)
+                worker.daemon = True
+                self.process_list.append(worker)
+                worker.start()
+
+    def update_beget_ns_to(self):
+        """
+        :return:
+        """
+        date = self.get_date_after_without_statistic('beget_domain_ns_to')
+
+        if date is not None:
+            for prefix in PREFIX_LIST_ZONE.keys():
+                self.count_ptheread += 1
+                worker = BegetNsToStatistic(self.count_ptheread, date, self.today, prefix)
+                worker.daemon = True
+                self.process_list.append(worker)
+                worker.start()
+
+    def update_beget_registrant_from(self):
+        """
+        :return:
+        """
+        date = self.get_date_after_without_statistic('beget_domain_registrant_from')
+
+        if date is not None:
+            self.count_ptheread += 1
+            worker = BegetRegistrantFromStatistic(self.count_ptheread, date, self.today)
+            worker.daemon = True
+            self.process_list.append(worker)
+            worker.start()
+
+    def update_beget_registrant_to(self):
+        """
+        :return:
+        """
+        date = self.get_date_after_without_statistic('beget_domain_registrant_to')
+
+        if date is not None:
+            self.count_ptheread += 1
+            worker = BegetRegistrantToStatistic(self.count_ptheread, date, self.today)
+            worker.daemon = True
+            self.process_list.append(worker)
+            worker.start()
 
     def update_all_statistic(self):
         """
         Обновление всех статистик
         :return:
         """
+        self.update_as_count_statistic()
         self.update_a_domain_old_count_statistic()
         self.update_ns_domain_old_count_statistic()
         self.update_as_domain_old_count_statistic()
@@ -344,14 +432,39 @@ class Statistic(object):
         self.update_ns_count_statistic()
         self.update_mx_count_statistic()
         self.update_domain_count_statistic()
-        self.update_as_count_statistic()
         self.update_a_count_statistic()
         self.update_cname_count_statistic()
         self.update_ns_domain_group_count_statistic()
+
+        # beget statistic
+        self.update_beget_as_from()
+        self.update_beget_as_to()
+        self.update_beget_registrant_from()
+        self.update_beget_registrant_to()
+        self.update_beget_ns_from()
+        self.update_beget_ns_to()
 
         for process in self.process_list:
             try:
                 # timeout 2 days
                 process.join(1728000)
+            except KeyboardInterrupt:
+                return
+
+    def update_all_test_statistic(self):
+        """
+        Обновление всех статистик
+        :return:
+        """
+        # self.update_beget_as_from()
+        # self.update_beget_as_to()
+        # self.update_beget_registrant_from()
+        # self.update_beget_registrant_to()
+        # self.update_beget_ns_from()
+        # self.update_beget_ns_to()
+
+        for process in self.process_list:
+            try:
+                process.join()
             except KeyboardInterrupt:
                 return

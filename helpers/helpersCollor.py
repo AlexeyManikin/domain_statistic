@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import time
 import os
 import traceback
 
 __author__ = 'alexeyymanikin'
 
-BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
+BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = list(range(8))
 
 RESET_SEQ = "\033[0m"
 COLOR_SEQ = "\033[1;%dm"
@@ -68,10 +66,10 @@ class BColor(object):
             else:
                 message_type = BColor.parsing_message(' <RED> ERROR: <RESET>')
 
-            print date + pid + message_type + " " + BColor.parsing_message(message)
+            print(date + pid + message_type + " " + BColor.parsing_message(message))
             return date + pid + message_type + " " + BColor.parsing_message(message)
         except:
-            print traceback.format_exc()
+            print(traceback.format_exc())
             return traceback.format_exc()
 
     @staticmethod

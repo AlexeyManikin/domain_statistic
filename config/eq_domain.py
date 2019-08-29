@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Project server.pyportal
-from __future__ import unicode_literals
+
 
 __author__ = 'alexeyymnaikin'
 

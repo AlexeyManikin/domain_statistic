@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-# Project server.pyportal
-from __future__ import unicode_literals
-
 __author__ = 'alexeyymnaikin'
 
 import os
@@ -11,18 +8,21 @@ CURRENT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__))+'/../'
 MAX_AS_NUMBER = 450000
 MINIMUM_DOMAIN_COUNT = 50
 
-PREFIX_LIST = ['ru', 'su', 'rf']
+PREFIX_LIST_ZONE = {'ru': 0, 'su': 1, 'rf': 2}
+
 DEFAULT_TIMEOUT = 3.0
 
+
 MYSQL_HOST = 'db'
-MYSQL_PORT = 33060
-MYSQL_USER = DB_USER
-MYSQL_PASSWD = 'domain_statisticdomain_statistic'
+MYSQL_PORT = 3306
+MYSQL_USER = 'DBUSER'
+MYSQL_PASSWD = 'DBPASSWD'
 MYSQL_DATABASE = 'domain_statistic'
 
 PRKI_JSON_URL = 'http://rpki:8080/export.json'
-COUNT_THREAD = 180
 
-START_YEAR = 2015
+COUNT_THREAD = 120
+
+START_YEAR = 2019
 START_MONTH = 8
-START_DAY = 1
+START_DAY = 17
