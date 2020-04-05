@@ -2,9 +2,9 @@ Site http://www.ris.ripe.net/source/bgpdump/
 
     apt-get install -y libbz2-dev
     cd /usr/src
-    wget http://www.ris.ripe.net/source/bgpdump/libbgpdump-1.4.99.13.tgz
-    tar -xf libbgpdump-1.4.99.13.tgz
-    cd libbgpdump-1.4.99.13
+    wget http://www.ris.ripe.net/source/bgpdump/libbgpdump-1.6.0.tgz
+    tar -xf libbgpdump-1.6.0.tgz
+    cd libbgpdump-1.6.0
     ./configure --prefix=/opt/libbgpdump
     mkdir /opt/libbgpdump
     mkdir /opt/libbgpdump/bin
