@@ -1,40 +1,54 @@
-# -*- coding: utf-8 -*-
 __author__ = 'Alexey Y Manikin'
 
-from helpers.helpers import get_mysql_connection
+from classes.statistic_worker.statisticBaseClass import StatisticBaseClass
 import MySQLdb
-import multiprocessing
 import datetime
 from config.main import PREFIX_LIST_ZONE
 
 
-class BegetAsFromStatistic(multiprocessing.Process):
+class ProviderAsFromStatistic(StatisticBaseClass):
 
-    def __init__(self, number, data, today, zone):
+    def __init__(self, number: int, data: datetime, today: datetime, zone: str, provider: str, as_number: int):
         """
         :param number:
         """
-        multiprocessing.Process.__init__(self, name="beget_as_from_%s" % number)
-        self.number = number
-        self.connection = None
 
+        StatisticBaseClass.__init__(self, number, "%s_from_as" % provider)
+
+        self.provider = provider
         self.today = today
         self.data = data
         self.zone = PREFIX_LIST_ZONE[zone]
+        self.as_number = as_number
 
-    def _connect_mysql(self):
-        """
-        :return:
-        """
-        self.connection = get_mysql_connection()
+    @staticmethod
+    def create_table(provider: str):
+        sql = """
+                CREATE TABLE IF NOT EXISTS `%s_domain_as_from_count_statistic` (
+                  `id` int(11) NOT NULL AUTO_INCREMENT,
+                  `date` date NOT NULL,
+                  `domain_id` int(11) NOT NULL,
+                  `domain_name` varchar(256) DEFAULT NULL,
+                  `as_from` int(11) NOT NULL,
+                  `tld` tinyint(3) unsigned NOT NULL,
+                  PRIMARY KEY (`id`),
+                  KEY `date` (`date`),
+                  KEY `domain_name` (`domain_name`),
+                  KEY `domain_id` (`domain_id`)
+                ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;""" % provider
 
-    def _update(self, date, today, zone):
+        StatisticBaseClass.create_db_if_not_exist(sql)
+
+    def _update(self):
         """
         :type date: date
         :type today: date
         :type zone: unicode
         :return:
         """
+        date = self.data
+        today = self.today
+
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
             sql_insert = ''
@@ -53,7 +67,7 @@ WHERE
         FROM
             domain_history AS dh1
         WHERE
-            dh1.asn1 = 198610
+            dh1.asn1 = %i
                 AND dh1.date_start <= '%s'
                 AND dh1.date_end > '%s'
                 AND dh1.delegated = 'Y'
@@ -64,9 +78,17 @@ WHERE
                 WHERE
                     dh.date_start <= DATE_SUB('%s', INTERVAL 1 DAY)
                         AND dh.date_end > DATE_SUB('%s', INTERVAL 1 DAY)
-                        AND dh.asn1 != 198610
+                        AND dh.asn1 != %i
                         AND dh.delegated = 'Y'
-                        AND dh.tld = %s))""" % (date, date, date, date, date, date, zone)
+                        AND dh.tld = %s))""" % (date,
+                                                date,
+                                                self.as_number,
+                                                date,
+                                                date,
+                                                date,
+                                                date,
+                                                self.as_number,
+                                                self.zone)
 
             cursor.execute(sql)
             data = cursor.fetchall()
@@ -76,28 +98,19 @@ WHERE
                                                                   row['domain_id'],
                                                                   row['domain_name'],
                                                                   row['asn1'],
-                                                                  zone)
+                                                                  self.zone)
                 if len(sql_insert) > 5:
                     sql_insert += ", " + sql_insert_date
                 else:
                     sql_insert += sql_insert_date
 
             if len(sql_insert) > 1:
-                sql = """INSERT INTO beget_domain_as_from_count_statistic(`date`, 
+                sql = """INSERT INTO %s_domain_as_from_count_statistic(`date`, 
                             `domain_id`, 
                             `domain_name`, 
                             `as_from`, 
-                            `tld`) VALUE """ + sql_insert
+                            `tld`) VALUE """ % self.provider + sql_insert
                 cursor.execute(sql)
                 self.connection.commit()
-            date += datetime.timedelta(days=1)
 
-    def run(self):
-        """
-        Обрабатываем массив записываем в БД
-        :return:
-        """
-        self._connect_mysql()
-        self._update(self.data, self.today, self.zone)
-        self.connection.commit()
-        self.connection.close()
+            date += datetime.timedelta(days=1)

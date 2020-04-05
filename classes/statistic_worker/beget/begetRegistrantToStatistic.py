@@ -1,38 +1,32 @@
-# -*- coding: utf-8 -*-
 __author__ = 'Alexey Y Manikin'
 
-from helpers.helpers import get_mysql_connection
+from classes.statistic_worker.statisticBaseClass import StatisticBaseClass
 import MySQLdb
-import multiprocessing
 import datetime
 
 
-class BegetRegistrantToStatistic(multiprocessing.Process):
+class BegetRegistrantToStatistic(StatisticBaseClass):
 
-    def __init__(self, number, data, today):
+    def __init__(self, number: int, data: datetime, today: datetime):
         """
         :param number:
         """
-        multiprocessing.Process.__init__(self, name="beget_registrant_to_%s" % number)
-        self.number = number
-        self.connection = None
-
+        StatisticBaseClass.__init__(self, number, 'beget_registrant_to')
         self.today = today
         self.data = data
 
-    def _connect_mysql(self):
-        """
-        :return:
-        """
-        self.connection = get_mysql_connection()
-
-    def _update(self, date, today):
+    def _update(self):
         """
         :type date: date
         :type today: date
         :return:
         """
+        date = self.data
+        today = self.today
+
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+        registrant_id: int = self.get_beget_registrant(cursor)
+
         while date <= today:
             sql_insert = ''
             sql = """SELECT 
@@ -42,7 +36,7 @@ class BegetRegistrantToStatistic(multiprocessing.Process):
         FROM
             domain_history AS dh1
         WHERE
-                dh1.registrant_id != 26
+                dh1.registrant_id != %i
                 AND dh1.date_start <= '%s'
                 AND dh1.date_end > '%s'
                 AND dh1.domain_id IN (SELECT 
@@ -52,8 +46,8 @@ class BegetRegistrantToStatistic(multiprocessing.Process):
                 WHERE
                     dh.date_start <= DATE_SUB('%s', INTERVAL 1 DAY)
                         AND dh.date_end > DATE_SUB('%s', INTERVAL 1 DAY)
-                        AND dh.registrant_id = 26)
-                        """ % (date, date, date, date)
+                        AND dh.registrant_id = %i)
+                        """ % (registrant_id, date, date, date, date, registrant_id)
 
             cursor.execute(sql)
             data = cursor.fetchall()
@@ -75,14 +69,6 @@ class BegetRegistrantToStatistic(multiprocessing.Process):
                             `registrant_id_to`) VALUE """ + sql_insert
                 cursor.execute(sql)
                 self.connection.commit()
+
             date += datetime.timedelta(days=1)
 
-    def run(self):
-        """
-        Обрабатываем массив записываем в БД
-        :return:
-        """
-        self._connect_mysql()
-        self._update(self.data, self.today)
-        self.connection.commit()
-        self.connection.close()

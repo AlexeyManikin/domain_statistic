@@ -1,17 +1,15 @@
 mysql:
   build: mysql/
   restart: always
-  name: "mysql_open_domain_statistic"
   mem_limit: "150G"
   ports:
-    - "3306:3306"
+    - "3307:3306"
   volumes:
     - ./counteiner_data/datadir:/var/lib/mysql:rw
     - ./mysql/config/my.cnf:/etc/mysql/my.cnf:rw
 
 recurcer:
   image: vimagick/pdnsd
-  name: "domain_open_statistic_recurcer"
   mem_limit: "10G"
   volumes:
    -  ./pdnsd/config/pdnsd.conf:/etc/pdnsd.conf
@@ -19,16 +17,16 @@ recurcer:
 
 runner:
   build: runner/
-  name: "domain_open_statistic_runner"
   links:
      - "mysql:db"
      - "recurcer:resolver"
-#     - "rpki:rpki"
+#     - "rpki:rpki" 
   mem_limit: "200G"
   volumes:
      - ../:/home/domain_statistic:rw
      - ./counteiner_data/download/:/home/domain_statistic/download:rw
      - ./runner/config/root:/var/spool/cron/crontabs/root:rw
+
 #rpki:
 #  build: rpki/
 #  mem_limit: "3G"
@@ -40,7 +38,6 @@ runner:
 
 devrunner:
   build: runner/
-  name: "domain_open_statistic_runner_dev"
   links:
    - "mysql:db"
    - "recurcer:resolver"

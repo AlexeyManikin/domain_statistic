@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 __author__ = 'Alexey Y Manikin'
 
 from helpers.helpers import get_mysql_connection
 import datetime
 import MySQLdb
-import traceback
 from config.main import *
 
 from classes.statistic_worker.groupProviderStatistic import GroupProviderStatistic
@@ -19,12 +17,16 @@ from classes.statistic_worker.registrantCountStatistic import RegistrantCountSta
 from classes.statistic_worker.asDomainOldCountStatistic import AsDomainOldCountStatistic
 from classes.statistic_worker.nsDomainOldCountStatistic import NsDomainOldCountStatistic
 from classes.statistic_worker.aDomainOldCountStatistic import ADomainOldCountStatistic
-from classes.statistic_worker.begetAsFromStatistic import BegetAsFromStatistic
-from classes.statistic_worker.begetAsToStatistic import BegetAsToStatistic
-from classes.statistic_worker.begetNsFromStatistic import BegetNsFromStatistic
-from classes.statistic_worker.begetNsToStatistic import BegetNsToStatistic
-from classes.statistic_worker.begetRegistrantFromStatistic import BegetRegistrantFromStatistic
-from classes.statistic_worker.begetRegistrantToStatistic import BegetRegistrantToStatistic
+
+from classes.statistic_worker.beget.begetAsFromStatistic import BegetAsFromStatistic
+from classes.statistic_worker.beget.begetAsToStatistic import BegetAsToStatistic
+from classes.statistic_worker.beget.begetNsFromStatistic import BegetNsFromStatistic
+from classes.statistic_worker.beget.begetNsToStatistic import BegetNsToStatistic
+from classes.statistic_worker.beget.begetRegistrantFromStatistic import BegetRegistrantFromStatistic
+from classes.statistic_worker.beget.begetRegistrantToStatistic import BegetRegistrantToStatistic
+
+from classes.statistic_worker.provider.providerAsFromStatistic import ProviderAsFromStatistic
+from classes.statistic_worker.provider.providerAsToStatistic import ProviderAsToStatistic
 
 
 class Statistic(object):
@@ -44,7 +46,7 @@ class Statistic(object):
         """
         self.connection = get_mysql_connection()
 
-    def get_date_after_without_statistic(self, table_prefix):
+    def get_date_after_without_statistic(self, table_prefix: str) -> datetime:
         """
         получить последнию дату без агригации данных
         :type table_prefix: unicode
@@ -54,13 +56,19 @@ class Statistic(object):
         date = datetime.date(START_YEAR, START_MONTH, START_DAY)
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
-            sql = "SELECT count(*) as count FROM %s_count_statistic WHERE date = '%s'" % (table_prefix, date)
-            cursor.execute(sql)
-            result = cursor.fetchone()
-            if result['count'] == 0:
-                return date
+            try:
+                sql = "SELECT count(*) as count FROM %s_count_statistic WHERE date = '%s'" % (table_prefix, today)
+                cursor.execute(sql)
+                result = cursor.fetchone()
+                if result['count'] != 0:
+                    today += datetime.timedelta(days=1)
+                    return today
 
-            date += datetime.timedelta(days=1)
+                today -= datetime.timedelta(days=1)
+            except MySQLdb.Error:
+                print("Table %s_count_statistic dosn`t exist" % table_prefix)
+                return today
+        return today
 
     def update_domain_count_statistic(self):
         """
@@ -86,7 +94,6 @@ class Statistic(object):
 
         if date is not None:
             for prefix in PREFIX_LIST_ZONE.keys():
-                print(prefix)
                 self.count_ptheread += 1
                 worker = AsCountStatistic(self.count_ptheread, date, self.today, prefix)
                 worker.daemon = True
@@ -213,129 +220,16 @@ class Statistic(object):
                 self.process_list.append(worker)
                 worker.start()
 
-    def _update_ns_domain_group_count_statistic_python(self, date, today, zone, count=COUNT_THREAD):
-        """
-        Реализация на питоне с использованием процессов
-        :type date: date
-        :type today: date
-        :type zone: unicode
-        :return:
-        """
-        self.connection.close()
-
-        while date <= today:
-            connection = get_mysql_connection()
-            cursor = connection.cursor(MySQLdb.cursors.DictCursor)
-            print(("date is %s" % date))
-
-            ns_array = {}
-            provider_array = {}
-
-            sql_has_data = """SELECT count(*) as count FROM ns_count_statistic
-                              WHERE tld = '%s' AND date = '%s'""" % (zone, date)
-            cursor.execute(sql_has_data)
-            data = cursor.fetchone()
-
-            if data['count'] == 0:
-                # Вариант когда записей нет в статистикие по NS серверам
-                for i in range(1, 5):
-                    sql = """SELECT ns%s as ns, count(*) as count FROM domain_history
-                            WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
-                            GROUP BY ns%s
-                            HAVING count(*) > %s
-                            ORDER BY count(*) desc""" % (i, zone, date, date, i, MINIMUM_DOMAIN_COUNT)
-
-                    cursor.execute(sql)
-                    data = cursor.fetchall()
-
-                    for row in data:
-                        if row['ns'] in ns_array:
-                            ns_array[row['ns']] += row['count']
-                        else:
-                            ns_array[row['ns']] = row['count']
-            else:
-                # вариант с использованием уже подготовленных данных
-                sql = """SELECT ns, count FROM ns_count_statistic
-                        WHERE tld = '%s' AND date= '%s'""" % (zone, date)
-                cursor.execute(sql)
-                data = cursor.fetchall()
-                for row in data:
-                    ns_array[row['ns']] = row['count']
-
-            for key in ns_array:
-                try:
-                    if key is not None:
-                        split_ns = key.split('.')
-                        if len(split_ns) > 2:
-
-                            if '.net.ru.' in key or '.com.ua.' in key:
-                                provider = split_ns[-4]
-                            else:
-                                provider = split_ns[-3]
-
-                            if provider in provider_array:
-                                provider_array[provider] += ns_array[key]
-                            else:
-                                provider_array[provider] = ns_array[key]
-
-                except Exception as e:
-                    # ну что бывает, не запоминаем это значение
-                    print(("Got an exception: %s" % e.message))
-                    print((traceback.format_exc()))
-
-            sql = """SELECT ns1, ns2, ns3, ns4 FROM domain_history
-                    WHERE delegated = 'Y' AND tld = '%s' AND date_start <= '%s' AND date_end >= '%s'
-            """ % (zone, date, date)
-            cursor.execute(sql)
-            data = cursor.fetchall()
-
-            connection.close()
-
-            process_list = []
-            i = 0
-
-            for key in provider_array:
-                search_string = key
-                print(("%s Search key is %s" % (i, search_string)))
-
-                worker = GroupProviderStatistic(i, search_string, data, zone, date)
-                worker.daemon = True
-                process_list.append(worker)
-                worker.start()
-
-                i += 1
-
-                if i != 0 and i % count == 0:
-                    for process in process_list:
-                        try:
-                            # timeout 2 days
-                            process.join(1728000)
-                        except KeyboardInterrupt:
-                            return
-                    process_list = []
-
-            for process in process_list:
-                try:
-                    # timeout 2 days
-                    process.join(1728000)
-                except KeyboardInterrupt:
-                    return
-
-            date += datetime.timedelta(days=1)
-
-        self.connection = get_mysql_connection()
-
     def update_ns_domain_group_count_statistic(self):
         """
         Обновлене статистики по груперованным провайдерам
         :return:
         """
-        today = datetime.date.today()
         date = self.get_date_after_without_statistic('ns_domain_group')
 
         if date is not None:
             for prefix in PREFIX_LIST_ZONE.keys():
-                self._update_ns_domain_group_count_statistic_python(date, today, prefix, 25)
+                GroupProviderStatistic.update_ns_domain_group_count_statistic_python(date, self.today, prefix, 25)
 
     def update_beget_as_from(self):
         """
@@ -419,6 +313,40 @@ class Statistic(object):
             self.process_list.append(worker)
             worker.start()
 
+    def _update_provider_as_from(self, provider: str, as_number: int):
+        """
+        :return:
+        """
+        ProviderAsFromStatistic.create_table(provider)
+        date = self.get_date_after_without_statistic("%s_domain_as_from" % provider)
+
+        if date is not None:
+            for prefix in PREFIX_LIST_ZONE.keys():
+                self.count_ptheread += 1
+                worker = ProviderAsFromStatistic(self.count_ptheread, date, self.today, prefix, provider, as_number)
+                worker.daemon = True
+                self.process_list.append(worker)
+                worker.start()
+
+    def _update_provider_to_from(self, provider: str, as_number: int):
+        """
+        :return:
+        """
+        ProviderAsToStatistic.create_table(provider)
+        date = self.get_date_after_without_statistic("%s_domain_as_to" % provider)
+
+        if date is not None:
+            for prefix in PREFIX_LIST_ZONE.keys():
+                self.count_ptheread += 1
+                worker = ProviderAsToStatistic(self.count_ptheread, date, self.today, prefix, provider, as_number)
+                worker.daemon = True
+                self.process_list.append(worker)
+                worker.start()
+
+    def update_provider_statistic(self, provider: str, as_number: int):
+        self._update_provider_as_from(provider, as_number)
+        self._update_provider_to_from(provider, as_number)
+
     def update_all_statistic(self):
         """
         Обновление всех статистик
@@ -444,6 +372,9 @@ class Statistic(object):
         self.update_beget_ns_from()
         self.update_beget_ns_to()
 
+        self.update_provider_statistic('netangels', 44128)
+        self.update_provider_statistic('timeweb', 9123)
+
         for process in self.process_list:
             try:
                 # timeout 2 days
@@ -456,13 +387,7 @@ class Statistic(object):
         Обновление всех статистик
         :return:
         """
-        # self.update_beget_as_from()
-        # self.update_beget_as_to()
-        # self.update_beget_registrant_from()
-        # self.update_beget_registrant_to()
-        # self.update_beget_ns_from()
-        # self.update_beget_ns_to()
-
+        #self.update_provider_statistic('netangels', 44128)
         for process in self.process_list:
             try:
                 process.join()

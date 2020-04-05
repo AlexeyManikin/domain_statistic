@@ -1,40 +1,29 @@
-# -*- coding: utf-8 -*-
 __author__ = 'Alexey Y Manikin'
 
-from helpers.helpers import get_mysql_connection
+from classes.statistic_worker.statisticBaseClass import StatisticBaseClass
 import MySQLdb
-import multiprocessing
 import datetime
 from config.main import PREFIX_LIST_ZONE
 
 
-class BegetNsToStatistic(multiprocessing.Process):
+class BegetNsToStatistic(StatisticBaseClass):
 
-    def __init__(self, number, data, today, zone):
+    def __init__(self, number: int, data: datetime, today: datetime, zone: str):
         """
         :param number:
         """
-        multiprocessing.Process.__init__(self, name="beget_ns_to_%s" % number)
-        self.number = number
-        self.connection = None
-
+        StatisticBaseClass.__init__(self, number, 'beget_ns_to')
         self.today = today
         self.data = data
         self.zone = PREFIX_LIST_ZONE[zone]
 
-    def _connect_mysql(self):
+    def _update(self):
         """
         :return:
         """
-        self.connection = get_mysql_connection()
+        date = self.data
+        today = self.today
 
-    def _update(self, date, today, zone):
-        """
-        :type date: date
-        :type today: date
-        :type zone: unicode
-        :return:
-        """
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
             sql_insert = ''
@@ -57,7 +46,7 @@ class BegetNsToStatistic(multiprocessing.Process):
                     dh.date_start <= DATE_SUB('%s', INTERVAL 1 DAY)
                         AND dh.date_end > DATE_SUB('%s', INTERVAL 1 DAY)
                         AND dh.ns1_like_beget = 1
-                        AND dh.tld = %s)""" % (date, date, date, date, zone)
+                        AND dh.tld = %s)""" % (date, date, date, date, self.zone)
 
             cursor.execute(sql)
             data = cursor.fetchall()
@@ -67,7 +56,7 @@ class BegetNsToStatistic(multiprocessing.Process):
                                                                   row['domain_id'],
                                                                   row['domain_name'],
                                                                   row['ns1'],
-                                                                  zone)
+                                                                  self.zone)
                 if len(sql_insert) > 5:
                     sql_insert += ", " + sql_insert_date
                 else:
@@ -81,14 +70,5 @@ class BegetNsToStatistic(multiprocessing.Process):
                             `tld`) VALUE """ + sql_insert
                 cursor.execute(sql)
                 self.connection.commit()
-            date += datetime.timedelta(days=1)
 
-    def run(self):
-        """
-        Обрабатываем массив записываем в БД
-        :return:
-        """
-        self._connect_mysql()
-        self._update(self.data, self.today, self.zone)
-        self.connection.commit()
-        self.connection.close()
+            date += datetime.timedelta(days=1)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __author__ = 'alekseymanikin'
 
 import helpers.helpers as Helper
@@ -13,7 +12,7 @@ class Command(object):
     OPTIONS = {}
     ':type : dict'
 
-    def __init__(self, command_name):
+    def __init__(self, command_name: str):
         """
         :param command_name: Имя команды
         :type command_name: unicode
@@ -22,7 +21,7 @@ class Command(object):
         self.options = {}
         self.binary = [Helper.get_util(command_name)]
 
-    def _set_single_option_(self, name, value):
+    def _set_single_option_(self, name: str, value: str):
         """
         Устанавливаем базовые опции
         :type name: unicode
@@ -49,7 +48,7 @@ class Command(object):
                 "value '%s' doesn't match option '%s'" %
                 (value, name))
 
-    def set_option(self, name, values=None):
+    def set_option(self, name: str, values: str or None = None):
         """
         :type name: unicode
         :type values: unicode
@@ -60,7 +59,7 @@ class Command(object):
         for value in values:
             self._set_single_option_(name, value)
 
-    def set_options(self, options):
+    def set_options(self, options: str):
         """
         :type options: unicode
         :return:
@@ -75,7 +74,7 @@ class Command(object):
                 else:
                     raise TypeError("option '%s' of wrong type" % option)
 
-    def get_args(self):
+    def get_args(self) -> list:
         """
         Возвращаем список аргументов
         :return: dict
@@ -89,7 +88,7 @@ class Command(object):
                 args.append(opt)
         return args
 
-    def get_command(self):
+    def get_command(self) -> list:
         """
         Умеет смысл переопределить этот метод в зависимотси от параметров
         :return: команда запуска

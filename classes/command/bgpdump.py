@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __author__ = 'alexeyymanikin'
 
 from classes.command.command import Command
@@ -16,7 +15,7 @@ class Bgpdump(Command):
     }
     ':type : dict'
 
-    def __init__(self, path):
+    def __init__(self, path: str):
         """
         :type path: unicode
         :return:
@@ -25,7 +24,7 @@ class Bgpdump(Command):
         self.binary = [os.path.abspath(CURRENT_PATH+'/bin/bgpdump')]
         self.path = path
 
-    def get_command(self):
+    def get_command(self) -> list:
         """
         Вернуть команду запуска Bgpdump
         :return: возвращаем команду запуска

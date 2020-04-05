@@ -223,7 +223,7 @@ class Resolver(multiprocessing.Process):
                 row: bytes = dns_data.to_text().lower()
 
             try:
-                row = row.decode()
+                row: bytes = row.decode()
             except:
                 pass
 
@@ -461,7 +461,7 @@ class Resolver(multiprocessing.Process):
         for row in registrar_list:
             self.registrar[row['registrant']] = row['id']
 
-    def get_registrar_id(self, cursor, registrar: str):
+    def get_registrar_id(self, cursor, registrar: str) -> int:
         """
         :param cursor:
         :param registrar:
@@ -478,9 +478,9 @@ class Resolver(multiprocessing.Process):
             try:
                 sql = "INSERT INTO registrant(registrant) VALUE(LOWER('%s'))" % registrar
                 cursor.execute(sql)
-            except:
-                # alredy update on other pthread
-                pass
+            except Exception as e:
+                print(e)
+
             self._update_registrant(cursor)
             return self.registrar[registrar]
 
@@ -498,6 +498,7 @@ class Resolver(multiprocessing.Process):
             re_prefix = re.compile(r'\s*')
             self._connect_mysql()
             cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+
             #   rpki = RpkiChecker()
 
             for domain_data in self.domains:

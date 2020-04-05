@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __author__ = 'Alexey Y Manikin'
 
 import datetime
@@ -28,7 +27,7 @@ class Downloader(object):
         return date_path
 
     @staticmethod
-    def download_file(url, data_dir):
+    def download_file(url: str, data_dir: str) -> bool:
         """
         Скачивает файл в указанную директорию
         :type url: unicode
@@ -49,7 +48,7 @@ class Downloader(object):
         return True
 
     @staticmethod
-    def download_data_for_current_date():
+    def download_data_for_current_date() -> str:
         """
         Скачивает все необходимы файлы для парсинга
 

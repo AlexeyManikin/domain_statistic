@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __author__ = 'alexeyymanikin'
 
 import re
@@ -97,7 +96,7 @@ class AsInet(object):
             print(traceback.format_exc())
             return []
 
-    def parsing_as(self, show_log=False, max_as=MAX_AS_NUMBER):
+    def parsing_as(self, show_log: bool = False, max_as: int = MAX_AS_NUMBER):
         """
         парсим названия AS
         :type show_log:  bool
@@ -112,7 +111,7 @@ class AsInet(object):
 
         self.update_as(198610, as_data, show_log=show_log)
 
-    def _get_asn_description(self, number):
+    def _get_asn_description(self, number: int):
         """
         :type number: intexit
         :return:
@@ -143,13 +142,9 @@ class AsInet(object):
                 'DESCRIPTION': description,
                 'USE_FAST': 0}
 
-    def update_as(self, number, as_data, show_log=False):
+    def update_as(self, number: int, as_data: dict, show_log: bool = False) -> bool:
         """
         Обновляем информацию об AS в базе данных
-        :param show_log:
-        :type number: int
-        :type as_data: dict
-        :return:
         """
 
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)

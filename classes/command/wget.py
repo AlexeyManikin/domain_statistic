@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 __author__ = 'alexeyymanikin'
+
 from classes.command.command import Command
 DEFAULT_ARGUMENTS = []
 
@@ -14,7 +14,7 @@ class Wget(Command):
     }
     ':type : dict'
 
-    def __init__(self, url, path):
+    def __init__(self, url: str, path: str):
         """
         :type url: unicode
         :type path: unicode
@@ -24,7 +24,7 @@ class Wget(Command):
         self.url = url
         self.path = path
 
-    def get_command(self):
+    def get_command(self) -> list:
         """
         Вернуть команду запуска mysqldump
         :return: возвращаем команду запуска

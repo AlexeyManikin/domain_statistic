@@ -160,7 +160,6 @@ WHERE domain_id NOT IN (SELECT id FROM domain)"""
 
         for row in data:
             sql = "SELECT * FROM domain_history WHERE domain_id = %s ORDER BY id" % (row['domain_id'])
-            print(sql)
             cursor.execute(sql)
             domain_data = cursor.fetchall()
 
@@ -214,8 +213,8 @@ WHERE domain_id NOT IN (SELECT id FROM domain)"""
                                                                    domain_fields_new['id']))
                 else:
                     domain_fields_old = domain_fields_new
-
             self.connection.commit()
+        print("Current domain count %s" % current_domain)
 
     def _normalization_one_domain(self, domain_id: int):
         """
@@ -295,6 +294,6 @@ WHERE domain_id NOT IN (SELECT id FROM domain)"""
         Обновление всех статистик
         :return:
         """
-        self._normalization_delete_record()
-        # self._normalization_duplicate_records()
+        #self._normalization_delete_record()
+        self._normalization_duplicate_records()
         # self.normalization_domain_date()

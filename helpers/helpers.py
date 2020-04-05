@@ -48,6 +48,7 @@ def get_mysql_connection():
     """
     :return:
     """
+
     connection = MySQLdb.connect(host=MYSQL_HOST,
                                  port=MYSQL_PORT,
                                  user=MYSQL_USER,
@@ -58,6 +59,7 @@ def get_mysql_connection():
 
     connection.query("SET SESSION wait_timeout = 3600000")
     connection.query("SET @@sql_mode:=TRADITIONAL")
+    connection.autocommit(True)
 
     return connection
 

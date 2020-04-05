@@ -12,6 +12,7 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, CURRENT_DIR)
 logfile = os.path.join(CURRENT_DIR, '%s.debug' % PROGRAM_NAME)
 
+
 import traceback
 from helpers.helpers import check_program_run
 from classes.resolver import Resolver
