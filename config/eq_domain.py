@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-# Project server.pyportal
-from __future__ import unicode_literals
-
-__author__ = 'alexeyymnaikin'
+_author__ = 'alexeyymnaikin'
 
 # Списки эквивалентности доменов, используются для схлопывания ns/mx
 eq_domains = {

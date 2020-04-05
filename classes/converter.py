@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 __author__ = 'alexeyymanikin'
 
 import shutil
@@ -14,7 +11,7 @@ from helpers.helpersCollor import BColor
 
 class Converter(object):
 
-    def __init__(self, path, show_log=True, delete_work_dir=True):
+    def __init__(self, path: str, show_log: bool = True, delete_work_dir: bool = True):
         """
         :type path: unicode
         :type show_log: bool
@@ -24,15 +21,13 @@ class Converter(object):
         self.path = path
         self.show_log = show_log
         self.work_path = self._create_work_dir()
-        self.prefix = PREFIX_LIST
+        self.prefix = PREFIX_LIST_ZONE.keys()
         self.delete_work_dir = delete_work_dir
 
         for prefix in self.prefix:
             shutil.copy(os.path.join(self.path, prefix+'_domains.gz'), self.work_path)
             path_archive = os.path.join(self.work_path, prefix+"_domains.gz")
             Converter.unzip_file(path_archive)
-
-        self.connection = get_mysql_connection()
 
     def __del__(self):
         """
@@ -41,7 +36,6 @@ class Converter(object):
         """
         if self.delete_work_dir:
             self._remove_work_dir()
-        self.connection.close()
 
     def get_work_path(self):
         """
@@ -49,7 +43,7 @@ class Converter(object):
         """
         return self.work_path
 
-    def _create_work_dir(self):
+    def _create_work_dir(self) -> str:
         """
         Создает директорию с текущей датой в download
         :rtype: unicode
@@ -69,7 +63,7 @@ class Converter(object):
             shutil.rmtree(self.work_path)
 
     @staticmethod
-    def unzip_file(path_file):
+    def unzip_file(path_file: str) -> bool:
         """
         :rtype path_file: unicode
         :return:
@@ -86,7 +80,7 @@ class Converter(object):
 
         return True
 
-    def parce_file_rib_file_to(self, path_rib_file=False, path_to=False):
+    def parse_file_rib_file_to(self, path_rib_file=False, path_to=False) -> str:
         """
         :type path_rib_file: unicode
         :type path_to: unicode

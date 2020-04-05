@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 __author__ = 'alexeyymanikin'
 
 from classes.command.command import Command
 
 DEFAULT_ARGUMENTS = []
+
 
 class Gunzip(Command):
     """
@@ -16,7 +15,7 @@ class Gunzip(Command):
     }
     ':type : dict'
 
-    def __init__(self, path):
+    def __init__(self, path: str):
         """
         :type url: unicode
         :type path: unicode
@@ -25,7 +24,7 @@ class Gunzip(Command):
         super(Gunzip, self).__init__("gunzip")
         self.path = path
 
-    def get_command(self):
+    def get_command(self) -> list:
         """
         Вернуть команду запуска mysqldump
         :return: возвращаем команду запуска

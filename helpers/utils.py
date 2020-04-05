@@ -86,8 +86,8 @@ def compare_domains(domain_first, domain_second):
     if domain_first == domain_second:
         return True
   
-    if (eq_domains.has_key(domain_first) and eq_domains[domain_first] == domain_second) or \
-        (eq_domains.has_key(domain_second) and eq_domains[domain_second] == domain_first):
+    if (domain_first in eq_domains and eq_domains[domain_first] == domain_second) or \
+        (domain_second in eq_domains and eq_domains[domain_second] == domain_first):
         return True
   
     return False

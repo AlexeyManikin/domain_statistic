@@ -5,9 +5,9 @@
 tool.py - helper code
 """
 
-from __future__ import unicode_literals
 
-import compat as compat
+
+from . import compat as compat
 
 
 __all__ = ["same_string_type_as", "as_bytes", "as_unicode",
@@ -90,7 +90,7 @@ def recursive_str_to_unicode(target):
 
     if isinstance(target, dict):
         level = {}
-        for key, val in target.iteritems():
+        for key, val in target.items():
             ukey = recursive_str_to_unicode(key)
             uval = recursive_str_to_unicode(val)
             level[ukey] = uval
@@ -124,5 +124,5 @@ if __name__ == '__main__':
                 str('myTuple'): (str('inTuple1'), str('inTuple2')),
                 str('mystr'): str('text'),
                 str('myint'): 99}
-    print repr(test_obj)
-    print repr(recursive_str_to_unicode(test_obj))
+    print(repr(test_obj))
+    print(repr(recursive_str_to_unicode(test_obj)))

@@ -1,53 +1,50 @@
 mysql:
   build: mysql/
-  name: "mysql_open_domain_statistic"
-  mem_limit: "20G"
+  restart: always
+  mem_limit: "150G"
   ports:
-    - "3311:33060"
+    - "3307:3306"
   volumes:
-    - ./counteiner_data/datadir/:/home/mysql:rw
+    - ./counteiner_data/datadir:/var/lib/mysql:rw
     - ./mysql/config/my.cnf:/etc/mysql/my.cnf:rw
 
 recurcer:
-  build: recurcer/
-  name: "domain_open_statistic_recurcer"
-  mem_limit: "3G"
+  image: vimagick/pdnsd
+  mem_limit: "10G"
   volumes:
-    - ./recurcer/config/recursor.conf:/etc/powerdns/recursor.conf:ro
+   -  ./pdnsd/config/pdnsd.conf:/etc/pdnsd.conf
+  restart: always
 
 runner:
   build: runner/
-  name: "domain_open_statistic_runner"
   links:
      - "mysql:db"
      - "recurcer:resolver"
-     - "rpki:rpki"
-  mem_limit: "100G"
+#     - "rpki:rpki" 
+  mem_limit: "200G"
   volumes:
+     - ../:/home/domain_statistic:rw
      - ./counteiner_data/download/:/home/domain_statistic/download:rw
      - ./runner/config/root:/var/spool/cron/crontabs/root:rw
 
-rpki:
-  build: rpki/
-  mem_limit: "3G"
-  volumes:
-     - ./rpki/config/config:/home/my-configuration.conf:ro
-  ports:
-    - "8085:8080"
-    - "8282:8282"
-
-#devrunner:
-#  build: runner/
-#  name: "domain_open_statistic_runner_dev"
-#  links:
-#     - "mysql:db"
-#     - "recurcer:resolver"
-#     - "rpki:rpki"
-#  mem_limit: "100G"
-#  ports:
-#    - "2222:2222"
+#rpki:
+#  build: rpki/
+#  mem_limit: "3G"
 #  volumes:
-#     - ../:/home/domain_statistic:rw
-#     - ./counteiner_data/download/:/home/domain_statistic/download:rw
-#     - ./runner/config/root_dev:/var/spool/cron/crontabs/root:rw
+#     - ./rpki/config/config:/home/my-configuration.conf:ro
+#  ports:
+#    - "8085:8080"
+#    - "8282:8282"
 
+devrunner:
+  build: runner/
+  links:
+   - "mysql:db"
+   - "recurcer:resolver"
+  mem_limit: "200G"
+  ports:
+    - "2222:2222"
+  volumes:
+     - ../:/home/domain_statistic:rw
+     - ./counteiner_data/download/:/home/domain_statistic/download:rw
+     - ./runner/config/root_dev:/var/spool/cron/crontabs/root:rw
