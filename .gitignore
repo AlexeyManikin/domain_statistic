@@ -59,4 +59,4 @@ target/
 docker/counteiner_data/download
 docker/counteiner_data/datadir
 
-config/main.py
+config/*
