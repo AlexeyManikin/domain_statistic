@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __author__ = 'Alexey Y Manikin'
 
 import sys
@@ -22,11 +21,9 @@ from helpers.helpersCollor import BColor
 from classes.statistic import Statistic
 
 
-def save_prefix_list(prefix_list, file_name):
+def save_prefix_list(prefix_list: dict, file_name: str) -> None:
     """
     Сохраняем информацию об AS в файл
-    :param prefix_list:
-    :param file_name:
     :return:
     """
     saved_file = open(file_name, 'w')
@@ -35,7 +32,7 @@ def save_prefix_list(prefix_list, file_name):
     saved_file.close()
 
 
-def load_prefix_list_from_file(file_name):
+def load_prefix_list_from_file(file_name: str) -> SubnetTree.SubnetTree:
     """
     Загрузка из файла
     :param file_name:
@@ -52,7 +49,7 @@ def load_prefix_list_from_file(file_name):
     return subnet_list_tree
 
 
-def load_prefix_list_from_var(prefix_list):
+def load_prefix_list_from_var(prefix_list: dict) -> SubnetTree.SubnetTree:
     """
     Загрузка данных из переменной
     :return:
@@ -121,8 +118,11 @@ if __name__ == "__main__":
         if args.name_server:
             BColor.ok("Use name server %s" % args.name_server)
             name_server = args.name_server
-        Resolver.start_load_and_resolver_domain(as_list, os.path.abspath(os.path.join(path, 'work')),
-                                                delete_old=delete_old, verbose=args.show_verbose,
+
+        Resolver.start_load_and_resolver_domain(as_list,
+                                                os.path.abspath(os.path.join(path, 'work')),
+                                                delete_old=delete_old,
+                                                verbose=args.show_verbose,
                                                 resolve_dns=name_server)
 
         if args.update_statistic:

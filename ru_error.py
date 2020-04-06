@@ -3,7 +3,7 @@ __author__ = 'Alexey Y Manikin'
 
 import sys
 from config.main import *
-from classes.ruErrorMove2 import RuErrorMove2
+from classes.cctld_check.ruErrorMove2 import RuErrorMove2
 import traceback
 
 PROGRAM_NAME = 'ru_error'

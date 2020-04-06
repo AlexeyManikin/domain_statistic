@@ -45,7 +45,7 @@ https://habr.com/ru/post/66151/
 
 # Пример отчета (1 августа 2015 года)
 
-![example](https://raw.githubusercontent.com/AlexeyManikin/domain_statistic/master/doc/2015_01.png)
+![example](https://scontent.xx.fbcdn.net/hphotos-xpt1/t31.0-8/11779902_855515371153091_8587193411725580989_o.png)
 
 
 

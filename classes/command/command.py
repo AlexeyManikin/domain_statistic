@@ -21,7 +21,7 @@ class Command(object):
         self.options = {}
         self.binary = [Helper.get_util(command_name)]
 
-    def _set_single_option_(self, name: str, value: str):
+    def _set_single_option_(self, name: str, value: str) -> None:
         """
         Устанавливаем базовые опции
         :type name: unicode
@@ -48,7 +48,7 @@ class Command(object):
                 "value '%s' doesn't match option '%s'" %
                 (value, name))
 
-    def set_option(self, name: str, values: str or None = None):
+    def set_option(self, name: str, values: str or None = None) -> None:
         """
         :type name: unicode
         :type values: unicode
@@ -59,7 +59,7 @@ class Command(object):
         for value in values:
             self._set_single_option_(name, value)
 
-    def set_options(self, options: str):
+    def set_options(self, options: str) -> None:
         """
         :type options: unicode
         :return:

@@ -25,7 +25,7 @@ class BegetRegistrantToStatistic(StatisticBaseClass):
         today = self.today
 
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
-        registrant_id: int = self.get_beget_registrant(cursor)
+        registrant_id: int = self.get_beget_registrant(self.connection)
 
         while date <= today:
             sql_insert = ''

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __author__ = 'vladislav'
 
 import psutil
@@ -29,7 +28,7 @@ def is_int(s):
         return False
 
 
-def check_program_run(process_name):
+def check_program_run(process_name: str) -> bool:
     """
     Проверка на запущенность программы
     :type process_name: unicode
@@ -44,7 +43,7 @@ def check_program_run(process_name):
         return True
 
 
-def get_mysql_connection():
+def get_mysql_connection() -> MySQLdb.connect:
     """
     :return:
     """
@@ -64,7 +63,7 @@ def get_mysql_connection():
     return connection
 
 
-def get_hostname():
+def get_hostname() -> str:
     """
 
     :return:
@@ -76,7 +75,7 @@ def get_hostname():
         raise EnvironmentError("Cannot get hostname")
 
 
-def get_util(name):
+def get_util(name: str):
     """
 
     :param name:
@@ -91,7 +90,7 @@ def get_util(name):
     return p.wait().rstrip("\n".encode('utf-8'))
 
 
-def pid_exists(pid):
+def pid_exists(pid: int) -> bool:
     """
     Check whether pid exists in the current process table
     :param pid:
@@ -107,7 +106,7 @@ def pid_exists(pid):
         return True
 
 
-def kill_child_processes(parent_pid, sig=signal.SIGTERM):
+def kill_child_processes(parent_pid: int, sig: int = signal.SIGTERM):
     """
 
     :param parent_pid:
@@ -118,18 +117,6 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
     child_pid = p.children(recursive=True)
     for pid in child_pid:
         os.kill(pid.pid, sig)
-
-
-def microtime(get_as_float=False):
-    """
-
-    :param get_as_float:
-    :return:
-    """
-    if get_as_float:
-        return time.time()
-    else:
-        return '%d' % time.time()
 
 
 class SubprocessRunner(object):

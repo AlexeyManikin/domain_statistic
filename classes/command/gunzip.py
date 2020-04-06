@@ -31,4 +31,4 @@ class Gunzip(Command):
         :rtype: list
         """
 
-        return self.binary + [self.path]
+        return self.binary + ['-f'] + [self.path]

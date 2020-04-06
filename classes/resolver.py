@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __author__ = 'Alexey Y Manikin'
 
 import multiprocessing
@@ -12,30 +11,43 @@ from collections import defaultdict
 from helpers.helpers import get_mysql_connection, is_int
 from dns.resolver import NXDOMAIN, NoAnswer, Timeout, NoNameservers
 import time
+import SubnetTree
 from classes.rpkiCheker import RpkiChecker
 from helpers.helpersCollor import BColor
+import queue
 import pprint
 
 
 class Resolver(multiprocessing.Process):
+    DNS_TYPE_LENGTH = {'a': 16,
+                       'aaaa': 54,
+                       'mx': 69,
+                       'txt': 250,
+                       'ns': 44,
+                       'cname': 44,
+                       'nserrors': 80
+                       }
 
-    def __init__(self, number: int, domains_list, dns_server, array_net, log_path):
+    def __init__(self, number: int,
+                 queue_in: multiprocessing.Queue,
+                 dns_server: str,
+                 array_net: SubnetTree.SubnetTree,
+                 log_path: str or bool,
+                 registrant_mutex: multiprocessing.Lock,
+                 queue_statistic: multiprocessing.Queue):
         """
-        :type number: int
-        :type domains_list: list
-        :type dns_server: unicode
-        :type log_path: unicode
-        :return:
         """
         multiprocessing.Process.__init__(self, name="resolver_%s" % number)
+
         self.number = number
-        self.domains = domains_list
+        self.queue = queue_in
         self.dns_server = dns_server
+        self.queue_statistic = queue_statistic
 
         self.resolver = dns.resolver.Resolver()
         self.resolver.nameservers = [self.dns_server]
-        # стандартное время ожидания велико, его нужно уменьшить
 
+        # стандартное время ожидания велико, его нужно уменьшить
         # The total number of seconds to spend trying to get an answer to the question.
         self.resolver.lifetime = DEFAULT_TIMEOUT
 
@@ -45,31 +57,20 @@ class Resolver(multiprocessing.Process):
         self.list_ip_address = {}
         self.array_net = array_net
 
-        self.dns_type_length = {'a': 16,
-                                'aaaa': 54,
-                                'mx': 69,
-                                'txt': 250,
-                                'ns': 44,
-                                'cname': 44,
-                                'nserrors': 80
-                                }
+        self.registrant_mutex = registrant_mutex
 
         self.log_path = log_path
         self.registrar = None
 
     @staticmethod
-    def start_load_and_resolver_domain(net_array, work_path, delete_old=True, count_thread=COUNT_THREAD, verbose=False,
-                                       count_cycle=2, resolve_dns='127.0.0.1'):
+    def start_load_and_resolver_domain(net_array: SubnetTree.SubnetTree,
+                                       work_path: str,
+                                       delete_old: bool = True,
+                                       count_thread: int = COUNT_THREAD,
+                                       verbose: bool = False,
+                                       resolve_dns: str = '127.0.0.1') -> None:
         """
         Запускам процессы резолвинга
-
-        :param net_array: unicode|list
-        :type work_path: unicode
-        :type delete_old: bool
-        :type count_thread: int
-        :type verbose: bool
-        :type count_cycle: int
-        :type resolve_dns: unicode
         :return:
         """
 
@@ -80,11 +81,11 @@ class Resolver(multiprocessing.Process):
         else:
             log_path = False
 
-        count_array_data = count_thread * count_cycle
-        data_for_process = []
-        for thread_number in range(0, count_array_data):
-            data_for_process.append([])
-
+        # Разбиваем все домены в файлах на N массивов
+        # пример формата строки из файла
+        # 0--2.RU	REGRU-RU	15.06.2019	15.06.2020	16.07.2020	1
+        queue_data = multiprocessing.Queue(MAX_DOMAIN_COUNT)
+        queue_statistic = multiprocessing.Queue(count_thread + 5)
         counter_all = {}
 
         for prefix in PREFIX_LIST_ZONE.keys():
@@ -96,30 +97,24 @@ class Resolver(multiprocessing.Process):
             line = file_domain_data.readline()
             counter_all[prefix] = 0
             while line:
-                data_for_process[counter_all[prefix] % count_array_data].append({'line': line, 'prefix': prefix})
+                queue_data.put({'line': line, 'prefix': prefix})
                 counter_all[prefix] += 1
                 line = file_domain_data.readline()
 
+                # if counter_all[prefix] > 20000:
+                #     break
+
             BColor.process("All load zone %s -  %s" % (prefix, counter_all[prefix]))
 
+        # Запускаем процессы парсинга доменов
+        start_time = datetime.now()
+        registrant_mutex = multiprocessing.Lock()
         process_list = []
-        for i in range(0, count_array_data):
-            BColor.process("Start process to work %s %s" % (i, len(data_for_process[i])))
-            resolver = Resolver(i,  data_for_process[i], resolve_dns, net_array, log_path)
+        for i in range(0, count_thread):
+            resolver = Resolver(i, queue_data, resolve_dns, net_array, log_path, registrant_mutex, queue_statistic)
             resolver.daemon = True
             process_list.append(resolver)
             resolver.start()
-
-            if i != 0 and i % count_thread == 0:
-                BColor.process("Wait for threads finish...")
-                for process in process_list:
-                    try:
-                        # timeout 2 days
-                        process.join(1728000)
-                    except KeyboardInterrupt:
-                        BColor.warning("Interrupted by user")
-                        return
-                process_list = []
 
         if len(process_list):
             for process in process_list:
@@ -130,19 +125,32 @@ class Resolver(multiprocessing.Process):
                     BColor.warning("Interrupted by user")
                     return
 
+        queue_data.close()
+        diff = datetime.now() - start_time
+
+        all_time = 0
+        all_count = 0
+        while not queue_statistic.empty():
+            statistic_data = queue_statistic.get()
+            all_time += statistic_data['time_diff']
+            all_count += statistic_data['count']
+
+        performance_per_process = all_time / all_count
+        performance = diff.seconds / all_count
+        BColor.process(
+            "Performance %f per process, total time %i per process, total count %i, performance %f, all time %i"
+            % (performance_per_process, all_time, all_count, performance, diff.seconds))
+
+        # После обработки всех доменов запускаем удаление доменов которые сегодня не обновлены
         if delete_old:
             Resolver.delete_not_updated_today(counter_all)
 
-    def write_to_file(self, text, sql=False):
+    def write_to_file(self, text: str, sql: bool = False) -> None:
         """
         Записываем подробный лог работы в файл
-
-        :type text: unicode
-        :type sql: bool
         :return:
         """
 
-        self.log_path = '/home/domain_statistic/download/'
         if not self.log_path:
             return
 
@@ -158,7 +166,7 @@ class Resolver(multiprocessing.Process):
         file_handler.close()
 
     @staticmethod
-    def delete_not_updated_today(count_all_domain=False):
+    def delete_not_updated_today(count_all_domain: dict or bool = False) -> None:
         """
         :type count_all_domain: bool|dict
         :return:
@@ -170,17 +178,16 @@ class Resolver(multiprocessing.Process):
 
         if not count_all_domain:
             sql = "DELETE FROM domain WHERE load_today = 'N'"
-            BColor.process(sql)
             cursor.execute(sql)
             cursor.execute(sql_trigger_disable)
 
             sql = "UPDATE domain SET load_today = 'N'"
-            BColor.process(sql)
             cursor.execute(sql)
             cursor.execute(sql_trigger_enable)
         else:
             for key_tld, tld_count_in_file in count_all_domain.items():
-                cursor.execute("SELECT count(*) as domain_count FROM domain WHERE tld = '%s'" % PREFIX_LIST_ZONE[key_tld])
+                cursor.execute(
+                    "SELECT count(*) as domain_count FROM domain WHERE tld = '%s'" % PREFIX_LIST_ZONE[key_tld])
                 count_in_base = cursor.fetchone()
                 BColor.process("Count zone (%s) in file %s, in base %s"
                                % (str(key_tld), str(tld_count_in_file), str(count_in_base['domain_count'])))
@@ -198,30 +205,29 @@ class Resolver(multiprocessing.Process):
         connection.commit()
         connection.close()
 
-    def _connect_mysql(self):
+    def _connect_mysql(self) -> MySQLdb.connect:
         """
         :return:
         """
         self.connection = get_mysql_connection()
+        return self.connection
 
-    def _get_dns_record(self, resolver, domain_name, record_type):
+    @staticmethod
+    def _get_dns_record(resolver: dns.resolver.Resolver, domain_name: str, record_type: str) -> list:
         """
         Получить ресурсную запись данного типа от DNS сервера
-        :type resolver: dns.resolver.Resolver()
-        :type domain_name: unicode
-        :type record_type: unicode
         :return:
         """
         dns_records = []
         answers = resolver.query(domain_name, record_type)
 
         for dns_data in answers:
-
             if record_type == 'MX':
                 row: bytes = dns_data.exchange.to_text().lower()
             else:
                 row: bytes = dns_data.to_text().lower()
 
+            # TODO:manikin Не понятно зачем это было сделано, проверить как будет реботать без этого куса
             try:
                 row: bytes = row.decode()
             except:
@@ -230,10 +236,9 @@ class Resolver(multiprocessing.Process):
             dns_records.append(row)
         return dns_records
 
-    def get_ns_record(self, domain_name):
+    def get_ns_record(self, domain_name: str) -> dict:
         """
         Получаем массив с DNS записями
-        :type domain_name: unicode
         :return:
         """
         domain_dns_data_list = {'nserrors': []}
@@ -261,10 +266,9 @@ class Resolver(multiprocessing.Process):
 
         return domain_dns_data_list
 
-    def _get_asn_array(self, domain_dns_data_list):
+    def _get_asn_array(self, domain_dns_data_list: dict) -> list:
         """
         Возвращаем массив AS
-        :param domain_dns_data_list: list
         :return:
         """
         asn_for_a_records_array = []
@@ -291,14 +295,13 @@ class Resolver(multiprocessing.Process):
                 asn_for_a_records_array.append(self.list_ip_address[ip_as_str_byte])
         return asn_for_a_records_array
 
-    def _update_domain(self, dns_data, as_data, domain_id, register_info, rpki_status, cursor):
+    def _update_domain(self, dns_data: dict,
+                       as_data: dict,
+                       domain_id: int,
+                       register_info: dict,
+                       rpki_status: int) -> str:
         """
         Возвращаем сворфмированный SQL
-        :param dns_data:
-        :param as_data:
-        :param domain_id:
-        :param rpki_status:
-        :return:
         """
         update_sql_begin = "UPDATE domain SET "
         update_sql_end = " WHERE id = %s " % domain_id
@@ -309,7 +312,7 @@ class Resolver(multiprocessing.Process):
                 if dns_type == 'txt' or dns_type == 'cname' or dns_type == 'nserrors':
 
                     text = " ".join(dns_data[dns_type])
-                    text = text[0:self.dns_type_length[dns_type]]
+                    text = text[0:self.DNS_TYPE_LENGTH[dns_type]]
 
                     if dns_type == 'txt':
                         text = text.replace("\"", "")
@@ -331,19 +334,19 @@ class Resolver(multiprocessing.Process):
                         else:
                             if dns_type == 'a':
                                 set_statement += ", %s%s = INET_ATON('%s')" % (dns_type, (int(value) + 1),
-                                                                    self.connection.escape_string(
-                                                                        values[value])[
-                                                                    0:self.dns_type_length[dns_type]])
-                            elif dns_type == 'aaaa':
-                                set_statement += ", %s%s = INET6_ATON('%s')" % (dns_type, (int(value) + 1),
                                                                                self.connection.escape_string(
                                                                                    values[value])[
-                                                                               0:self.dns_type_length[dns_type]])
+                                                                               0:self.DNS_TYPE_LENGTH[dns_type]])
+                            elif dns_type == 'aaaa':
+                                set_statement += ", %s%s = INET6_ATON('%s')" % (dns_type, (int(value) + 1),
+                                                                                self.connection.escape_string(
+                                                                                    values[value])[
+                                                                                0:self.DNS_TYPE_LENGTH[dns_type]])
                             else:
                                 set_statement += ", %s%s = '%s'" % (dns_type, (int(value) + 1),
                                                                     self.connection.escape_string(
                                                                         values[value])[
-                                                                    0:self.dns_type_length[dns_type]])
+                                                                    0:self.DNS_TYPE_LENGTH[dns_type]])
             values = {0: None, 1: None, 2: None, 3: None}
             i = 0
             for record in as_data:
@@ -353,9 +356,9 @@ class Resolver(multiprocessing.Process):
 
             for value in values:
                 if values[value] is None or values[value] == '':
-                    set_statement += ", asn%s = NULL" % (int(value)+1)
+                    set_statement += ", asn%s = NULL" % (int(value) + 1)
                 else:
-                    set_statement += ", asn%s = '%s'" % ((int(value)+1),
+                    set_statement += ", asn%s = '%s'" % ((int(value) + 1),
                                                          self.connection.escape_string(values[value]))
 
             set_statement += ", rpki = NULL"
@@ -363,16 +366,12 @@ class Resolver(multiprocessing.Process):
         set_statement += ", register_date = STR_TO_DATE('%s', '%%d.%%m.%%Y')" % register_info['register_date']
         set_statement += ", register_date_end = STR_TO_DATE('%s', '%%d.%%m.%%Y')" % register_info['register_end_date']
         set_statement += ", free_date = STR_TO_DATE('%s', '%%d.%%m.%%Y')" % register_info['free_date']
-        set_statement += ", registrant_id = %s" % self.get_registrar_id(cursor, register_info['registrant'])
+        set_statement += ", registrant_id = %s" % self.get_registrar_id(register_info['registrant'])
         set_statement += ", delegated = '%s'" % register_info['delegated']
         return update_sql_begin + set_statement + update_sql_end
 
-    def _insert_domain(self, dns_data, as_data, register_info, rpki_status, cursor):
+    def _insert_domain(self, dns_data: dict, as_data: dict, register_info: dict, rpki_status: int) -> str:
         """
-        :param dns_data:
-        :param as_data:
-        :param register_info:
-        :param rpki_status:
         :return:
         """
         sql_insert = "INSERT INTO " \
@@ -386,7 +385,7 @@ class Resolver(multiprocessing.Process):
             if dns_type == 'txt' or dns_type == 'cname' or dns_type == 'nserrors':
 
                 text = " ".join(dns_data[dns_type])
-                text = text[0:self.dns_type_length[dns_type]]
+                text = text[0:self.DNS_TYPE_LENGTH[dns_type]]
 
                 if dns_type == 'txt':
                     text = text.replace("\"", "")
@@ -399,7 +398,7 @@ class Resolver(multiprocessing.Process):
                     if dns_row != '' and i <= 3:
                         default_value[dns_type][i] = "'%s'" \
                                                      % self.connection.escape_string(
-                            dns_row)[0:self.dns_type_length[dns_type]]
+                            dns_row)[0:self.DNS_TYPE_LENGTH[dns_type]]
                         i += 1
 
         i = 0
@@ -421,7 +420,7 @@ class Resolver(multiprocessing.Process):
                              register_info['register_end_date'],
                              register_info['free_date'],
                              register_info['domain'],
-                             self.get_registrar_id(cursor, register_info['registrant']),
+                             self.get_registrar_id(register_info['registrant']),
                              register_info['delegated'],
                              default_value['a'][0],
                              default_value['a'][1],
@@ -450,38 +449,47 @@ class Resolver(multiprocessing.Process):
 
         return sql_insert + sql_insert_date
 
-    def _update_registrant(self, cursor):
+    def _update_registrant(self) -> None:
         """
-        :param cursor:
         :return:
         """
-        self.registrar = {}
+        cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("SELECT id, registrant FROM registrant")
         registrar_list = cursor.fetchall()
+
+        self.registrar = {}
         for row in registrar_list:
             self.registrar[row['registrant']] = row['id']
 
-    def get_registrar_id(self, cursor, registrar: str) -> int:
+    def get_registrar_id(self, registrar: str) -> int:
         """
-        :param cursor:
-        :param registrar:
-        :return:
+        Получаем ID регистратора в БД, данная таблица кешируется в памяти.
         """
         registrar = registrar.lower()
 
         if self.registrar is None:
-            self._update_registrant(cursor)
+            self._update_registrant()
 
         if registrar in self.registrar:
             return self.registrar[registrar]
         else:
+            self.registrant_mutex.acquire()
             try:
+                # Блокировка необходима что бы 2 потока одновременно не записывали в БД одинаковые данные
+                self._update_registrant()
+                if registrar in self.registrar:
+                    self.registrant_mutex.release()
+                    return self.registrar[registrar]
+
+                cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
                 sql = "INSERT INTO registrant(registrant) VALUE(LOWER('%s'))" % registrar
                 cursor.execute(sql)
+
             except Exception as e:
                 print(e)
 
-            self._update_registrant(cursor)
+            self.registrant_mutex.release()
+            self._update_registrant()
             return self.registrar[registrar]
 
     def run(self):
@@ -490,18 +498,18 @@ class Resolver(multiprocessing.Process):
         :return:
         """
 
-        try:
-            self.write_to_file(BColor.process("Process %s running, need work %s domains"
-                                              % (self.number, len(self.domains))))
+        self.write_to_file(BColor.process("Process %s running" % self.number))
+        added_domains = 0
+        re_prefix = re.compile(r'\s*')
+        start_time = datetime.now()
 
-            added_domains = 0
-            re_prefix = re.compile(r'\s*')
+        try:
             self._connect_mysql()
             cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+            #rpki = RpkiChecker()
 
-            #   rpki = RpkiChecker()
-
-            for domain_data in self.domains:
+            while not self.queue.empty():
+                domain_data = self.queue.get()
                 try:
                     data = domain_data['line'].split("\t")
 
@@ -512,6 +520,7 @@ class Resolver(multiprocessing.Process):
                         delegated = 'Y'
                         domain_dns_data_array = self.get_ns_record(domain)
                         as_array = self._get_asn_array(domain_dns_data_array)
+
                         # try:
                         #     status = rpki.check_ip(domain_dns_data_array['a'][0], as_array[0])
                         #     rpki_status = status['code']
@@ -540,15 +549,13 @@ class Resolver(multiprocessing.Process):
                         run_sql = self._insert_domain(domain_dns_data_array,
                                                       as_array,
                                                       register_info,
-                                                      rpki_status,
-                                                      cursor)
+                                                      rpki_status)
                     else:
                         run_sql = self._update_domain(domain_dns_data_array,
                                                       as_array,
                                                       domain_id['id'],
                                                       register_info,
-                                                      rpki_status,
-                                                      cursor)
+                                                      rpki_status)
 
                     run_sql = run_sql.replace("b\'", '')
                     run_sql = run_sql.replace("\'\'", '\'')
@@ -572,7 +579,7 @@ class Resolver(multiprocessing.Process):
                     added_domains += 1
 
                     if (added_domains % 1000) == 0:
-                        self.write_to_file(BColor.process("Thread %d success resolved %d domains"
+                        self.write_to_file(BColor.process("Thread %i success resolved %i domains"
                                                           % (self.number, added_domains), pid=self.number))
 
                     # READ http://habrahabr.ru/post/178637/
@@ -586,20 +593,34 @@ class Resolver(multiprocessing.Process):
                     run_sql = None
 
                 except Exception:
-
                     pprint.pprint(domain_data)
 
                     data = domain_data['line'].split("\t")
                     domain = re.sub(re_prefix, '', data[0])
 
-                    self.write_to_file(BColor.error("Domain %s work failed process number %s" % (domain, self.number)))
+                    self.write_to_file(BColor.error("Domain %s work failed process number %i" % (domain, self.number)))
                     self.write_to_file(BColor.error(traceback.format_exc()))
 
-            self.write_to_file(BColor.process("Process %s done " % self.number))
+            diff = datetime.now() - start_time
+            performance = diff.seconds / added_domains
+
+            self.queue_statistic.put({'time_diff': diff.seconds, 'performance': performance, 'count': added_domains})
+            self.write_to_file(BColor.process(
+                "Process %i done, processed %i domain (performance %f)" % (self.number, added_domains, performance),
+                pid=self.number))
             self.connection.close()
             return 0
+        except queue.Empty:
+            diff = datetime.now() - start_time
+            performance = diff.seconds / added_domains
 
+            self.queue_statistic.put({'time_diff': diff.seconds, 'performance': performance, 'count': added_domains})
+            self.write_to_file(BColor.process(
+                "Process %i done queue is Empty = %i, processed %i domain (performance %f)"
+                % (self.number, self.queue.empty(), added_domains, performance),
+                pid=self.number))
+            return 0
         except Exception:
-            self.write_to_file(BColor.error("Process failed %s" % self.number))
+            self.write_to_file(BColor.error("Process failed %i" % self.number, pid=self.number))
             self.write_to_file(BColor.error(traceback.format_exc()))
             return 1

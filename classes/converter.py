@@ -37,7 +37,7 @@ class Converter(object):
         if self.delete_work_dir:
             self._remove_work_dir()
 
-    def get_work_path(self):
+    def get_work_path(self) -> str:
         """
         :rtype: unicode
         """
@@ -54,7 +54,7 @@ class Converter(object):
 
         return work_path
 
-    def _remove_work_dir(self):
+    def _remove_work_dir(self) -> None:
         """
         Подчищаем за собой
         :return:
@@ -80,10 +80,8 @@ class Converter(object):
 
         return True
 
-    def parse_file_rib_file_to(self, path_rib_file=False, path_to=False) -> str:
+    def parse_file_rib_file_to(self, path_rib_file: str or None = None, path_to: str or None = None) -> str:
         """
-        :type path_rib_file: unicode
-        :type path_to: unicode
         :rtype: unicode
         """
 
@@ -104,7 +102,7 @@ class Converter(object):
 
         return path_to
 
-    def convert_rib_to_net_as(self, path_rib_file=False):
+    def convert_rib_to_net_as(self, path_rib_file: str or bool = False) -> dict:
         """
         # Input rows format:
         # TIME: 12/19/11 08:00:01

@@ -39,7 +39,7 @@ class AsInet(object):
         self.connection.close()
 
     @staticmethod
-    def download_data():
+    def download_data() -> str or bool:
         """
         Скачивает данные http
         :rtype: unicode|bool
@@ -56,7 +56,7 @@ class AsInet(object):
             return False
 
     @staticmethod
-    def _get_all_as_info():
+    def _get_all_as_info() -> dict:
         """
         Получаем список всех AS с их описанием с сайта
         http://www.cidr-report.org/as2.0/autnums.html
@@ -94,9 +94,9 @@ class AsInet(object):
         except Exception:
             print(data)
             print(traceback.format_exc())
-            return []
+            return {}
 
-    def parsing_as(self, show_log: bool = False, max_as: int = MAX_AS_NUMBER):
+    def parsing_as(self, show_log: bool = False, max_as: int = MAX_AS_NUMBER) -> None:
         """
         парсим названия AS
         :type show_log:  bool
@@ -111,7 +111,7 @@ class AsInet(object):
 
         self.update_as(198610, as_data, show_log=show_log)
 
-    def _get_asn_description(self, number: int):
+    def _get_asn_description(self, number: int) -> dict:
         """
         :type number: intexit
         :return:

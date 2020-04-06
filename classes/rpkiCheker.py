@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __author__ = 'alexeyymanikin'
 
 import re
@@ -41,10 +40,8 @@ class RpkiChecker(object):
             self.load_flag = False
 
     @staticmethod
-    def load_data_from_rpki_server(url_server):
+    def load_data_from_rpki_server(url_server: str) -> str or bool:
         """
-        :type url_server: string
-        :rtype: bool | string
         """
         headers = {'User-Agent': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'}
         try:
@@ -57,14 +54,14 @@ class RpkiChecker(object):
         except urllib.error.URLError:
             return False
 
-    def load_rpki_list(self):
+    def load_rpki_list(self) -> SubnetTree.SubnetTree or None:
         """
         :rtype: subnetTree.SubnetTree
         """
         json_string = self.load_data_from_rpki_server(PRKI_JSON_URL)
 
         if not json_string:
-            return False
+            return None
 
         data_array = json.loads(json_string)['roas']
         subnet_list_tree = SubnetTree.SubnetTree()
@@ -105,7 +102,7 @@ class RpkiChecker(object):
         connection.commit()
         connection.close()
 
-    def update_base(self):
+    def update_base(self) -> bool:
         """
         :return:
         """
@@ -158,12 +155,10 @@ class RpkiChecker(object):
 
         connection.close()
         self.delete_not_updated_today()
+        return True
 
-    def check_ip(self, ip, asn):
+    def check_ip(self, ip: str, asn: int) -> dict:
         """
-        :type ip: string
-        :type asn: int
-        :rtype: list
         """
         if not self.load_flag:
             return {'code': RPKI_LOAD_ERROR,

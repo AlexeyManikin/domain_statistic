@@ -1,6 +1,0 @@
-# python modules
-MySQLdb
-dnspython
-SubnetTree
-psuntil >= 2.2
-urllib2

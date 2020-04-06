@@ -34,7 +34,7 @@ CREATE TABLE `a_count_statistic` (
   KEY `asn` (`asn`),
   KEY `i_a` (`a`),
   KEY `i_uniq` (`date`,`a`,`tld`)
-) ENGINE=InnoDB AUTO_INCREMENT=13231452 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -55,7 +55,7 @@ CREATE TABLE `a_domain_old_count_statistic` (
   KEY `i_a` (`a`),
   KEY `uniq_index` (`date`),
   KEY `a_tld` (`a`,`tld`)
-) ENGINE=InnoDB AUTO_INCREMENT=12900974 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -75,7 +75,7 @@ CREATE TABLE `as_count_statistic` (
   KEY `date` (`date`),
   KEY `asn` (`asn`),
   KEY `date_tld` (`date`,`tld`)
-) ENGINE=InnoDB AUTO_INCREMENT=2154304 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -94,7 +94,7 @@ CREATE TABLE `as_domain_old_count_statistic` (
   PRIMARY KEY (`id`),
   KEY `date` (`date`),
   KEY `asn` (`asn`)
-) ENGINE=InnoDB AUTO_INCREMENT=2053693 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -132,7 +132,7 @@ CREATE TABLE `beget_domain_as_from_count_statistic` (
   KEY `date` (`date`),
   KEY `domain_name` (`domain_name`),
   KEY `domain_id` (`domain_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6715 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -153,7 +153,7 @@ CREATE TABLE `beget_domain_as_to_count_statistic` (
   KEY `date` (`date`),
   KEY `domain_name` (`domain_name`),
   KEY `domain_id` (`domain_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=151325 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -174,7 +174,7 @@ CREATE TABLE `beget_domain_ns_from_count_statistic` (
   KEY `date` (`date`),
   KEY `domain_name` (`domain_name`),
   KEY `domain_id` (`domain_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=290583 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -195,7 +195,7 @@ CREATE TABLE `beget_domain_ns_to_count_statistic` (
   KEY `date` (`date`),
   KEY `domain_name` (`domain_name`),
   KEY `domain_id` (`domain_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=365120 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -217,7 +217,7 @@ CREATE TABLE `beget_domain_registrant_from_count_statistic` (
   KEY `domain_id` (`domain_id`),
   KEY `FK_REGISTRANT_BEGET_FROM` (`registrant_id_from`),
   CONSTRAINT `FK_REGISTRANT_BEGET_FROM` FOREIGN KEY (`registrant_id_from`) REFERENCES `registrant` (`id`) ON DELETE SET NULL ON UPDATE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=691281 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -239,7 +239,7 @@ CREATE TABLE `beget_domain_registrant_to_count_statistic` (
   KEY `domain_id` (`domain_id`),
   KEY `FK_REGISTRANT_BEGET_TO` (`registrant_id_to`),
   CONSTRAINT `FK_REGISTRANT_BEGET_TO` FOREIGN KEY (`registrant_id_to`) REFERENCES `registrant` (`id`) ON DELETE SET NULL ON UPDATE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=42738 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -257,7 +257,7 @@ CREATE TABLE `cname_count_statistic` (
   `count` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `date` (`date`)
-) ENGINE=InnoDB AUTO_INCREMENT=27710 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -331,7 +331,7 @@ CREATE TABLE `domain` (
   FULLTEXT KEY `ns4_ft` (`ns4`),
   FULLTEXT KEY `ns_all_ft` (`ns1`,`ns2`,`ns3`,`ns4`),
   CONSTRAINT `FK_REGISTRANT` FOREIGN KEY (`registrant_id`) REFERENCES `registrant` (`id`) ON DELETE SET NULL ON UPDATE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=18287038 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -482,7 +482,7 @@ CREATE TABLE `domain_count_statistic` (
   `count` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `date` (`date`)
-) ENGINE=InnoDB AUTO_INCREMENT=4113 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -538,7 +538,7 @@ CREATE TABLE `domain_history` (
   KEY `period_tld` (`tld`,`date_start`,`date_end`),
   KEY `FK_REGISTRANT_HISTORY` (`registrant_id`),
   CONSTRAINT `FK_REGISTRANT_HISTORY` FOREIGN KEY (`registrant_id`) REFERENCES `registrant` (`id`) ON DELETE SET NULL ON UPDATE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=241316282 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -556,7 +556,7 @@ CREATE TABLE `mx_count_statistic` (
   `count` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `date` (`date`)
-) ENGINE=InnoDB AUTO_INCREMENT=1114679 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -577,7 +577,7 @@ CREATE TABLE `ns_count_statistic` (
   KEY `i_ns` (`ns`),
   KEY `i_ns_tld` (`ns`),
   KEY `i_date_ns` (`ns`,`date`)
-) ENGINE=InnoDB AUTO_INCREMENT=9279288 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -596,7 +596,7 @@ CREATE TABLE `ns_domain_group_count_statistic` (
   PRIMARY KEY (`id`),
   KEY `date` (`date`),
   KEY `ns_group` (`ns_group`)
-) ENGINE=InnoDB AUTO_INCREMENT=2956460 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -615,7 +615,7 @@ CREATE TABLE `ns_domain_old_count_statistic` (
   PRIMARY KEY (`id`),
   KEY `date` (`date`),
   KEY `ns` (`ns`)
-) ENGINE=InnoDB AUTO_INCREMENT=9275558 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -638,7 +638,7 @@ CREATE TABLE `providers_like_statistic` (
   KEY `i_ns` (`name`),
   KEY `i_ns_tld` (`name`,`tld`),
   KEY `i_date_ns` (`name`,`date`)
-) ENGINE=InnoDB AUTO_INCREMENT=3392465 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -653,7 +653,7 @@ CREATE TABLE `registrant` (
   `registrant` varchar(64) CHARACTER SET utf8 DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `registrant` (`registrant`)
-) ENGINE=InnoDB AUTO_INCREMENT=289 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -673,7 +673,7 @@ CREATE TABLE `registrant_count_statistic` (
   KEY `date` (`date`),
   KEY `FK_REGISTRANT_COUNT_STATISTIC` (`registrant_id`),
   CONSTRAINT `FK_REGISTRANT_COUNT_STATISTIC` FOREIGN KEY (`registrant_id`) REFERENCES `registrant` (`id`) ON DELETE SET NULL ON UPDATE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=92022 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -695,16 +695,7 @@ CREATE TABLE `rpki` (
   UNIQUE KEY `rpki_uniq` (`prefix`,`maxLength`,`asn`),
   KEY `asn` (`asn`),
   KEY `load_today` (`load_today`)
-) ENGINE=InnoDB AUTO_INCREMENT=29152 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = latin1 */ ;
-/*!50003 SET character_set_results = latin1 */ ;
-/*!50003 SET collation_connection  = latin1_swedish_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`domain_statistic`@`%`*/ /*!50003 TRIGGER `domain_statistic`.`rpki_AFTER_INSERT` AFTER INSERT ON `rpki` FOR EACH ROW
 BEGIN
@@ -714,18 +705,7 @@ BEGIN
                                NEW.maxLength, NEW.asn, NEW.ta);
 END */;;
 DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = latin1 */ ;
-/*!50003 SET character_set_results = latin1 */ ;
-/*!50003 SET collation_connection  = latin1_swedish_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'NO_ENGINE_SUBSTITUTION' */ ;
+
 DELIMITER ;;
 /*!50003 CREATE*/ /*!50017 DEFINER=`domain_statistic`@`%`*/ /*!50003 TRIGGER `domain_statistic`.`rpki_BEFORE_DELETE` BEFORE DELETE ON `rpki` FOR EACH ROW
 BEGIN
@@ -734,10 +714,6 @@ BEGIN
   UPDATE rpki_history SET date_end = NOW() WHERE id = max_id;
 END */;;
 DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `rpki_history`
@@ -758,7 +734,7 @@ CREATE TABLE `rpki_history` (
   PRIMARY KEY (`id`),
   KEY `rpki_id` (`rpki_id`),
   KEY `period` (`date_start`,`date_end`)
-) ENGINE=InnoDB AUTO_INCREMENT=29152 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

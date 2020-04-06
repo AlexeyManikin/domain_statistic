@@ -23,7 +23,7 @@ class BColor(object):
         pass
 
     @staticmethod
-    def parsing_message(message):
+    def parsing_message(message: str) -> str:
         """
         Красивый вывод в консоль
         :param message:
@@ -41,12 +41,9 @@ class BColor(object):
         return message
 
     @staticmethod
-    def format_message(message_type, message, pid=None):
+    def format_message(message_type: str, message: str, pid: int or None = None) -> str:
         """
         Вывод сообщения на консоль в формате
-        [дата] PID TYPE: message
-        :param message_type: unicode
-        :param message: unicode
         :return:
         """
         try:
@@ -73,7 +70,7 @@ class BColor(object):
             return traceback.format_exc()
 
     @staticmethod
-    def ok(message, pid=None):
+    def ok(message: str, pid: int or None = None):
         """
         :type message: unicode
         :type pid: int
@@ -82,7 +79,7 @@ class BColor(object):
         return BColor.format_message(BColor.STATUS_OK, message, pid=pid)
 
     @staticmethod
-    def warning(message, pid=None):
+    def warning(message: str, pid: int or None = None):
         """
         :type message: unicode
         :type pid: int
@@ -91,7 +88,7 @@ class BColor(object):
         return BColor.format_message(BColor.STATUS_WARNING, message, pid=pid)
 
     @staticmethod
-    def error(message, pid=None):
+    def error(message: str, pid: int or None = None):
         """
         :type message: unicode
         :type pid: int
@@ -100,7 +97,7 @@ class BColor(object):
         return BColor.format_message(BColor.STATUS_ERROR, message, pid=pid)
 
     @staticmethod
-    def process(message, pid=None):
+    def process(message: str, pid: int or None = None):
         """
         :type message: unicode
         :type pid: int

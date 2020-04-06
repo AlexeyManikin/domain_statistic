@@ -10,7 +10,7 @@ from helpers.helpersCollor import BColor
 class Downloader(object):
 
     @staticmethod
-    def create_data_dir():
+    def create_data_dir() -> str:
         """
         Создает директорию с текущей датой в download
         :rtype: unicode

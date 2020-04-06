@@ -16,16 +16,30 @@ RUN $APT_GET_UPDATE && $APT_GET_UPGRADE
 RUN $APT_GET_INSTALL \
     curl \
     wget \
+    openssh-client \
+    rsync \
+    vim \
+    mc \
     gnupg2 \
     xz-utils \
+    htop \
+    man \
     unzip \
-    cron
+    git \
+    build-essential
 
 # setup msk timezone
 RUN $APT_GET_UPDATE && $APT_GET_INSTALL tzdata && \
     rm -f /etc/localtime && \
     cp -f /usr/share/zoneinfo/Europe/Moscow /etc/localtime && \
     chmod 644 /etc/localtime
+
+# need for developing
+RUN $APT_GET_INSTALL openssh-server && \
+    mkdir /root/.ssh;
+
+ADD config/sshd_config /etc/ssh/sshd_config
+ADD config/authorized_keys /root/.ssh/authorized_keys
 
 ADD install_code.sh /usr/local/sbin/install_code.sh
 RUN /bin/bash /usr/local/sbin/install_code.sh

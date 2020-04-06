@@ -43,10 +43,11 @@ class StatisticBaseClass(multiprocessing.Process):
         connection.close()
 
     @staticmethod
-    def get_beget_registrant(cursor) -> int:
+    def get_beget_registrant(connection: MySQLdb.connect) -> int:
         """
         :return:
         """
+        cursor = connection.cursor(MySQLdb.cursors.DictCursor)
         sql = "SELECT id FROM registrant WHERE registrant = '%s' LIMIT 1" % StatisticBaseClass.BEGET_REGISTRANT
         cursor.execute(sql)
         result = cursor.fetchone()

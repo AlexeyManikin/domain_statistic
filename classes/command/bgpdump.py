@@ -20,7 +20,7 @@ class Bgpdump(Command):
         :type path: unicode
         :return:
         """
-        super(Bgpdump, self).__init__("ls")
+        super(Bgpdump, self).__init__("bgpdump")
         self.binary = [os.path.abspath(CURRENT_PATH+'/bin/bgpdump')]
         self.path = path
 

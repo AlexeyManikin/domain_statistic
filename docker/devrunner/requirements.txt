@@ -1,0 +1,8 @@
+# python modules
+mysqlclient==1.4.6
+dnspython==1.16.0
+prettytable==0.7.2
+pysubnettree==0.33
+psutil==5.7.0
+urllib3==1.25.8
+idna==2.9

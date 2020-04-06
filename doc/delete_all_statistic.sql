@@ -14,3 +14,9 @@ DELETE FROM ns_count_statistic WHERE 1=1;
 DELETE FROM ns_domain_old_count_statistic WHERE 1=1;
 DELETE FROM ns_domain_group_count_statistic WHERE 1=1;
 DELETE FROM registrant_count_statistic WHERE 1=1;
+
+SET @TRIGGER_DISABLED = 1;
+DELETE FROM domain_history WHERE 1=1;
+DELETE FROM domain WHERE 1=1;
+DELETE FROM registrant WHERE 1=1;
+SET @TRIGGER_DISABLED = 0;
