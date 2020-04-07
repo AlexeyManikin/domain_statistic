@@ -31,7 +31,6 @@ class BegetAsFromStatistic(StatisticBaseClass):
         while date <= today:
             sql_insert = ''
             sql = """SELECT 
-    dh2.domain_id, 
     dh2.domain_name, 
     dh2.tld, 
     dh2.asn1
@@ -40,8 +39,8 @@ FROM
 WHERE
     dh2.date_start <= DATE_SUB('%s', INTERVAL 1 DAY)
         AND dh2.date_end > DATE_SUB('%s', INTERVAL 1 DAY)
-        AND dh2.domain_id IN (SELECT 
-            dh1.domain_id
+        AND dh2.domain_name IN (SELECT 
+            dh1.domain_name
         FROM
             domain_history AS dh1
         WHERE
@@ -49,8 +48,8 @@ WHERE
                 AND dh1.date_start <= '%s'
                 AND dh1.date_end > '%s'
                 AND dh1.delegated = 'Y'
-                AND dh1.domain_id IN (SELECT 
-                    dh.domain_id
+                AND dh1.domain_name IN (SELECT 
+                    dh.domain_name
                 FROM
                     domain_history AS dh
                 WHERE
@@ -65,11 +64,7 @@ WHERE
             data = cursor.fetchall()
 
             for row in data:
-                sql_insert_date = " ('%s','%s','%s','%s', %s)" % (date,
-                                                                  row['domain_id'],
-                                                                  row['domain_name'],
-                                                                  row['asn1'],
-                                                                  self.zone)
+                sql_insert_date = " ('%s','%s','%s', %s)" % (date, row['domain_name'], row['asn1'], self.zone)
                 if len(sql_insert) > 5:
                     sql_insert += ", " + sql_insert_date
                 else:
@@ -77,7 +72,6 @@ WHERE
 
             if len(sql_insert) > 1:
                 sql = """INSERT INTO beget_domain_as_from_count_statistic(`date`, 
-                            `domain_id`, 
                             `domain_name`, 
                             `as_from`, 
                             `tld`) VALUE """ + sql_insert

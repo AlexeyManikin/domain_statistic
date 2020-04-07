@@ -41,7 +41,8 @@
 
 # TODO
 
-https://habr.com/ru/post/66151/
+* https://habr.com/ru/post/66151/
+* собирать статистику за сегодня из domain, а не из domain_history
 
 # Пример отчета (1 августа 2015 года)
 

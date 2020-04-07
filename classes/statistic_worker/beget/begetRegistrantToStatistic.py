@@ -30,7 +30,6 @@ class BegetRegistrantToStatistic(StatisticBaseClass):
         while date <= today:
             sql_insert = ''
             sql = """SELECT 
-            dh1.domain_id,
             dh1.domain_name, 
             dh1.registrant_id
         FROM
@@ -39,8 +38,8 @@ class BegetRegistrantToStatistic(StatisticBaseClass):
                 dh1.registrant_id != %i
                 AND dh1.date_start <= '%s'
                 AND dh1.date_end > '%s'
-                AND dh1.domain_id IN (SELECT 
-                    dh.domain_id
+                AND dh1.domain_name IN (SELECT 
+                    dh.domain_name
                 FROM
                     domain_history AS dh
                 WHERE
@@ -53,10 +52,7 @@ class BegetRegistrantToStatistic(StatisticBaseClass):
             data = cursor.fetchall()
 
             for row in data:
-                sql_insert_date = " ('%s','%s','%s','%s')" % (date,
-                                                              row['domain_id'],
-                                                              row['domain_name'],
-                                                              row['registrant_id'])
+                sql_insert_date = " ('%s','%s','%s')" % (date, row['domain_name'], row['registrant_id'])
                 if len(sql_insert) > 5:
                     sql_insert += ", " + sql_insert_date
                 else:
@@ -64,7 +60,6 @@ class BegetRegistrantToStatistic(StatisticBaseClass):
 
             if len(sql_insert) > 1:
                 sql = """INSERT INTO beget_domain_registrant_to_count_statistic(`date`, 
-                            `domain_id`, 
                             `domain_name`, 
                             `registrant_id_to`) VALUE """ + sql_insert
                 cursor.execute(sql)

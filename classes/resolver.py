@@ -101,7 +101,7 @@ class Resolver(multiprocessing.Process):
                 counter_all[prefix] += 1
                 line = file_domain_data.readline()
 
-                # if counter_all[prefix] > 20000:
+                # if counter_all[prefix] > 1000:
                 #     break
 
             BColor.process("All load zone %s -  %s" % (prefix, counter_all[prefix]))
@@ -295,16 +295,14 @@ class Resolver(multiprocessing.Process):
                 asn_for_a_records_array.append(self.list_ip_address[ip_as_str_byte])
         return asn_for_a_records_array
 
-    def _update_domain(self, dns_data: dict,
-                       as_data: dict,
-                       domain_id: int,
-                       register_info: dict,
-                       rpki_status: int) -> str:
+    def _on_duplicate_key_update(self, dns_data: dict,
+                                 as_data: dict,
+                                 register_info: dict,
+                                 rpki_status: int) -> str:
         """
         Возвращаем сворфмированный SQL
         """
-        update_sql_begin = "UPDATE domain SET "
-        update_sql_end = " WHERE id = %s " % domain_id
+        update_sql_begin = " ON DUPLICATE KEY UPDATE "
         set_statement = " last_update = NOW(), load_today = 'Y'"
 
         if register_info['delegated'] == 'Y':
@@ -368,9 +366,9 @@ class Resolver(multiprocessing.Process):
         set_statement += ", free_date = STR_TO_DATE('%s', '%%d.%%m.%%Y')" % register_info['free_date']
         set_statement += ", registrant_id = %s" % self.get_registrar_id(register_info['registrant'])
         set_statement += ", delegated = '%s'" % register_info['delegated']
-        return update_sql_begin + set_statement + update_sql_end
+        return update_sql_begin + set_statement
 
-    def _insert_domain(self, dns_data: dict, as_data: dict, register_info: dict, rpki_status: int) -> str:
+    def _update_domain_row(self, dns_data: dict, as_data: dict, register_info: dict, rpki_status: int) -> str:
         """
         :return:
         """
@@ -446,8 +444,8 @@ class Resolver(multiprocessing.Process):
                              default_value['cname']['cname'],
                              default_value['nserrors']['nserrors'],
                              default_value['rpki'])
-
-        return sql_insert + sql_insert_date
+        sql_update = self._on_duplicate_key_update(dns_data, as_data, register_info, rpki_status)
+        return sql_insert + sql_insert_date + sql_update
 
     def _update_registrant(self) -> None:
         """
@@ -542,18 +540,8 @@ class Resolver(multiprocessing.Process):
                                      'domain': domain,
                                      'prefix': domain_data['prefix']}
 
-                    cursor.execute("SELECT id FROM domain WHERE domain_name = LOWER('%s')" % domain)
-                    domain_id = cursor.fetchone()
-
-                    if not domain_id:
-                        run_sql = self._insert_domain(domain_dns_data_array,
+                    run_sql = self._update_domain_row(domain_dns_data_array,
                                                       as_array,
-                                                      register_info,
-                                                      rpki_status)
-                    else:
-                        run_sql = self._update_domain(domain_dns_data_array,
-                                                      as_array,
-                                                      domain_id['id'],
                                                       register_info,
                                                       rpki_status)
 
