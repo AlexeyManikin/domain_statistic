@@ -15,7 +15,30 @@ class MxCountStatistic(StatisticBaseClass):
         StatisticBaseClass.__init__(self, number, "mx_count_")
         self.today = today
         self.data = data
-        self.zone = PREFIX_LIST_ZONE[zone]
+        self.zone_id = PREFIX_LIST_ZONE[zone]
+
+    def _get_data(self, number: int, date: datetime) -> list:
+        """
+        В зависимости от дня статистики обращаемся или к domain_history или к domain
+        :return:
+        """
+        cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        if date == datetime.date.today():
+            sql = """SELECT mx%i as mx, count(*) as count FROM domain
+            WHERE delegated = 'Y' AND tld = %i
+            GROUP BY mx%i
+            HAVING count(*) > %i
+            ORDER BY count(*) desc""" % (number, self.zone_id, number, MINIMUM_DOMAIN_COUNT)
+        else:
+            sql = """SELECT mx%i as mx, count(*) as count FROM domain_history
+            WHERE delegated = 'Y' AND tld = %i AND date_start <= '%s' AND date_end >= '%s'
+            GROUP BY mx%i
+            HAVING count(*) > %i
+            ORDER BY count(*) desc""" % (number, self.zone_id, date, date, number, MINIMUM_DOMAIN_COUNT)
+
+        cursor.execute(sql)
+        return cursor.fetchall()
 
     def _update(self):
         """
@@ -30,15 +53,7 @@ class MxCountStatistic(StatisticBaseClass):
             mx_array = {}
 
             for i in range(1, 5):
-                sql = """SELECT mx%s as mx, count(*) as count FROM domain_history
-    WHERE delegated = 'Y' AND tld = %s AND date_start <= '%s' AND date_end >= '%s'
-    GROUP BY mx%s
-    HAVING count(*) > %s
-    ORDER BY count(*) desc""" % (i, self.zone, date, date, i, MINIMUM_DOMAIN_COUNT)
-
-                cursor.execute(sql)
-                data = cursor.fetchall()
-
+                data = self._get_data(i, date)
                 for row in data:
                     if row['mx'] in mx_array:
                         mx_array[row['mx']] += row['count']
@@ -46,7 +61,7 @@ class MxCountStatistic(StatisticBaseClass):
                         mx_array[row['mx']] = row['count']
 
             for key in mx_array:
-                sql_insert_date = " ('%s', %s,'%s', '%s')" % (date, self.zone, key, mx_array[key])
+                sql_insert_date = " ('%s', %i, '%s', '%s')" % (date, self.zone_id, key, mx_array[key])
                 if len(sql_insert) > 5:
                     sql_insert += ", " + sql_insert_date
                 else:

@@ -87,10 +87,10 @@ WHERE
             data = cursor.fetchall()
 
             for row in data:
-                sql_insert_date = " ('%s','%s','%s', %s)" % (date,
-                                                             row['domain_name'],
-                                                             row['asn1'],
-                                                             self.zone)
+                sql_insert_date = " ('%s', '%s', '%s', %i)" % (date,
+                                                               row['domain_name'],
+                                                               row['asn1'],
+                                                               self.zone)
                 if len(sql_insert) > 5:
                     sql_insert += ", " + sql_insert_date
                 else:

@@ -16,7 +16,32 @@ class ADomainOldCountStatistic(StatisticBaseClass):
 
         self.today = today
         self.data = data
-        self.zone = PREFIX_LIST_ZONE[zone]
+        self.zone_id = PREFIX_LIST_ZONE[zone]
+
+    def _get_data(self, date: datetime) -> list:
+        """
+        В зависимости от дня статистики обращаемся или к domain_history или к domain
+        :return:
+        """
+        cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        if date == datetime.date.today():
+            sql = """SELECT a1 as a, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
+            FROM domain
+            WHERE tld = %i AND delegated = 'Y'
+            GROUP BY a1
+            HAVING count(*) > %i
+            ORDER BY count(*) desc""" % (self.zone_id, MINIMUM_DOMAIN_COUNT)
+        else:
+            sql = """SELECT a1 as a, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
+            FROM domain_history
+            WHERE tld = %i AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
+            GROUP BY a1
+            HAVING count(*) > %i
+            ORDER BY count(*) desc""" % (self.zone_id, date, date, MINIMUM_DOMAIN_COUNT)
+
+        cursor.execute(sql)
+        return cursor.fetchall()
 
     def _update(self):
         """
@@ -30,21 +55,12 @@ class ADomainOldCountStatistic(StatisticBaseClass):
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
             sql_insert = ""
-            sql = """SELECT a1 as a, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
-FROM domain_history
-WHERE tld = %s AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
-GROUP BY a1
-HAVING count(*) > %s
-ORDER BY count(*) desc""" % (self.zone, date, date, MINIMUM_DOMAIN_COUNT)
-
-            cursor.execute(sql)
-            data = cursor.fetchall()
-
+            data = self._get_data(date)
             for row in data:
                 if row['a'] is None:
                     row['a'] = 0
 
-                sql_insert_date = " ('%s','%s', %s,'%s')" % (date, row['a'], self.zone, row['old'])
+                sql_insert_date = " ('%s','%s', %i,'%s')" % (date, row['a'], self.zone_id, row['old'])
                 if len(sql_insert) > 5:
                     sql_insert += ', ' + sql_insert_date
                 else:

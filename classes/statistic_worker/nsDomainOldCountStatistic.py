@@ -15,7 +15,32 @@ class NsDomainOldCountStatistic(StatisticBaseClass):
         StatisticBaseClass.__init__(self, number, "ns_domain_old_count_")
         self.today = today
         self.data = data
-        self.zone = PREFIX_LIST_ZONE[zone]
+        self.zone_id = PREFIX_LIST_ZONE[zone]
+
+    def _get_data(self, number: int, date: datetime) -> list:
+        """
+        В зависимости от дня статистики обращаемся или к domain_history или к domain
+        :return:
+        """
+        cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        if date == datetime.date.today():
+            sql = """SELECT ns%i as ns, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
+            FROM domain
+            WHERE tld = %i AND delegated = 'Y'
+            GROUP BY ns%i
+            HAVING count(*) > %i
+            ORDER BY count(*) desc""" % (number, self.zone_id, number, MINIMUM_DOMAIN_COUNT)
+        else:
+            sql = """SELECT ns%i as ns, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
+            FROM domain_history
+            WHERE tld = %i AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
+            GROUP BY ns%i
+            HAVING count(*) > %i
+            ORDER BY count(*) desc""" % (number, self.zone_id, date, date, number, MINIMUM_DOMAIN_COUNT)
+
+        cursor.execute(sql)
+        return cursor.fetchall()
 
     def _update(self):
         """
@@ -28,15 +53,8 @@ class NsDomainOldCountStatistic(StatisticBaseClass):
         while date <= today:
             ns_list = {}
 
-            for i in [1, 2, 3, 4]:
-                sql = """SELECT ns%s as ns, AVG(DATEDIFF(NOW(), register_date)) as old, count(*) as count
-    FROM domain_history
-    WHERE tld = %s AND date_start <= '%s' AND date_end >= '%s' AND delegated = 'Y'
-    GROUP BY ns%i
-    HAVING count(*) > %s
-    ORDER BY count(*) desc""" % (i, self.zone, date, date, i, MINIMUM_DOMAIN_COUNT)
-                cursor.execute(sql)
-                data = cursor.fetchall()
+            for i in range(1, 5):
+                data = self._get_data(i, date)
                 for row in data:
                     if row['ns'] not in ns_list:
                         ns_list[row['ns']] = []
@@ -58,7 +76,7 @@ class NsDomainOldCountStatistic(StatisticBaseClass):
 
                 old = round((summary_value / summary_count), 2)
 
-                sql_insert_date = " ('%s','%s', %s,'%s')" % (date, key, self.zone, old)
+                sql_insert_date = " ('%s', '%s', %i, '%s')" % (date, key, self.zone_id, old)
                 if len(sql_insert) > 5:
                     sql_insert += ', ' + sql_insert_date
                 else:

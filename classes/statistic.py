@@ -4,6 +4,7 @@ from helpers.helpers import get_mysql_connection
 import datetime
 import MySQLdb
 from config.main import *
+from helpers.helpersCollor import BColor
 
 from classes.statistic_worker.groupProviderStatistic import GroupProviderStatistic
 
@@ -229,7 +230,11 @@ class Statistic(object):
 
         if date is not None:
             for prefix in PREFIX_LIST_ZONE.keys():
-                GroupProviderStatistic.update_ns_domain_group_count_statistic_python(date, self.today, prefix, 25)
+                self.count_ptheread += 1
+                worker = GroupProviderStatistic(self.count_ptheread, date, self.today, prefix)
+                worker.daemon = False
+                self.process_list.append(worker)
+                worker.start()
 
     def update_beget_as_from(self):
         """
@@ -344,14 +349,32 @@ class Statistic(object):
                 worker.start()
 
     def update_provider_statistic(self, provider: str, as_number: int):
+        """
+        Обновление статистики по определенному провайдеру - его AS
+        :return:
+        """
         self._update_provider_as_from(provider, as_number)
         self._update_provider_to_from(provider, as_number)
+
+    def update_beget_statistic(self):
+        """
+        Обновляем статистику по beget, переходы с/на AS, NS, registant
+        :return:
+        """
+        self.update_beget_as_from()
+        self.update_beget_as_to()
+        self.update_beget_registrant_from()
+        self.update_beget_registrant_to()
+        self.update_beget_ns_from()
+        self.update_beget_ns_to()
 
     def update_all_statistic(self):
         """
         Обновление всех статистик
         :return:
         """
+        start_time = datetime.datetime.now()
+
         self.update_as_count_statistic()
         self.update_a_domain_old_count_statistic()
         self.update_ns_domain_old_count_statistic()
@@ -362,15 +385,9 @@ class Statistic(object):
         self.update_domain_count_statistic()
         self.update_a_count_statistic()
         self.update_cname_count_statistic()
-        self.update_ns_domain_group_count_statistic()
 
         # beget statistic
-        self.update_beget_as_from()
-        self.update_beget_as_to()
-        self.update_beget_registrant_from()
-        self.update_beget_registrant_to()
-        self.update_beget_ns_from()
-        self.update_beget_ns_to()
+        self.update_beget_statistic()
 
         self.update_provider_statistic('netangels', 44128)
         self.update_provider_statistic('timeweb', 9123)
@@ -379,17 +396,19 @@ class Statistic(object):
             try:
                 # timeout 2 days
                 process.join(1728000)
+                self.process_list.remove(process)
             except KeyboardInterrupt:
                 return
 
-    def update_all_test_statistic(self):
-        """
-        Обновление всех статистик
-        :return:
-        """
-        #self.update_provider_statistic('netangels', 44128)
+        # отдельно ждем пока собирется статистика по NS серверам что бы сгруперовать ее
+        self.update_ns_domain_group_count_statistic()
         for process in self.process_list:
             try:
-                process.join()
+                # timeout 2 days
+                process.join(1728000)
+                self.process_list.remove(process)
             except KeyboardInterrupt:
                 return
+
+        diff = datetime.datetime.now() - start_time
+        BColor.process("Statistic done to %i second" % diff.seconds)

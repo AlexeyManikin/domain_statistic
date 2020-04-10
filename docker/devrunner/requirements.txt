@@ -6,3 +6,6 @@ pysubnettree==0.33
 psutil==5.7.0
 urllib3==1.25.8
 idna==2.9
+tqdm==4.45.0
+ipaddress==1.0.23
+cprofilev

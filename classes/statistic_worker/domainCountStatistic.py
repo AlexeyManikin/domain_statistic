@@ -15,7 +15,26 @@ class DomainCountStatistic(StatisticBaseClass):
         StatisticBaseClass.__init__(self, number, "domain_count_")
         self.today = today
         self.data = data
-        self.zone = PREFIX_LIST_ZONE[zone]
+        self.zone_id = PREFIX_LIST_ZONE[zone]
+
+    def _get_data(self, date: datetime) -> list:
+        """
+        В зависимости от дня статистики обращаемся или к domain_history или к domain
+        :return:
+        """
+        cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        if date == datetime.date.today():
+            sql = """SELECT count(*) as count FROM domain
+            WHERE tld = %i 
+            ORDER BY count(*) desc""" % self.zone_id
+        else:
+            sql = """SELECT count(*) as count FROM domain_history
+            WHERE tld = %i AND date_start <= '%s' AND date_end >= '%s'
+            ORDER BY count(*) desc""" % (self.zone_id, date, date)
+
+        cursor.execute(sql)
+        return cursor.fetchall()
 
     def _update(self):
         """
@@ -27,15 +46,9 @@ class DomainCountStatistic(StatisticBaseClass):
         cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
         while date <= today:
             sql_insert = ''
-            sql = """SELECT count(*) as count FROM domain_history
-    WHERE tld = %s AND date_start <= '%s' AND date_end >= '%s'
-    ORDER BY count(*) desc""" % (self.zone, date, date)
-
-            cursor.execute(sql)
-            data = cursor.fetchall()
-
+            data = self._get_data(date)
             for row in data:
-                sql_insert_date = " ('%s', %s, '%s')" % (date, self.zone, row['count'])
+                sql_insert_date = " ('%s', %i, '%s')" % (date, self.zone_id, row['count'])
                 if len(sql_insert) > 5:
                     sql_insert += ", " + sql_insert_date
                 else:

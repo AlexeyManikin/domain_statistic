@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __author__ = 'alexeyymnaikin'
 
 import os
@@ -16,12 +15,13 @@ DEFAULT_TIMEOUT = 3.0
 MYSQL_HOST = 'db'
 MYSQL_PORT = 3306
 MYSQL_USER = 'domain_statistic'
-MYSQL_PASSWD = '12345678'
+MYSQL_PASSWD = '0123456789'
 MYSQL_DATABASE = 'domain_statistic'
 
 PRKI_JSON_URL = 'http://rpki:8080/export.json'
 
 COUNT_THREAD = 450
+COUNT_THREAD_STATISTIC = 70
 MAX_DOMAIN_COUNT = 10000000
 
 START_YEAR = 2020

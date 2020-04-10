@@ -2,6 +2,6 @@ SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 10 1 */5 * *   /usr/local/bin/python3.7 /home/domain_statistic/update_as_info.py >> /home/domain_statistic/download/update_as_info_`date +%Y-%m-%d`.log
-0 4 * * *      /usr/local/bin/python3.7 /home/domain_statistic/update_domain.py -n `cat /etc/resolv.conf | awk '{print $2}'` -u  2>&1 &>/home/domain_statistic/download/update_domain_`date +%Y-%m-%d`.log
+0 6 * * *      /usr/local/bin/python3.7 /home/domain_statistic/update_domain.py -n `cat /etc/resolv.conf | awk '{print $2}'` -u  2>&1 &>/home/domain_statistic/download/update_domain_`date +%Y-%m-%d`.log
 #1 1 * * *     /usr/local/bin/python3.7 /home/domain_statistic/update_rpki_history.py >> /home/domain_statistic/download/update_rpki.log
 #1 10 */7 * *   /usr/local/bin/python3.7 /home/domain_statistic/normalization.py

@@ -16,7 +16,30 @@ class AsCountStatistic(StatisticBaseClass):
 
         self.today = today
         self.data = data
-        self.zone = PREFIX_LIST_ZONE[zone]
+        self.zone_id = PREFIX_LIST_ZONE[zone]
+
+    def _get_data(self, date: datetime) -> list:
+        """
+        В зависимости от дня статистики обращаемся или к domain_history или к domain
+        :return:
+        """
+        cursor = self.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        if date == datetime.date.today():
+            sql = """SELECT asn1 as as_number, count(*) as count FROM domain
+            WHERE delegated = 'Y' AND tld = %i 
+            GROUP BY asn1
+            HAVING count(*) > %i
+            ORDER BY count(*) desc""" % (self.zone_id, MINIMUM_DOMAIN_COUNT)
+        else:
+            sql = """SELECT asn1 as as_number, count(*) as count FROM domain_history
+            WHERE delegated = 'Y' AND tld = %i AND date_start <= '%s' AND date_end > '%s'
+            GROUP BY asn1
+            HAVING count(*) > %i
+            ORDER BY count(*) desc""" % (self.zone_id, date, date, MINIMUM_DOMAIN_COUNT)
+
+        cursor.execute(sql)
+        return cursor.fetchall()
 
     def _update(self):
         """
@@ -29,15 +52,7 @@ class AsCountStatistic(StatisticBaseClass):
         while date <= today:
             sql_insert = ''
             as_array = {}
-
-            sql = """SELECT asn1 as as_number, count(*) as count FROM domain_history
-   WHERE delegated = 'Y' AND tld = %s AND date_start <= '%s' AND date_end > '%s'
-   GROUP BY asn1
-   HAVING count(*) > %s
-   ORDER BY count(*) desc""" % (self.zone, date, date, MINIMUM_DOMAIN_COUNT)
-
-            cursor.execute(sql)
-            data = cursor.fetchall()
+            data = self._get_data(date)
 
             for row in data:
                 if row['as_number'] is None:
@@ -48,7 +63,7 @@ class AsCountStatistic(StatisticBaseClass):
                 as_array[asn] = row['count']
 
             for key in as_array:
-                sql_insert_date = " ('%s', %s,'%s', '%s')" % (date, self.zone, key, as_array[key])
+                sql_insert_date = " ('%s', %i, '%s', '%s')" % (date, self.zone_id, key, as_array[key])
                 if len(sql_insert) > 5:
                     sql_insert += ', ' + sql_insert_date
                 else:

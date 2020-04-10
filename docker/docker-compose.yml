@@ -15,12 +15,13 @@ recurcer:
    -  ./pdnsd/config/pdnsd.conf:/etc/pdnsd.conf
   restart: always
 
+
 runner:
   build: runner/
   links:
      - "mysql:db"
      - "recurcer:resolver"
-#     - "rpki:rpki" 
+#     - "rpki:rpki"
   mem_limit: "200G"
   volumes:
      - ../:/home/domain_statistic:rw
@@ -41,6 +42,7 @@ devrunner:
   links:
    - "mysql:db"
    - "recurcer:resolver"
+#   - "rpki:rpki"
   mem_limit: "200G"
   ports:
     - "2222:2222"
