@@ -4,6 +4,7 @@ import datetime
 from classes.command.wget import Wget
 from helpers.helpers import *
 import shutil
+import concurrent.futures
 from helpers.helpersCollor import BColor
 
 
@@ -48,6 +49,24 @@ class Downloader(object):
         return True
 
     @staticmethod
+    def download(path: str, item: dict):
+        """
+        :return:
+        """
+        file_name = item['file_name']
+        url = item['url']
+        path_file = os.path.abspath(os.path.join(path, file_name))
+
+        BColor.process("Download %s to %s " % (url, path_file))
+        shutil.rmtree(path_file, ignore_errors=True)
+        Downloader.download_file(url, path_file)
+        if os.path.getsize(path_file) == 0:
+            BColor.error("Can`t download file %s to %s" % (url, path_file))
+            raise Exception("Can`t download file %s to %s" % (url, path_file))
+
+        return os.path.getsize(path_file)
+
+    @staticmethod
     def download_data_for_current_date() -> str:
         """
         Скачивает все необходимы файлы для парсинга
@@ -73,13 +92,15 @@ class Downloader(object):
 
         path = Downloader.create_data_dir()
 
-        for item in files_list:
-            path_file = os.path.abspath(os.path.join(path, item['file_name']))
-            BColor.process("Download %s to %s " % (item['url'], path_file))
-            shutil.rmtree(path_file, ignore_errors=True)
-            Downloader.download_file(item['url'], path_file)
-            if os.path.getsize(path_file) == 0:
-                BColor.error("Can`t download file %s to %s" % (item['url'], path_file))
-                raise Exception("Can`t download file %s to %s" % (item['url'], path_file))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(files_list)) as executor:
+            future_to_download = {executor.submit(Downloader.download,
+                                                   path,
+                                                   item): item for item in files_list}
+            for future in concurrent.futures.as_completed(future_to_download, timeout=1800):
+                item = future_to_download[future]
+                file_name = item['file_name']
+                url = item['url']
+                array_data = future.result()
+                BColor.ok("Download url %s to %s, size is %i" % (url, file_name, array_data))
 
         return path

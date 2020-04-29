@@ -89,16 +89,13 @@ class Converter(object):
             path_rib_file = os.path.abspath(os.path.join(self.path, 'rib.bz2'))
             path_to = os.path.abspath(os.path.join(self.work_path, 'rib'))
 
-        bgp_dump = Bgpdump(path_rib_file)
+        shutil.rmtree(path_to, ignore_errors=True)
+        bgp_dump = Bgpdump(path_rib_file, path_to)
         command = bgp_dump.get_command()
 
-        shutil.rmtree(path_to, ignore_errors=True)
-        file_rib = open(path_to, 'w')
-
-        p = SubprocessRunner(command=command, stdout=file_rib)
+        p = SubprocessRunner(command=command)
         p.run()
         p.wait(write_output_in_log=False)
-        file_rib.close()
 
         return path_to
 
@@ -116,7 +113,6 @@ class Converter(object):
         # NEXT_HOP: 80.91.255.62
         # AGGREGATOR: AS24940 213.133.96.18
 
-        :type path_rib_file: unicode
         :return:
         """
 
@@ -131,8 +127,8 @@ class Converter(object):
         prefix = ''
         as_path = ''
 
-        file_rib_data = open(path_rib_file)
-        line = file_rib_data.readline()
+        file_rib_data = open(path_rib_file, 'r')
+        line: str = file_rib_data.readline()
         while line:
             symbol = line[0]
             if symbol == 'T' or symbol == 'S' or symbol == 'F' or symbol == 'O' or symbol == 'N':

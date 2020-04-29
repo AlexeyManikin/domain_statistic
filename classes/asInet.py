@@ -9,6 +9,7 @@ import urllib.error
 import urllib.parse
 import traceback
 import time
+import typing
 
 from helpers.helperUnicode import as_default_string
 from helpers.helpers import get_mysql_connection
@@ -106,10 +107,10 @@ class AsInet(object):
         as_data = self._get_all_as_info()
 
         for i in range(1, max_as):
-            print("Update as %s" % i)
-            self.update_as(i, as_data,  show_log=show_log)
-
-        self.update_as(198610, as_data, show_log=show_log)
+            if i in as_data:
+                self.update_as(i, as_data=as_data[i], show_log=show_log)
+            else:
+                self.update_as(i, as_data=None, show_log=show_log)
 
     def _get_asn_description(self, number: int) -> dict:
         """
@@ -142,7 +143,7 @@ class AsInet(object):
                 'DESCRIPTION': description,
                 'USE_FAST': 0}
 
-    def update_as(self, number: int, as_data: dict, show_log: bool = False) -> bool:
+    def update_as(self, number: int, as_data: typing.Union[dict, None], show_log: bool = False) -> bool:
         """
         Обновляем информацию об AS в базе данных
         """
@@ -157,16 +158,15 @@ class AsInet(object):
 
         count = cursor.fetchone()
 
-        if number in as_data and count['count'] != 0:
+        if as_data and count['count'] != 0:
             as_info = {'AS': number,
-                       'COUNTRY': as_data[number]['country'],
+                       'COUNTRY': as_data['country'],
                        'ORGANIZATION': '',
                        'DATE_REGISTER': '',
-                       'DESCRIPTION': as_data[number]['descriptions'],
+                       'DESCRIPTION': as_data['descriptions'],
                        'USE_FAST': 1}
         else:
             try:
-                time.sleep(.2)
                 as_info = self._get_asn_description(number)
             except:
                 as_info = {'AS': number,

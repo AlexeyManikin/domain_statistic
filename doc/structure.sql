@@ -634,29 +634,6 @@ CREATE TABLE `ns_domain_old_count_statistic` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `providers_like_statistic`
---
-
-DROP TABLE IF EXISTS `providers_like_statistic`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `providers_like_statistic` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `date` date NOT NULL,
-  `name` varchar(70) DEFAULT NULL,
-  `tld` varchar(32) DEFAULT NULL,
-  `count` bigint(20) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uniq` (`date`,`name`,`tld`),
-  KEY `date` (`date`),
-  KEY `date_tld` (`date`,`tld`),
-  KEY `i_ns` (`name`),
-  KEY `i_ns_tld` (`name`,`tld`),
-  KEY `i_date_ns` (`name`,`date`)
-) ENGINE=InnoDB AUTO_INCREMENT=3392465 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `registrant`
 --
 

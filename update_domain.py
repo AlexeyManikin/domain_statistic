@@ -87,7 +87,7 @@ if __name__ == "__main__":
             BColor.process("Unzip file")
             converter = Converter(path, delete_work_dir=(not args.show_verbose))
 
-            BColor.process("Parsing rib file")
+            BColor.process("Parsing rib file (run bgpdump)")
             converter.parse_file_rib_file_to()
 
             BColor.process("Get AS list")

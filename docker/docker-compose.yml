@@ -26,7 +26,7 @@ runner:
   volumes:
      - ../:/home/domain_statistic:rw
      - ./counteiner_data/download/:/home/domain_statistic/download:rw
-     - ./runner/config/root:/var/spool/cron/crontabs/root:rw
+     - ./runner/config/root:/var/spool/cron/crontabs/root:ro
 
 #rpki:
 #  build: rpki/
@@ -42,7 +42,7 @@ devrunner:
   links:
    - "mysql:db"
    - "recurcer:resolver"
-#   - "rpki:rpki"
+     #   - "rpki:rpki"
   mem_limit: "200G"
   ports:
     - "2222:2222"

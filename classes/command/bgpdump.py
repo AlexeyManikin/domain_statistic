@@ -15,14 +15,15 @@ class Bgpdump(Command):
     }
     ':type : dict'
 
-    def __init__(self, path: str):
+    def __init__(self, path_in: str, path_out: str):
         """
-        :type path: unicode
+        :type path_in: unicode
         :return:
         """
         super(Bgpdump, self).__init__("bgpdump")
         self.binary = [os.path.abspath(CURRENT_PATH+'/bin/bgpdump')]
-        self.path = path
+        self.path_in = path_in
+        self.path_out = path_out
 
     def get_command(self) -> list:
         """
@@ -31,4 +32,4 @@ class Bgpdump(Command):
         :rtype: list
         """
 
-        return self.binary + [self.path]
+        return self.binary + ["-O", self.path_out, self.path_in]
